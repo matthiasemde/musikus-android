@@ -38,7 +38,7 @@ object TestMainModule {
     @Provides
     fun provideFakeTimeProvider(
         timeProvider: TimeProvider
-    ) : FakeTimeProvider {
+    ): FakeTimeProvider {
         return timeProvider as FakeTimeProvider
     }
 
@@ -47,7 +47,6 @@ object TestMainModule {
     fun provideIdProvider(): IdProvider {
         return FakeIdProvider()
     }
-
 
     @Provides
     @Singleton
@@ -72,5 +71,4 @@ object TestMainModule {
     ): MusikusDatabase {
         return database
     }
-
 }

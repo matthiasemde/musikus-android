@@ -8,8 +8,8 @@
 
 package app.musikus.activesession.di
 
-import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.data.ActiveSessionRepositoryImpl
+import app.musikus.activesession.domain.ActiveSessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -23,8 +23,7 @@ import dagger.hilt.testing.TestInstallIn
 object TestActiveSessionRepositoryModule {
 
     @Provides
-    fun provideActiveSessionRepository() : ActiveSessionRepository {
+    fun provideActiveSessionRepository(): ActiveSessionRepository {
         return ActiveSessionRepositoryImpl()
     }
-
 }

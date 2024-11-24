@@ -44,7 +44,6 @@ class MusikusBottomBarTest {
     fun setUp() {
         hiltRule.inject()
         composeRule.activity.setContent {
-
             val mainViewModel: MainViewModel = hiltViewModel()
 
             val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()

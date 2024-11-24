@@ -14,8 +14,6 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import app.musikus.core.data.MusikusDatabase
-import app.musikus.core.data.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -63,7 +61,6 @@ class MusikusDatabaseTest {
      */
     @Test
     fun migrate3To4() = runTest {
-
         // Prepare
 
         db = migrationTestHelper.createDatabase(TEST_DB, 3)
@@ -91,7 +88,7 @@ class MusikusDatabaseTest {
                 )
             )
             execSQL(
-                sql="""
+                sql = """
                     INSERT INTO library_item
                         (id, created_at, modified_at, deleted, name, color_index, library_folder_id, custom_order)
                         VALUES
@@ -99,8 +96,14 @@ class MusikusDatabaseTest {
                             (?,?,?,?,?,?,?,?)
                 """.trimIndent(),
                 bindArgs = arrayOf(
-                    uuidConverter.toByte(UUIDConverter.fromInt(0)), TEST_TIME, TEST_TIME, "false", "item1", 0, null, null,
-                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(UUIDConverter.fromInt(1)), null,
+                    uuidConverter.toByte(
+                        UUIDConverter.fromInt(0)
+                    ),
+                    TEST_TIME, TEST_TIME, "false", "item1", 0, null, null,
+                    uuidConverter.toByte(
+                        UUIDConverter.fromInt(1)
+                    ),
+                    TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(UUIDConverter.fromInt(1)), null,
                 )
             )
             execSQL(
@@ -125,13 +128,18 @@ class MusikusDatabaseTest {
                             (?,?,?,?,?,?,?,?,?,?,?,?)
                 """.trimIndent(),
                 bindArgs = arrayOf(
-                    uuidConverter.toByte(UUIDConverter.fromInt(0)), TEST_TIME, TEST_TIME, "false", "ITEM_SPECIFIC", 0, 1, "DAY", "TIME", "false", 0, null,
-                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "NON_SPECIFIC", 1, 1, "WEEK", "TIME", 1, 1, null,
+                    uuidConverter.toByte(
+                        UUIDConverter.fromInt(0)
+                    ),
+                    TEST_TIME, TEST_TIME, "false", "ITEM_SPECIFIC", 0, 1, "DAY", "TIME", "false", 0, null,
+                    uuidConverter.toByte(
+                        UUIDConverter.fromInt(1)
+                    ),
+                    TEST_TIME, TEST_TIME, 1, "NON_SPECIFIC", 1, 1, "WEEK", "TIME", 1, 1, null,
                 )
             )
             close()
         }
-
 
         // Act
 
@@ -140,7 +148,6 @@ class MusikusDatabaseTest {
             version = 4,
             validateDroppedTables = true
         )
-
 
         // Assert
 
