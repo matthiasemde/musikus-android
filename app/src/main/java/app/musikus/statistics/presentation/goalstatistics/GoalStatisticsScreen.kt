@@ -227,6 +227,8 @@ fun GoalStatisticsGoalSelector(
                             modifier = Modifier.matchParentSize(),
                             color = color,
                             strokeCap = StrokeCap.Round,
+                            drawStopIndicator = {},
+                            gapSize = 0.dp,
                         )
                     }
                     AnimatedVisibility(
