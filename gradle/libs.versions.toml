@@ -13,7 +13,7 @@ androidx-test-espresso = "3.6.1"
 androidx-test-ext-junit = "1.2.1"
 androidx-hilt-navigation-compose = "1.2.0"
 # @keep
-compileSdk = "34"
+compileSdk = "35"
 compose-bom = "2024.09.00"
 coroutines = "1.8.1"
 dagger-hilt = "2.52"
@@ -36,7 +36,7 @@ room = "2.6.1"
 room-testing = "1.1.1"
 detekt = "1.23.0"
 # @keep
-targetSdk = "34"
+targetSdk = "35"
 google-truth = "1.4.4"
 ui-test = "1.7.0"
 
