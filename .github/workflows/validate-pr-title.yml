@@ -2,8 +2,6 @@ name: VALIDATE-PR-TITLE
 
 on:
   pull_request:
-    # Only run on PRs with main as target branch
-    branches: [ "main" ]
     types: [ opened, edited, reopened ]
 
 jobs:
@@ -12,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Ensure sync with GitHub
+        run: echo "Giving GitHub a bit of time before continuing..." && sleep 3
+
       - uses: actions/checkout@v4
 
       - name: Validate PR title
