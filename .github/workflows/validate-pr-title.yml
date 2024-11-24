@@ -2,7 +2,7 @@ name: VALIDATE-PR-TITLE
 
 on:
   pull_request:
-    types: [ opened, edited, reopened ]
+    types: [ opened, synchronize, edited, reopened ]
 
 jobs:
   validate-pr-title:
@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Ensure sync with GitHub
-        run: echo "Giving GitHub a bit of time before continuing..." && sleep 3
-
       - uses: actions/checkout@v4
 
       - name: Validate PR title
