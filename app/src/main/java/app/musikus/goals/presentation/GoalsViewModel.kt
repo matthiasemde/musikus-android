@@ -10,10 +10,8 @@ package app.musikus.goals.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.R
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
@@ -25,7 +23,6 @@ import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.DialogMode
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,7 +47,6 @@ data class GoalDialogData(
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
-    private val userPreferencesUseCases: UserPreferencesUseCases,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
 ) : ViewModel() {
@@ -65,7 +61,7 @@ class GoalsViewModel @Inject constructor(
 
     /** Imported flows */
 
-    private val goalsSortInfo = userPreferencesUseCases.getGoalSortInfo().stateIn(
+    private val goalsSortInfo = goalsUseCases.getGoalSortInfo().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -126,16 +122,12 @@ class GoalsViewModel @Inject constructor(
 
     private val topBarUiState = sortMenuUiState.map { sortMenuUiState ->
         GoalsTopBarUiState(
-            title = UiText.StringResource(R.string.goals_title),
-            showBackButton = false,
             sortMenuUiState = sortMenuUiState,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsTopBarUiState(
-            title = UiText.StringResource(R.string.goals_title),
-            showBackButton = false,
             sortMenuUiState = sortMenuUiState.value,
         )
     )
@@ -256,7 +248,7 @@ class GoalsViewModel @Inject constructor(
      * Ui event handler
      */
 
-    fun onUiEvent(event: GoalsUiEvent) {
+    fun onUiEvent(event: GoalsUiEvent): Boolean {
         when (event) {
             is GoalsUiEvent.BackButtonPressed -> clearActionMode()
 
@@ -312,6 +304,9 @@ class GoalsViewModel @Inject constructor(
                 }
             }
         }
+
+        // events are consumed by default
+        return true
     }
 
     /**
@@ -331,7 +326,7 @@ class GoalsViewModel @Inject constructor(
     private fun onSortModeSelected(selection: GoalsSortMode) {
         _showSortModeMenu.update { false }
         viewModelScope.launch {
-            userPreferencesUseCases.selectGoalSortMode(selection)
+            goalsUseCases.selectGoalSortMode(selection)
         }
     }
 

@@ -8,6 +8,7 @@
 
 package app.musikus.library.domain.usecase
 
+import app.musikus.core.data.FakeUserPreferencesRepository
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeIdProvider
@@ -20,8 +21,6 @@ import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
-import app.musikus.settings.data.FakeUserPreferencesRepository
-import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

@@ -61,7 +61,7 @@ import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
 
 @Composable
 fun MetronomeUi(
@@ -95,7 +95,7 @@ fun MetronomeUi(
 fun MetronomeLayout(
     modifier: Modifier = Modifier,
     uiState: MetronomeUiState,
-    eventHandler: (MetronomeUiEvent) -> Unit,
+    eventHandler: MetronomeUiEventHandler,
 ) {
     Column(
         modifier = modifier
@@ -154,7 +154,7 @@ private fun PreviewMetronome(
                     isPlaying = false,
                     sliderValue = 120f,
                 ),
-                eventHandler = {}
+                eventHandler = { true }
             )
         }
     }

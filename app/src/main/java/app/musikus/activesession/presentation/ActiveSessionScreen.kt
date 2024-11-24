@@ -177,11 +177,11 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.library.presentation.LibraryUiItem
+import app.musikus.library.presentation.LibraryItemComponent
+import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.metronome.presentation.MetronomeUi
 import app.musikus.recorder.presentation.RecorderUi
 import app.musikus.sessions.presentation.RatingBar
-import app.musikus.settings.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -355,7 +355,7 @@ private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: (T) -> Unit) {
 private fun ActiveSessionScreen(
     uiState: State<ActiveSessionUiState>,
     tabs: ImmutableList<ToolsTab>,
-    eventHandler: (ActiveSessionUiEvent) -> Unit,
+    eventHandler: ActiveSessionUiEventHandler,
     navigateUp: () -> Unit,
     bottomSheetScaffoldState: BottomSheetScaffoldState,
     bottomSheetPagerState: PagerState,
@@ -614,7 +614,7 @@ private fun ActiveSessionMainContent(
     uiState: State<ActiveSessionContentUiState>,
     sessionState: State<ActiveSessionState>,
     snackbarHostState: SnackbarHostState,
-    eventHandler: (ActiveSessionUiEvent) -> Unit,
+    eventHandler: ActiveSessionUiEventHandler,
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -1454,7 +1454,7 @@ private fun LibraryItemList(
         ).add(WindowInsets.navigationBars).asPaddingValues() // don't get covered by navbars
     ) {
         items(items) {
-            LibraryUiItem(
+            LibraryItemComponent(
                 item = it,
                 lastPracticedDate = lastPracticedDates.filterKeys { key -> key == it.id }.values.firstOrNull(),
                 selected = false,
@@ -1583,7 +1583,7 @@ private fun PreviewActiveSessionScreen(
                     content = { }
                 )
             ).toImmutableList(),
-            eventHandler = {},
+            eventHandler = { true },
             navigateUp = {},
             bottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
             bottomSheetPagerState = rememberPagerState(pageCount = { 2 }),
@@ -1717,7 +1717,7 @@ private fun PreviewLibraryItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme = theme) {
-        LibraryUiItem(
+        LibraryItemComponent(
             item = dummyLibraryItems.first(),
             lastPracticedDate = ZonedDateTime.now(),
             selected = false,

@@ -21,4 +21,8 @@ data class LibraryUseCases(
     val deleteFolders: DeleteFoldersUseCase,
     val restoreItems: RestoreItemsUseCase,
     val restoreFolders: RestoreFoldersUseCase,
+    val getFolderSortInfo: GetFolderSortInfoUseCase,
+    val getItemSortInfo: GetItemSortInfoUseCase,
+    val selectFolderSortMode: SelectFolderSortModeUseCase,
+    val selectItemSortMode: SelectItemSortModeUseCase,
 )

@@ -11,17 +11,10 @@ package app.musikus.library.presentation
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortMode
-import app.musikus.core.presentation.components.TopBarUiState
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import java.time.ZonedDateTime
 import java.util.UUID
-
-data class LibraryTopBarUiState(
-    override val title: UiText,
-    override val showBackButton: Boolean,
-) : TopBarUiState
 
 data class LibraryActionModeUiState(
     val isActionMode: Boolean,
@@ -82,20 +75,8 @@ data class LibraryDeleteDialogUiState(
     val numberOfSelectedItems: Int,
 )
 
-data class LibraryDialogUiState(
+data class LibraryDialogsUiState(
     val folderDialogUiState: LibraryFolderDialogUiState?,
     val itemDialogUiState: LibraryItemDialogUiState?,
     val deleteDialogUiState: LibraryDeleteDialogUiState?,
-)
-
-data class LibraryFabUiState(
-    val activeFolder: LibraryFolder?,
-)
-
-data class LibraryUiState(
-    val topBarUiState: LibraryTopBarUiState,
-    val actionModeUiState: LibraryActionModeUiState,
-    val contentUiState: LibraryContentUiState,
-    val dialogUiState: LibraryDialogUiState,
-    val fabUiState: LibraryFabUiState,
 )

@@ -27,6 +27,7 @@ fun HomeScreen(
     currentTab: HomeTab,
     viewModel: HomeViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
+    navigateUp: () -> Unit,
     timeProvider: TimeProvider,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -37,9 +38,8 @@ fun HomeScreen(
             SessionsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
                 navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 onSessionEdit = {},
                 bottomBarHeight = bottomBarHeight,
 //                        onSessionEdit = { sessionId: UUID ->
@@ -56,9 +56,7 @@ fun HomeScreen(
             GoalsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
-                navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 timeProvider = timeProvider,
                 bottomBarHeight = bottomBarHeight,
             )
@@ -67,17 +65,15 @@ fun HomeScreen(
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
-                navigateTo = navigateTo,
+                navigateToFolderDetails = { navigateTo(it) },
                 bottomBarHeight = bottomBarHeight,
             )
         }
         is HomeTab.Statistics -> {
             Statistics(
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
+                mainEventHandler = mainEventHandler,
                 navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 timeProvider = timeProvider,
                 bottomBarHeight = bottomBarHeight,
             )

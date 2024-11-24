@@ -22,7 +22,7 @@ data class HomeUiState(
     val showMainMenu: Boolean,
 )
 
-typealias HomeUiEventHandler = (HomeUiEvent) -> Unit
+typealias HomeUiEventHandler = (HomeUiEvent) -> Boolean
 
 sealed class HomeUiEvent {
     data object ShowMainMenu : HomeUiEvent()
@@ -55,7 +55,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
         )
     )
 
-    fun onUiEvent(event: HomeUiEvent) {
+    fun onUiEvent(event: HomeUiEvent): Boolean {
         when (event) {
             is HomeUiEvent.ShowMainMenu -> {
                 _showMainMenu.update { true }
@@ -64,5 +64,8 @@ class HomeViewModel @Inject constructor() : ViewModel() {
                 _showMainMenu.update { false }
             }
         }
+
+        // events are consumed by default
+        return true
     }
 }

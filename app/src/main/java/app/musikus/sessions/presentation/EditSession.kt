@@ -20,14 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -39,14 +35,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.R
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
 import java.util.UUID
 
@@ -67,18 +63,11 @@ fun EditSession(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(text = "Edit Session") },
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(
-                                id = R.string.components_top_bar_back_description
-                            )
-                        )
-                    }
-                }
+            MusikusTopBar(
+                isTopLevel = false,
+                title = UiText.DynamicString("Edit Session"),
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigateUp
             )
         },
         content = { innerPadding ->

@@ -15,23 +15,31 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.showSnackbar
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
+import app.musikus.menu.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ThemeSelections
+import app.musikus.menu.domain.usecase.SettingsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-typealias MainUiEventHandler = (MainUiEvent) -> Unit
+typealias MainUiEventHandler = (MainUiEvent) -> Boolean
 
 sealed class MainUiEvent {
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null) : MainUiEvent()
     data object ExpandMultiFab : MainUiEvent()
     data object CollapseMultiFab : MainUiEvent()
+    data object OpenMainMenu : MainUiEvent()
+}
+
+sealed class MainEvent {
+    data object OpenMainDrawer : MainEvent()
 }
 
 data class MainUiState(
@@ -45,7 +53,7 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val application: Application,
-    userPreferencesUseCases: UserPreferencesUseCases,
+    settingsUseCases: SettingsUseCases,
     activeSessionUseCases: ActiveSessionUseCases
 ) : AndroidViewModel(application) {
 
@@ -56,15 +64,19 @@ class MainViewModel @Inject constructor(
     // Snackbar
     private val _snackbarHost = MutableStateFlow(SnackbarHostState())
 
+    // Main Menu Drawer
+    private val _eventChannel = Channel<MainEvent>()
+    val eventChannel = _eventChannel.receiveAsFlow()
+
     // Theme
-    private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
+    private val _activeTheme = settingsUseCases.getTheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
     // Color Scheme
-    private val _activeColorScheme = userPreferencesUseCases.getColorScheme().stateIn(
+    private val _activeColorScheme = settingsUseCases.getColorScheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
@@ -112,7 +124,7 @@ class MainViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: MainUiEvent) {
+    fun onUiEvent(event: MainUiEvent): Boolean {
         when (event) {
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(
@@ -129,6 +141,14 @@ class MainViewModel @Inject constructor(
             is MainUiEvent.CollapseMultiFab -> {
                 _multiFabState.update { MultiFabState.COLLAPSED }
             }
+            is MainUiEvent.OpenMainMenu -> {
+                viewModelScope.launch {
+                    _eventChannel.send(MainEvent.OpenMainDrawer)
+                }
+            }
         }
+
+        // events are consumed by default
+        return true
     }
 }

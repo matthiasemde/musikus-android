@@ -242,7 +242,7 @@ class RecorderViewModel @Inject constructor(
     )
 
     // TODO split out subfunctions
-    fun onUiEvent(event: RecorderUiEvent) {
+    fun onUiEvent(event: RecorderUiEvent): Boolean {
         when (event) {
             is RecorderUiEvent.StartRecording -> { viewModelScope.launch { startRecording() } }
             is RecorderUiEvent.PauseRecording -> pauseRecording()
@@ -289,6 +289,9 @@ class RecorderViewModel @Inject constructor(
             is RecorderUiEvent.SaveRecordingDialogDismissed -> _showSaveRecordingDialog.update { false }
             is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
+
+        // events are consumed by default
+        return true
     }
 
     val exceptionChannel = _exceptionChannel.receiveAsFlow()

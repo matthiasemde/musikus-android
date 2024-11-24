@@ -9,6 +9,7 @@
 package app.musikus.goals.di
 
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.UserPreferencesRepository
 import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.domain.usecase.AddGoalUseCase
 import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
@@ -18,19 +19,20 @@ import app.musikus.goals.domain.usecase.DeleteGoalsUseCase
 import app.musikus.goals.domain.usecase.EditGoalUseCase
 import app.musikus.goals.domain.usecase.GetAllGoalsUseCase
 import app.musikus.goals.domain.usecase.GetCurrentGoalsUseCase
+import app.musikus.goals.domain.usecase.GetGoalSortInfoUseCase
 import app.musikus.goals.domain.usecase.GetLastFiveCompletedGoalsUseCase
 import app.musikus.goals.domain.usecase.GetLastNBeforeInstanceUseCase
 import app.musikus.goals.domain.usecase.GetNextNAfterInstanceUseCase
 import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.goals.domain.usecase.PauseGoalsUseCase
 import app.musikus.goals.domain.usecase.RestoreGoalsUseCase
+import app.musikus.goals.domain.usecase.SelectGoalsSortModeUseCase
 import app.musikus.goals.domain.usecase.SortGoalsUseCase
 import app.musikus.goals.domain.usecase.UnarchiveGoalsUseCase
 import app.musikus.goals.domain.usecase.UnpauseGoalsUseCase
 import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.sessions.domain.usecase.SessionsUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,10 +49,11 @@ object GoalsUseCasesModule {
         goalRepository: GoalRepository,
         libraryUseCases: LibraryUseCases,
         sessionsUseCases: SessionsUseCases,
-        userPreferencesUseCases: UserPreferencesUseCases,
+        userPreferencesRepository: UserPreferencesRepository,
         timeProvider: TimeProvider
     ): GoalsUseCases {
-        val sortGoalsUseCase = SortGoalsUseCase(userPreferencesUseCases.getGoalSortInfo)
+        val getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository)
+        val sortGoalsUseCase = SortGoalsUseCase(getGoalSortInfo)
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(
             goalRepository = goalRepository,
             timeProvider = timeProvider
@@ -101,6 +104,8 @@ object GoalsUseCasesModule {
             edit = EditGoalUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             delete = DeleteGoalsUseCase(goalRepository),
             restore = RestoreGoalsUseCase(goalRepository),
+            getGoalSortInfo = getGoalSortInfo,
+            selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository)
         )
     }
 }

@@ -25,7 +25,10 @@
     <!-- Components -->
 
     <!-- MainMenu -->
-    <string name="components_main_menu">Settings</string>
+    <string name="components_main_menu_item_settings">Settings</string>
+    <string name="components_main_menu_item_about">About the app</string>
+    <string name="components_main_menu_item_help">Help</string>
+    <string name="components_main_menu_item_donate">Support us!</string>
 
     <!-- SortMenu -->
     <string name="components_sort_menu_content_description">Select sort mode and direction for %1$s</string>
@@ -33,6 +36,7 @@
     <string name="components_sort_menu_title">Sort by</string>
 
     <!-- TopBar -->
+    <string name="components_top_bar_menu_description">Main menu</string>
     <string name="components_top_bar_back_description">Back</string>
 
     <!-- ActionBar -->

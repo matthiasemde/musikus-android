@@ -10,7 +10,7 @@ package app.musikus.sessions.presentation
 
 import java.util.UUID
 
-typealias SessionsUiEventHandler = (SessionsUiEvent) -> Unit
+typealias SessionsUiEventHandler = (SessionsUiEvent) -> Boolean
 
 sealed class SessionsUiEvent {
     data class SessionPressed(

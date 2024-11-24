@@ -11,7 +11,7 @@ package app.musikus.goals.presentation
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 
-typealias GoalsUiEventHandler = (GoalsUiEvent) -> Unit
+typealias GoalsUiEventHandler = (GoalsUiEvent) -> Boolean
 
 sealed class GoalsUiEvent {
     data object BackButtonPressed : GoalsUiEvent()

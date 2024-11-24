@@ -25,12 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -51,17 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
-import app.musikus.core.presentation.HomeUiEvent
-import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationString
@@ -76,13 +69,12 @@ import java.util.UUID
 @Composable
 fun SessionsScreen(
     mainUiState: MainUiState,
-    homeUiState: HomeUiState,
-    bottomBarHeight: Dp,
+    mainEventHandler: MainUiEventHandler,
     viewModel: SessionsViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
+    navigateUp: () -> Unit,
+    bottomBarHeight: Dp,
     onSessionEdit: (sessionId: UUID) -> Unit,
-    mainEventHandler: MainUiEventHandler,
-    homeEventHandler: HomeUiEventHandler,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: SessionsUiEventHandler = viewModel::onUiEvent
@@ -142,30 +134,12 @@ fun SessionsScreen(
             )
         },
         topBar = {
-            val topBarUiState = uiState.topBarUiState
-            LargeTopAppBar(
-                title = { Text(text = topBarUiState.title.asString()) },
+            // Main top bar
+            MusikusTopBar(
+                isTopLevel = true,
+                title = UiText.StringResource(R.string.sessions_title),
                 scrollBehavior = scrollBehavior,
-                actions = {
-                    IconButton(onClick = { homeEventHandler(HomeUiEvent.ShowMainMenu) }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
-                        )
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings)
-                                }
-                            },
-                            uniqueMenuItems = { }
-                        )
-                    }
-                }
+                openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
 
             // Action bar

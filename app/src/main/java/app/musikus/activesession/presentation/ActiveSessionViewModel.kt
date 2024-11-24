@@ -310,7 +310,7 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    fun onUiEvent(event: ActiveSessionUiEvent) {
+    fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
             is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }
@@ -328,6 +328,9 @@ class ActiveSessionViewModel @Inject constructor(
                 _newItemSelectorVisible.update { !it }
             }
         }
+
+        // events are consumed by default
+        return true
     }
 
     private fun onEndDialogUiEvent(event: ActiveSessionEndDialogUiEvent) {

@@ -8,14 +8,7 @@
 
 package app.musikus.sessions.presentation
 
-import app.musikus.core.presentation.components.TopBarUiState
-import app.musikus.core.presentation.utils.UiText
 import java.util.UUID
-
-data class SessionsTopBarUiState(
-    override val title: UiText,
-    override val showBackButton: Boolean,
-) : TopBarUiState
 
 data class SessionsActionModeUiState(
     val isActionMode: Boolean,
@@ -34,7 +27,6 @@ data class SessionsDeleteDialogUiState(
 )
 
 data class SessionsUiState(
-    val topBarUiState: SessionsTopBarUiState,
     val actionModeUiState: SessionsActionModeUiState,
     val contentUiState: SessionsContentUiState,
     val deleteDialogUiState: SessionsDeleteDialogUiState?,

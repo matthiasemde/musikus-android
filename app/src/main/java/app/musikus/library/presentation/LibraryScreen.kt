@@ -14,42 +14,28 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -57,62 +43,36 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
-import app.musikus.core.data.UUIDConverter
-import app.musikus.core.domain.DateFormat
-import app.musikus.core.domain.musikusFormat
-import app.musikus.core.presentation.HomeUiEvent
-import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
-import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.MiniFABData
 import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
-import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
-import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
-import app.musikus.core.presentation.theme.MusikusThemedPreview
-import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryFolderSortMode
-import app.musikus.library.data.LibraryItemSortMode
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.settings.domain.ColorSchemeSelections
-import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    homeUiState: HomeUiState,
-    homeEventHandler: HomeUiEventHandler,
+    navigateToFolderDetails: (Screen.LibraryFolderDetails) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
-    navigateTo: (Screen) -> Unit,
     bottomBarHeight: Dp,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -121,13 +81,8 @@ fun Library(
     val eventHandler = viewModel::onUiEvent
 
     BackHandler(
-        enabled = uiState.topBarUiState.showBackButton,
-        onBack = { eventHandler(LibraryUiEvent.BackButtonPressed) }
-    )
-
-    BackHandler(
         enabled = uiState.actionModeUiState.isActionMode,
-        onBack = { eventHandler(LibraryUiEvent.ClearActionMode) }
+        onBack = { eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.ClearActionMode)) }
     )
 
     BackHandler(
@@ -139,90 +94,44 @@ fun Library(
         contentWindowInsets = WindowInsets(bottom = bottomBarHeight), // makes sure FAB is above the bottom Bar
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
-            val fabUiState = uiState.fabUiState
-            if (fabUiState.activeFolder != null) {
-                FloatingActionButton(
-                    onClick = {
-                        eventHandler(LibraryUiEvent.AddItemButtonPressed)
+            MultiFAB(
+                state = mainUiState.multiFabState,
+                onStateChange = { newState ->
+                    if (newState == MultiFabState.EXPANDED) {
+                        mainEventHandler(MainUiEvent.ExpandMultiFab)
+                        eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.ClearActionMode))
+                    } else {
                         mainEventHandler(MainUiEvent.CollapseMultiFab)
-                    },
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = stringResource(id = R.string.library_screen_fab_description)
-                    )
-                }
-            } else {
-                MultiFAB(
-                    state = mainUiState.multiFabState,
-                    onStateChange = { newState ->
-                        if (newState == MultiFabState.EXPANDED) {
-                            mainEventHandler(MainUiEvent.ExpandMultiFab)
-                            eventHandler(LibraryUiEvent.ClearActionMode)
-                        } else {
-                            mainEventHandler(MainUiEvent.CollapseMultiFab)
-                        }
-                    },
-                    contentDescription = stringResource(id = R.string.library_screen_multi_fab_description),
-                    miniFABs = listOf(
-                        MiniFABData(
-                            onClick = {
-                                eventHandler(LibraryUiEvent.AddItemButtonPressed)
-                                mainEventHandler(MainUiEvent.CollapseMultiFab)
-                            },
-                            label = stringResource(id = R.string.library_screen_multi_fab_item_description),
-                            icon = Icons.Rounded.MusicNote
-                        ),
-                        MiniFABData(
-                            onClick = {
-                                eventHandler(LibraryUiEvent.AddFolderButtonPressed)
-                                mainEventHandler(MainUiEvent.CollapseMultiFab)
-                            },
-                            label = stringResource(id = R.string.library_screen_multi_fab_folder_description),
-                            icon = Icons.Rounded.Folder
-                        )
-                    )
-                )
-            }
-        },
-        topBar = {
-            val topBarUiState = uiState.topBarUiState
-            LargeTopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = { Text(text = topBarUiState.title.asString()) },
-                navigationIcon = {
-                    if (topBarUiState.showBackButton) {
-                        IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(
-                                    id = R.string.components_top_bar_back_description
-                                )
-                            )
-                        }
                     }
                 },
-                actions = {
-                    IconButton(onClick = {
-                        homeEventHandler(HomeUiEvent.ShowMainMenu)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
-                        )
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
-                                }
-                            }
-                        )
-                    }
-                }
+                contentDescription = stringResource(id = R.string.library_screen_multi_fab_description),
+                miniFABs = listOf(
+                    MiniFABData(
+                        onClick = {
+                            eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.AddItemButtonPressed))
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
+                        },
+                        label = stringResource(id = R.string.library_screen_multi_fab_item_description),
+                        icon = Icons.Rounded.MusicNote
+                    ),
+                    MiniFABData(
+                        onClick = {
+                            eventHandler(LibraryUiEvent.AddFolderButtonPressed)
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
+                        },
+                        label = stringResource(id = R.string.library_screen_multi_fab_folder_description),
+                        icon = Icons.Rounded.Folder
+                    )
+                )
+            )
+        },
+        topBar = {
+            // Main top bar
+            MusikusTopBar(
+                isTopLevel = true,
+                title = UiText.StringResource(R.string.library_title),
+                scrollBehavior = scrollBehavior,
+                openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
 
             // Action bar
@@ -230,10 +139,10 @@ fun Library(
             if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = { eventHandler(LibraryUiEvent.ClearActionMode) },
-                    onEditHandler = { eventHandler(LibraryUiEvent.EditButtonPressed) },
+                    onDismissHandler = { eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.ClearActionMode)) },
+                    onEditHandler = { eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.EditButtonPressed)) },
                     onDeleteHandler = {
-                        eventHandler(LibraryUiEvent.DeleteButtonPressed)
+                        eventHandler(LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.DeleteButtonPressed))
                     }
                 )
             }
@@ -244,6 +153,7 @@ fun Library(
             LibraryContent(
                 contentPadding = paddingValues,
                 contentUiState = contentUiState,
+                navigateToFolderDetails = navigateToFolderDetails,
                 eventHandler = eventHandler
             )
 
@@ -263,87 +173,12 @@ fun Library(
                 }
             }
 
-            val dialogUiState = uiState.dialogUiState
-
-            val folderDialogUiState = dialogUiState.folderDialogUiState
-            val itemDialogUiState = dialogUiState.itemDialogUiState
-
-            if (folderDialogUiState != null) {
-                LibraryFolderDialog(
-                    uiState = folderDialogUiState,
-                    eventHandler = eventHandler
-                )
-            }
-
-            if (itemDialogUiState != null) {
-                LibraryItemDialog(
-                    uiState = itemDialogUiState,
-                    eventHandler = { eventHandler(LibraryUiEvent.ItemDialogUiEvent(it)) }
-                )
-            }
-
-            val deleteDialogUiState = dialogUiState.deleteDialogUiState
-
-            if (deleteDialogUiState != null) {
-                val snackbarMessage = stringResource(id = R.string.library_screen_snackbar_deleted)
-
-                val foldersSelected = deleteDialogUiState.numberOfSelectedFolders > 0
-                val itemsSelected = deleteDialogUiState.numberOfSelectedItems > 0
-
-                val totalSelections =
-                    deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
-
-                DeleteConfirmationBottomSheet(
-                    explanation =
-                    if (foldersSelected && itemsSelected) {
-                        UiText.StringResource(
-                            R.string.library_screen_deletion_dialog_explanation_both,
-                            deleteDialogUiState.numberOfSelectedFolders,
-                            pluralStringResource(
-                                id = R.plurals.library_folder,
-                                deleteDialogUiState.numberOfSelectedFolders
-                            ),
-                            deleteDialogUiState.numberOfSelectedItems,
-                            pluralStringResource(
-                                id = R.plurals.library_item,
-                                deleteDialogUiState.numberOfSelectedItems
-                            )
-                        )
-                    } else {
-                        UiText.PluralResource(
-                            R.plurals.library_screen_deletion_dialog_explanation,
-                            totalSelections,
-                            totalSelections,
-                            if (foldersSelected) {
-                                pluralStringResource(
-                                    id = R.plurals.library_folder,
-                                    deleteDialogUiState.numberOfSelectedFolders
-                                )
-                            } else {
-                                pluralStringResource(
-                                    id = R.plurals.library_item,
-                                    deleteDialogUiState.numberOfSelectedItems
-                                )
-                            }
-                        )
-                    },
-                    confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-                    confirmationText = UiText.StringResource(
-                        R.string.library_screen_deletion_dialog_confirm,
-                        totalSelections
-                    ),
-                    onDismiss = { eventHandler(LibraryUiEvent.DeleteDialogDismissed) },
-                    onConfirm = {
-                        eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
-                        mainEventHandler(
-                            MainUiEvent.ShowSnackbar(
-                                message = snackbarMessage,
-                                onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
-                            )
-                        )
-                    }
-                )
-            }
+            // Dialogs
+            LibraryDialogs(
+                uiState = uiState.dialogsUiState,
+                libraryCoreEventHandler = { eventHandler(LibraryUiEvent.CoreUiEvent(it)) },
+                mainEventHandler = mainEventHandler
+            )
 
             // Content Scrim for multiFAB
             AnimatedVisibility(
@@ -373,6 +208,7 @@ fun Library(
 fun LibraryContent(
     contentPadding: PaddingValues,
     contentUiState: LibraryContentUiState,
+    navigateToFolderDetails: (Screen.LibraryFolderDetails) -> Unit,
     eventHandler: LibraryUiEventHandler
 ) {
     LazyColumn(
@@ -387,6 +223,7 @@ fun LibraryContent(
 
         /** Folders */
         if (foldersUiState != null) {
+            /** Header (with sort menu) */
             item {
                 Row(
                     modifier = Modifier
@@ -418,6 +255,8 @@ fun LibraryContent(
                     )
                 }
             }
+
+            /** Folders */
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -436,12 +275,14 @@ fun LibraryContent(
                             modifier = Modifier
                                 .animateItemPlacement()
                         ) {
-                            LibraryFolder(
+                            LibraryFolderComponent(
                                 folder = folder,
                                 numItems = folderWithItems.items.size,
                                 selected = folder.id in foldersUiState.selectedFolderIds,
                                 onShortClick = {
-                                    eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))
+                                    if (!eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))) {
+                                        navigateToFolderDetails(Screen.LibraryFolderDetails(folder.id.toString()))
+                                    }
                                 },
                                 onLongClick = {
                                     eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = true))
@@ -458,178 +299,10 @@ fun LibraryContent(
 
         /** Items */
         if (itemsUiState != null) {
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            vertical = MaterialTheme.spacing.small,
-                            horizontal = MaterialTheme.spacing.large
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.library_content_items_title),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    val sortMenuUiState = itemsUiState.sortMenuUiState
-                    SortMenu(
-                        show = sortMenuUiState.show,
-                        sortModes = LibraryItemSortMode.entries,
-                        currentSortMode = sortMenuUiState.mode,
-                        currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = stringResource(id = R.string.library_content_items_sort_menu_description),
-                        onShowMenuChanged = { eventHandler(LibraryUiEvent.ItemSortMenuPressed) },
-                        onSelectionHandler = {
-                            eventHandler(LibraryUiEvent.ItemSortModeSelected(it as LibraryItemSortMode))
-                        }
-                    )
-                }
-            }
-            items(
-                items = itemsUiState.itemsWithLastPracticedDate,
-                key = { (item, _) -> item.id }
-            ) { (item, lastPracticedDate) ->
-                Box(
-                    modifier = Modifier.animateItemPlacement()
-                ) {
-                    LibraryUiItem(
-                        item = item,
-                        lastPracticedDate = lastPracticedDate,
-                        selected = item.id in itemsUiState.selectedItemIds,
-                        onShortClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = false)) },
-                        onLongClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = true)) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun LibraryFolder(
-    folder: LibraryFolder,
-    numItems: Int,
-    selected: Boolean,
-    onShortClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    Selectable(
-        selected = selected,
-        onShortClick = onShortClick,
-        onLongClick = onLongClick,
-        shape = MaterialTheme.shapes.large,
-    ) {
-        Surface(
-            modifier = Modifier
-                .size(150.dp),
-            color = colorScheme.surfaceContainer,
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = folder.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    modifier = Modifier.padding(top = 4.dp),
-                    text = stringResource(id = R.string.library_content_folders_sub_title, numItems),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colorScheme.onSurface.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun LibraryUiItem(
-    modifier: Modifier = Modifier,
-    item: LibraryItem,
-    lastPracticedDate: ZonedDateTime?,
-    selected: Boolean,
-    onShortClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
-    enabled: Boolean = true,
-) {
-    Selectable(
-        selected = selected,
-        onShortClick = onShortClick,
-        onLongClick = onLongClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(0.dp),
-    ) {
-        Row(
-            modifier = modifier
-                .padding(vertical = MaterialTheme.spacing.small)
-                .fillMaxWidth()
-                .alpha(if (!enabled) 0.5f else 1f),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
-            Box(
-                modifier = Modifier
-                    .width(10.dp)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .align(Alignment.CenterVertically)
-                    .background(libraryItemColors[item.colorIndex])
+            libraryItemsComponent(
+                uiState = itemsUiState,
+                libraryCoreEventHandler = { eventHandler(LibraryUiEvent.CoreUiEvent(it)) },
             )
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-            Column {
-                Text(
-                    modifier = Modifier.basicMarquee(),
-                    text = item.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colorScheme.onSurface,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                )
-                Text(
-                    text = stringResource(
-                        id = R.string.library_content_items_last_practiced,
-                        lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: stringResource(
-                            id = R.string.library_content_items_last_practiced_never
-                        )
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                )
-            }
         }
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun PreviewLibraryItem(
-    @PreviewParameter(MusikusColorSchemeProvider::class) colorScheme: ColorSchemeSelections
-) {
-    MusikusThemedPreview(colorScheme) {
-        LibraryUiItem(
-            item = LibraryItem(
-                id = UUIDConverter.deadBeef,
-                name = "Item 1",
-                colorIndex = 0,
-                createdAt = ZonedDateTime.now(),
-                modifiedAt = ZonedDateTime.now(),
-                libraryFolderId = null,
-                customOrder = null
-            ),
-            lastPracticedDate = ZonedDateTime.now(),
-            selected = false,
-            onShortClick = {},
-            onLongClick = {},
-        )
     }
 }

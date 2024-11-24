@@ -27,14 +27,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,17 +52,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.core.domain.TimeProvider
-import app.musikus.core.presentation.HomeUiEvent
-import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
-import app.musikus.core.presentation.Screen
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.MiniFABData
 import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
@@ -80,10 +73,8 @@ import app.musikus.goals.data.GoalsSortMode
 fun GoalsScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    homeUiState: HomeUiState,
-    homeEventHandler: HomeUiEventHandler,
-    navigateTo: (Screen) -> Unit,
     viewModel: GoalsViewModel = hiltViewModel(),
+    navigateUp: () -> Unit,
     timeProvider: TimeProvider,
     bottomBarHeight: Dp,
 ) {
@@ -138,11 +129,13 @@ fun GoalsScreen(
             )
         },
         topBar = {
-            // TODO find a way to re-use Composable in every screen
             val topBarUiState = uiState.topBarUiState
-            LargeTopAppBar(
-                title = { Text(text = topBarUiState.title.asString()) },
+
+            MusikusTopBar(
+                isTopLevel = true,
+                title = UiText.StringResource(R.string.goals_title),
                 scrollBehavior = scrollBehavior,
+                openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) },
                 actions = {
                     val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
@@ -156,30 +149,7 @@ fun GoalsScreen(
                         onShowMenuChanged = { eventHandler(GoalsUiEvent.GoalSortMenuPressed) },
                         onSelectionHandler = { eventHandler(GoalsUiEvent.GoalSortModeSelected(it)) }
                     )
-                    Box {
-                        IconButton(onClick = {
-                            homeEventHandler(HomeUiEvent.ShowMainMenu)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = stringResource(id = R.string.core_kebab_menu_description)
-                            )
-                        }
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
-                                }
-                            },
-                            uniqueMenuItems = {}
-                        )
-                    }
                 }
-
             )
 
             // Action bar
