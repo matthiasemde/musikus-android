@@ -2,9 +2,7 @@ name: VALIDATE-PR-TITLE
 
 on:
   pull_request:
-    # Only run on PRs with main as target branch
-    branches: [ "main" ]
-    types: [ opened, edited, reopened ]
+    types: [ opened, synchronize, edited, reopened ]
 
 jobs:
   validate-pr-title:
