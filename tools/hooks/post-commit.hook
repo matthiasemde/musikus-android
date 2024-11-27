@@ -8,7 +8,7 @@ if ! ./gradlew checkLicense; then
 fi
 
 # Get the list of files changed in the most recent commit
-CHANGED_FILES=$(git diff --name-only origin/main HEAD | tr '\n' ':')
+CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT --merge-base origin/main HEAD | tr '\n' ':')
 export CHANGED_FILES
 
 # Run detekt on changed files
