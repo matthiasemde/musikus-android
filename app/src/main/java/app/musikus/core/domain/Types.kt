@@ -41,7 +41,10 @@ data class UserPreferences(
     val showPausedGoals: Boolean,
 
     // Metronome
-    val metronomeSettings: MetronomeSettings
+    val metronomeSettings: MetronomeSettings,
+
+    // Announcement message
+    val idOfLastAnnouncementSeen: Int
 )
 
 interface UserPreferencesRepository {
@@ -54,6 +57,8 @@ interface UserPreferencesRepository {
     val goalSortInfo: Flow<GoalSortInfo>
 
     val metronomeSettings: Flow<MetronomeSettings>
+
+    val idOfLastAnnouncementSeen: Flow<Int>
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
@@ -68,4 +73,6 @@ interface UserPreferencesRepository {
     suspend fun updateAppIntroDone(value: Boolean)
 
     suspend fun updateMetronomeSettings(settings: MetronomeSettings)
+
+    suspend fun updateIdOfLastAnnouncementSeen(id: Int)
 }

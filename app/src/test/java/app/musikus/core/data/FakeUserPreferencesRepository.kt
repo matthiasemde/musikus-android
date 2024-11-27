@@ -40,7 +40,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
             goalsSortMode = GoalsSortMode.Companion.DEFAULT,
             goalsSortDirection = SortDirection.Companion.DEFAULT,
             showPausedGoals = true,
-            metronomeSettings = MetronomeSettings.Companion.DEFAULT
+            metronomeSettings = MetronomeSettings.Companion.DEFAULT,
+            idOfLastAnnouncementSeen = 0
         )
     )
     override val theme: Flow<ThemeSelections>
@@ -74,6 +75,9 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         }
     override val metronomeSettings: Flow<MetronomeSettings>
         get() = _preferences.map { it.metronomeSettings }
+
+    override val idOfLastAnnouncementSeen: Flow<Int>
+        get() = _preferences.map { it.idOfLastAnnouncementSeen }
 
     override suspend fun updateTheme(theme: ThemeSelections) {
         _preferences.update {
@@ -129,6 +133,12 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateMetronomeSettings(settings: MetronomeSettings) {
         _preferences.update {
             it.copy(metronomeSettings = settings)
+        }
+    }
+
+    override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
+        _preferences.update {
+            it.copy(idOfLastAnnouncementSeen = id)
         }
     }
 }
