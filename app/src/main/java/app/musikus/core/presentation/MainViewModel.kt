@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.core.domain.usecase.CoreUseCases
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.showSnackbar
 import app.musikus.menu.domain.ColorSchemeSelections
@@ -23,6 +24,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -36,23 +38,30 @@ sealed class MainUiEvent {
     data object ExpandMultiFab : MainUiEvent()
     data object CollapseMultiFab : MainUiEvent()
     data object OpenMainMenu : MainUiEvent()
+    data object DismissAnnouncement : MainUiEvent()
 }
 
 sealed class MainEvent {
     data object OpenMainDrawer : MainEvent()
 }
 
-data class MainUiState(
+data class ThemeUiState(
     val activeTheme: ThemeSelections?,
-    val activeColorScheme: ColorSchemeSelections?,
+    val activeColorScheme: ColorSchemeSelections?
+)
+
+data class MainUiState(
+    val themeUiState: ThemeUiState,
     val snackbarHost: SnackbarHostState,
     val isSessionRunning: Boolean,
     val multiFabState: MultiFabState,
+    val showAnnouncement: Boolean
 )
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val application: Application,
+    private val coreUseCases: CoreUseCases,
     settingsUseCases: SettingsUseCases,
     activeSessionUseCases: ActiveSessionUseCases
 ) : AndroidViewModel(application) {
@@ -68,27 +77,33 @@ class MainViewModel @Inject constructor(
     private val _eventChannel = Channel<MainEvent>()
     val eventChannel = _eventChannel.receiveAsFlow()
 
-    // Theme
-    private val _activeTheme = settingsUseCases.getTheme().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
-    // Color Scheme
-    private val _activeColorScheme = settingsUseCases.getColorScheme().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
     // Content Scrim over NavBar for Multi FAB etc.
     private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     /**
      * Imported flows
      */
+    private val showAnnouncement = coreUseCases.getIdOfLastSeenAnnouncementSeen().map {
+        it < CURRENT_ANNOUNCEMENT_ID
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
     private val runningItem = activeSessionUseCases.getRunningItem().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val activeTheme = settingsUseCases.getTheme().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val activeColorScheme = settingsUseCases.getColorScheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
@@ -98,29 +113,46 @@ class MainViewModel @Inject constructor(
      * Composing the ui state
      */
 
+    val themeUiState = combine(
+        activeTheme,
+        activeColorScheme
+    ) { activeTheme, activeColorScheme ->
+        ThemeUiState(
+            activeTheme = activeTheme,
+            activeColorScheme = activeColorScheme
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ThemeUiState(
+            activeTheme = activeTheme.value,
+            activeColorScheme = activeColorScheme.value
+        )
+    )
+
     val uiState = combine(
-        _activeTheme,
-        _activeColorScheme,
+        themeUiState,
         _snackbarHost,
         runningItem,
-        _multiFabState
-    ) { activeTheme, activeColorScheme, snackbarHost, runningItem, multiFabState ->
+        _multiFabState,
+        showAnnouncement
+    ) { themeUiState, snackbarHost, runningItem, multiFabState, showAnnouncement ->
         MainUiState(
-            activeTheme = activeTheme,
-            activeColorScheme = activeColorScheme,
+            themeUiState = themeUiState,
             snackbarHost = snackbarHost,
             isSessionRunning = runningItem != null,
-            multiFabState = multiFabState
+            multiFabState = multiFabState,
+            showAnnouncement = showAnnouncement
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainUiState(
-            activeTheme = _activeTheme.value,
-            activeColorScheme = _activeColorScheme.value,
+            themeUiState = themeUiState.value,
             snackbarHost = _snackbarHost.value,
             isSessionRunning = runningItem.value != null,
-            multiFabState = _multiFabState.value
+            multiFabState = _multiFabState.value,
+            showAnnouncement = showAnnouncement.value
         )
     )
 
@@ -144,6 +176,11 @@ class MainViewModel @Inject constructor(
             is MainUiEvent.OpenMainMenu -> {
                 viewModelScope.launch {
                     _eventChannel.send(MainEvent.OpenMainDrawer)
+                }
+            }
+            is MainUiEvent.DismissAnnouncement -> {
+                viewModelScope.launch {
+                    coreUseCases.confirmAnnouncementMessage()
                 }
             }
         }

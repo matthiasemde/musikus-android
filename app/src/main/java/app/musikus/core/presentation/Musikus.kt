@@ -9,36 +9,18 @@
 package app.musikus.core.presentation
 
 import android.app.Application
-import android.content.Context
-import app.musikus.R
 import dagger.hilt.android.HiltAndroidApp
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
+const val CURRENT_ANNOUNCEMENT_ID = 1
 
 @HiltAndroidApp
 class Musikus : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-    }
-
     companion object {
-        val executorService: ExecutorService = Executors.newFixedThreadPool(4)
         private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
         fun ioThread(f: () -> Unit) {
             IO_EXECUTOR.execute(f)
-        }
-
-        var noSessionsYet = true
-        var serviceIsRunning = false
-
-        fun getRandomQuote(context: Context): CharSequence {
-            return context.resources.getTextArray(R.array.quotes).random()
-        }
-
-        fun dp(context: Context, dp: Int): Float {
-            return context.resources.displayMetrics.density * dp
         }
     }
 }

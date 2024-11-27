@@ -21,6 +21,15 @@
     <string name="core_average_sign" translatable="false">Ø</string>
     <string name="core_star_sign" translatable="false">★</string>
 
+    <string name="core_announcement_confirm">Awesome!</string>
+    <string name="core_announcement_heading_1">Welcome to Musikus!</string>
+    <string name="core_announcement_paragraph_1">Thank you for joining the open beta of Musikus! We\'re thrilled to have you on this journey as we shape the future of music practice.</string>
+    <string name="core_announcement_heading_2">A Work in Progress</string>
+    <string name="core_announcement_paragraph_2">As an open beta, Musikus is still in development, and you may encounter some bugs or incomplete features. Your feedback is invaluable in helping us refine the experience, so please don\'t hesitate to share your thoughts with us!</string>
+    <string name="core_announcement_heading_3">A Legacy Continued</string>
+    <string name="core_announcement_paragraph_3">If you\'re a fan of PracticeTime, you\'ll feel right at home here. Musikus is the next evolution of that app, built by the same developers, with new tools and features to elevate your practice sessions.</string>
+    <string name="core_announcement_paragraph_4">Thank you for being a part of our beta community. Together, we can make Musikus a fantastic resource for musicians everywhere!</string>
+    <string name="core_announcement_paragraph_5">Happy practicing!</string>
 
     <!-- Components -->
 
