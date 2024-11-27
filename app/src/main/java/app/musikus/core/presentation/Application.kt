@@ -27,6 +27,8 @@ const val SESSION_NOTIFICATION_CHANNEL_NAME = "Session notification"
 const val RECORDER_NOTIFICATION_CHANNEL_ID = "recorder_notification_channel"
 const val RECORDER_NOTIFICATION_CHANNEL_NAME = "Recorder notification"
 
+const val CURRENT_ANNOUNCEMENT_ID = 1
+
 @HiltAndroidApp
 class Musikus : Application() {
 

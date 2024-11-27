@@ -33,7 +33,7 @@ import app.musikus.menu.domain.ColorSchemeSelections
 
 @Composable
 fun DialogActions(
-    onDismissHandler: () -> Unit,
+    onDismissHandler: (() -> Unit)? = null,
     onConfirmHandler: () -> Unit,
     confirmButtonText: String = stringResource(id = android.R.string.ok),
     dismissButtonText: String = stringResource(id = android.R.string.cancel),
@@ -45,18 +45,20 @@ fun DialogActions(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
-        TextButton(
-            modifier = Modifier.semantics {
-                contentDescription = dismissButtonText
-            },
-            onClick = onDismissHandler,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Text(text = dismissButtonText)
+        if (onDismissHandler != null) {
+            TextButton(
+                modifier = Modifier.semantics {
+                    contentDescription = dismissButtonText
+                },
+                onClick = onDismissHandler,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(text = dismissButtonText)
+            }
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
         }
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
         Button(
             modifier = Modifier.semantics {
                 contentDescription = confirmButtonText

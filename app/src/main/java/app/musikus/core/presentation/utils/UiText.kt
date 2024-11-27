@@ -8,6 +8,7 @@
 
 package app.musikus.core.presentation.utils
 
+import android.text.style.RelativeSizeSpan
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.em
 import androidx.core.text.HtmlCompat
 
 // source: https://www.youtube.com/watch?v=mB1Lej0aDus (Phillip Lackner)
@@ -76,7 +78,6 @@ fun htmlResource(@StringRes resId: Int, vararg formatArgs: Any): AnnotatedString
     return AnnotatedString.Builder().apply {
         append(spanned.toString())
         spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
-            println(span)
             val start = spanned.getSpanStart(span)
             val end = spanned.getSpanEnd(span)
 
@@ -93,6 +94,13 @@ fun htmlResource(@StringRes resId: Int, vararg formatArgs: Any): AnnotatedString
                 }
                 is android.text.style.UnderlineSpan -> {
                     addStyle(SpanStyle(textDecoration = TextDecoration.Underline), start, end)
+                }
+                is RelativeSizeSpan -> {
+                    addStyle(
+                        SpanStyle(fontSize = span.sizeChange.em),
+                        start,
+                        end
+                    )
                 }
             }
         }

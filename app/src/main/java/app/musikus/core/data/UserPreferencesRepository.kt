@@ -49,6 +49,9 @@ object PreferenceKeys {
     val METRONOME_BPM = intPreferencesKey("metronome_bpm")
     val METRONOME_BEATS_PER_BAR = intPreferencesKey("metronome_beats_per_bar")
     val METRONOME_CLICKS_PER_BEAT = intPreferencesKey("metronome_clicks_per_beat")
+
+    // Contains the id of the last announcement message that was shown to the user
+    val LAST_ANNOUNCEMENT_SEEN = intPreferencesKey("last_announcement_seen")
 }
 
 class UserPreferencesRepositoryImpl(
@@ -89,7 +92,9 @@ class UserPreferencesRepositoryImpl(
                     ?: MetronomeSettings.Companion.DEFAULT.beatsPerBar,
                 clicksPerBeat = preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT]
                     ?: MetronomeSettings.Companion.DEFAULT.clicksPerBeat
-            )
+            ),
+
+            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1
         )
     }
 
@@ -127,6 +132,10 @@ class UserPreferencesRepositoryImpl(
 
     override val metronomeSettings: Flow<MetronomeSettings> = userPreferences.map { preferences ->
         preferences.metronomeSettings
+    }
+
+    override val idOfLastAnnouncementSeen: Flow<Int> = userPreferences.map { preferences ->
+        preferences.idOfLastAnnouncementSeen
     }
 
     /** Mutators */
@@ -178,6 +187,12 @@ class UserPreferencesRepositoryImpl(
             preferences[PreferenceKeys.METRONOME_BPM] = settings.bpm
             preferences[PreferenceKeys.METRONOME_BEATS_PER_BAR] = settings.beatsPerBar
             preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT] = settings.clicksPerBeat
+        }
+    }
+
+    override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] = id
         }
     }
 }
