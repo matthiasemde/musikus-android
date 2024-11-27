@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.sessionslist.data.daos
@@ -12,8 +12,8 @@ import androidx.test.filters.SmallTest
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
-import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.sessions.data.daos.Section
 import app.musikus.sessions.data.daos.SectionDao
 import app.musikus.sessions.data.entities.SectionCreationAttributes
@@ -36,7 +36,6 @@ import javax.inject.Named
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
-
 
 @HiltAndroidTest
 @SmallTest
@@ -136,11 +135,11 @@ class SectionDaoTest {
             runBlocking {
                 sectionDao.insert(
                     SectionCreationAttributes(
-                    sessionId = UUIDConverter.fromInt(2),
-                    libraryItemId = UUIDConverter.fromInt(1),
-                    duration = 10.minutes,
-                    startTimestamp = FakeTimeProvider.START_TIME
-                )
+                        sessionId = UUIDConverter.fromInt(2),
+                        libraryItemId = UUIDConverter.fromInt(1),
+                        duration = 10.minutes,
+                        startTimestamp = FakeTimeProvider.START_TIME
+                    )
                 )
             }
         }
@@ -200,10 +199,12 @@ class SectionDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
-            sectionDaoSpy.update(listOf(
-                UUIDConverter.fromInt(1) to updateAttributes
-            ))
+        coVerify(exactly = 1) {
+            sectionDaoSpy.update(
+                listOf(
+                    UUIDConverter.fromInt(1) to updateAttributes
+                )
+            )
         }
     }
 
@@ -246,10 +247,12 @@ class SectionDaoTest {
     fun deleteSections_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.delete(listOf(
-                    UUIDConverter.fromInt(1),
-                    UUIDConverter.fromInt(2)
-                ))
+                sectionDao.delete(
+                    listOf(
+                        UUIDConverter.fromInt(1),
+                        UUIDConverter.fromInt(2)
+                    )
+                )
             }
         }
 
@@ -297,10 +300,12 @@ class SectionDaoTest {
         )
 
         // Get the sections
-        val sections = sectionDao.getAsFlow(listOf(
-            UUIDConverter.fromInt(3),
-            UUIDConverter.fromInt(7)
-        )).first()
+        val sections = sectionDao.getAsFlow(
+            listOf(
+                UUIDConverter.fromInt(3),
+                UUIDConverter.fromInt(7)
+            )
+        ).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
@@ -327,7 +332,7 @@ class SectionDaoTest {
 
         sectionDaoSpy.getAsFlow(UUIDConverter.fromInt(3))
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             sectionDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(3)))
         }
     }
@@ -480,18 +485,20 @@ class SectionDaoTest {
     @Test
     fun getSectionsInTimeframeForItemId() = runTest {
         // Insert more library items
-        database.libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 6,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem3",
-                colorIndex = 7,
-                libraryFolderId = Nullable(null),
-            ),
-        ))
+        database.libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 6,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem3",
+                    colorIndex = 7,
+                    libraryFolderId = Nullable(null),
+                ),
+            )
+        )
 
         // Insert another session with a few more sections
         database.sessionDao.insert(
@@ -599,7 +606,6 @@ class SectionDaoTest {
 
     @Test
     fun getLatestSection() = runTest {
-
         val section = sectionDao.getLatestForItems(listOf(UUIDConverter.fromInt(1))).first()
 
         assertThat(section).containsExactly(
@@ -612,20 +618,4 @@ class SectionDaoTest {
             )
         )
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

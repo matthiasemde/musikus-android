@@ -44,8 +44,7 @@ object TestActiveSessionUseCasesModule {
         activeSessionRepository: ActiveSessionRepository,
         timeProvider: TimeProvider,
         idProvider: IdProvider
-    ) : ActiveSessionUseCases {
-
+    ): ActiveSessionUseCases {
         val getOngoingPauseDurationUseCase = GetOngoingPauseDurationUseCase(
             activeSessionRepository,
             timeProvider
@@ -96,5 +95,4 @@ object TestActiveSessionUseCasesModule {
             getSessionStatus = GetSessionStatusUseCase(activeSessionRepository)
         )
     }
-
 }

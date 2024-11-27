@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.data.daos
@@ -13,10 +13,10 @@ import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -34,7 +34,6 @@ import javax.inject.Named
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
-
 
 @HiltAndroidTest
 @SmallTest
@@ -59,11 +58,12 @@ class LibraryFolderDaoTest {
 
     @Test
     fun insertFolders() = runTest {
-
-        val folderIds = libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2")
-        ))
+        val folderIds = libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2")
+            )
+        )
 
         // Check if the folderIds were returned correctly
         assertThat(folderIds).containsExactly(
@@ -100,16 +100,18 @@ class LibraryFolderDaoTest {
 
         libraryFolderDaoSpy.insert(folder)
 
-        coVerify (exactly = 1) { libraryFolderDaoSpy.insert(listOf(folder)) }
+        coVerify(exactly = 1) { libraryFolderDaoSpy.insert(listOf(folder)) }
     }
 
     @Test
     fun updateFolders() = runTest {
         // Insert folders
-        libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2")
-        ))
+        libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2")
+            )
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
@@ -161,10 +163,12 @@ class LibraryFolderDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
-            libraryFolderDaoSpy.update(listOf(
-                UUIDConverter.fromInt(1) to updateAttributes
-            ))
+        coVerify(exactly = 1) {
+            libraryFolderDaoSpy.update(
+                listOf(
+                    UUIDConverter.fromInt(1) to updateAttributes
+                )
+            )
         }
     }
 
@@ -187,16 +191,20 @@ class LibraryFolderDaoTest {
     @Test
     fun deleteFolders() = runTest {
         // Insert folders
-        libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2")
-        ))
+        libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2")
+            )
+        )
 
         // Delete the folders
-        libraryFolderDao.delete(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(2)
-        ))
+        libraryFolderDao.delete(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(2)
+            )
+        )
 
         // Check if the folders were deleted correctly
         val folders = libraryFolderDao.getAllAsFlow().first()
@@ -214,7 +222,7 @@ class LibraryFolderDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) { libraryFolderDaoSpy.delete(listOf(UUIDConverter.fromInt(2))) }
+        coVerify(exactly = 1) { libraryFolderDaoSpy.delete(listOf(UUIDConverter.fromInt(2))) }
     }
 
     @Test
@@ -233,24 +241,30 @@ class LibraryFolderDaoTest {
     @Test
     fun restoreFolders() = runTest {
         // Insert folders
-        libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2")
-        ))
+        libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2")
+            )
+        )
 
         // Delete the folders
-        libraryFolderDao.delete(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(2)
-        ))
+        libraryFolderDao.delete(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(2)
+            )
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
         // Restore the folders
-        libraryFolderDao.restore(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(2)
-        ))
+        libraryFolderDao.restore(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(2)
+            )
+        )
 
         // Check if the folders were restored correctly
         val folders = libraryFolderDao.getAllAsFlow().first()
@@ -283,7 +297,7 @@ class LibraryFolderDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             libraryFolderDaoSpy.restore(listOf(UUIDConverter.fromInt(2)))
         }
     }
@@ -304,17 +318,21 @@ class LibraryFolderDaoTest {
     @Test
     fun getSpecificFolders() = runTest {
         // Insert folders
-        libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2"),
-            LibraryFolderCreationAttributes(name = "TestFolder3"),
-        ))
+        libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2"),
+                LibraryFolderCreationAttributes(name = "TestFolder3"),
+            )
+        )
 
         // Get the folders
-        val folders = libraryFolderDao.getAsFlow(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(3)
-        )).first()
+        val folders = libraryFolderDao.getAsFlow(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(3)
+            )
+        ).first()
 
         // Check if the folders were retrieved correctly
         assertThat(folders).containsExactly(
@@ -345,7 +363,7 @@ class LibraryFolderDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             libraryFolderDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(2)))
         }
     }
@@ -372,8 +390,8 @@ class LibraryFolderDaoTest {
         assertThat(libraryFolderDao.exists(UUIDConverter.fromInt(1))).isTrue()
     }
 
-     @Test
-     fun deletedFolderDoesNotExist() = runTest {
+    @Test
+    fun deletedFolderDoesNotExist() = runTest {
         // Insert a folder
         libraryFolderDao.insert(LibraryFolderCreationAttributes(name = "TestFolder1"))
 
@@ -382,7 +400,7 @@ class LibraryFolderDaoTest {
 
         // Check if the folder exists
         assertThat(libraryFolderDao.exists(UUIDConverter.fromInt(1))).isFalse()
-     }
+    }
 
     @Test
     fun folderDoesNotExist() = runTest {
@@ -391,10 +409,12 @@ class LibraryFolderDaoTest {
 
     @Test
     fun cleanFolders() = runTest {
-        libraryFolderDao.insert(listOf(
-            LibraryFolderCreationAttributes(name = "TestFolder1"),
-            LibraryFolderCreationAttributes(name = "TestFolder2"),
-        ))
+        libraryFolderDao.insert(
+            listOf(
+                LibraryFolderCreationAttributes(name = "TestFolder1"),
+                LibraryFolderCreationAttributes(name = "TestFolder2"),
+            )
+        )
 
         libraryFolderDao.delete(UUIDConverter.fromInt(1))
 
@@ -413,10 +433,12 @@ class LibraryFolderDaoTest {
             runBlocking {
                 // Folder with Id 1 should be impossible to restore because it is permanently deleted
                 // Folder with Id 2 should should be still there because it was deleted less than a month ago
-                libraryFolderDao.restore(listOf(
-                    UUIDConverter.fromInt(1),
-                    UUIDConverter.fromInt(2),
-                ))
+                libraryFolderDao.restore(
+                    listOf(
+                        UUIDConverter.fromInt(1),
+                        UUIDConverter.fromInt(2),
+                    )
+                )
             }
         }
 
@@ -429,18 +451,20 @@ class LibraryFolderDaoTest {
     fun getFoldersWithItems() = runTest {
         libraryFolderDao.insert(LibraryFolderCreationAttributes(name = "TestFolder1"))
 
-        database.libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
-                colorIndex = 6,
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
-                colorIndex = 3,
+        database.libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                    colorIndex = 6,
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                    colorIndex = 3,
+                )
             )
-        ))
+        )
 
         val foldersWithItems = libraryFolderDao.getAllWithItems().first()
 

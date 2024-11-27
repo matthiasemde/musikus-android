@@ -29,5 +29,4 @@ object TestGoalRepositoryModule {
     ): GoalRepository {
         return GoalRepositoryImpl(database)
     }
-
 }

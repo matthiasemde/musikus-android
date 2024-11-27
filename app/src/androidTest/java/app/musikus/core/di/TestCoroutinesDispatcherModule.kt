@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2023-2024 Matthias Emde, Michael Prommersberger
  */
+
 @file:Suppress("DEPRECATION")
 
 package app.musikus.core.di

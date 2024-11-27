@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.sessionslist.data.daos
@@ -101,13 +101,15 @@ class SessionDaoTest {
     fun insertSessions_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sessionDao.insert(listOf(
-                    SessionCreationAttributes(
-                    breakDuration = 10.seconds,
-                    rating = 3,
-                    comment = "Test comment"
+                sessionDao.insert(
+                    listOf(
+                        SessionCreationAttributes(
+                            breakDuration = 10.seconds,
+                            rating = 3,
+                            comment = "Test comment"
+                        )
+                    )
                 )
-                ))
             }
         }
 
@@ -122,10 +124,10 @@ class SessionDaoTest {
             runBlocking {
                 sessionDao.insert(
                     SessionCreationAttributes(
-                    breakDuration = 10.seconds,
-                    rating = 3,
-                    comment = "Test comment"
-                )
+                        breakDuration = 10.seconds,
+                        rating = 3,
+                        comment = "Test comment"
+                    )
                 )
             }
         }
@@ -253,7 +255,7 @@ class SessionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             sessionDaoSpy.update(UUIDConverter.fromInt(1), SessionUpdateAttributes())
         }
     }
@@ -278,10 +280,12 @@ class SessionDaoTest {
     fun deleteSessions() = runTest {
         repeat(2) { insertSessionWithSection() }
 
-        sessionDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(4),
-        ))
+        sessionDao.delete(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(4),
+            )
+        )
 
         // check if sessions were deleted correctly
         val sessions = sessionDao.getAllAsFlow().first()
@@ -304,7 +308,7 @@ class SessionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) { sessionDaoSpy.delete(listOf(UUIDConverter.fromInt(1))) }
+        coVerify(exactly = 1) { sessionDaoSpy.delete(listOf(UUIDConverter.fromInt(1))) }
     }
 
     @Test
@@ -324,17 +328,21 @@ class SessionDaoTest {
     fun restoreSessions() = runTest {
         repeat(2) { insertSessionWithSection() }
 
-        sessionDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(4),
-        ))
+        sessionDao.delete(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(4),
+            )
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
-        sessionDao.restore(listOf(
+        sessionDao.restore(
+            listOf(
                 UUIDConverter.fromInt(2),
                 UUIDConverter.fromInt(4),
-        ))
+            )
+        )
 
         val sessions = sessionDao.getAllAsFlow().first()
 
@@ -388,7 +396,7 @@ class SessionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             sessionDaoSpy.restore(listOf(UUIDConverter.fromInt(1)))
         }
     }
@@ -410,10 +418,12 @@ class SessionDaoTest {
     fun getSpecificSessions() = runTest {
         repeat(3) { insertSessionWithSection() }
 
-        val sessions = sessionDao.getAsFlow(listOf(
+        val sessions = sessionDao.getAsFlow(
+            listOf(
                 UUIDConverter.fromInt(2),
                 UUIDConverter.fromInt(6),
-        )).first()
+            )
+        ).first()
 
         assertThat(sessions).containsExactly(
             Session(
@@ -445,7 +455,7 @@ class SessionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             sessionDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(2)))
         }
     }
@@ -596,7 +606,6 @@ class SessionDaoTest {
 
     @Test
     fun getOrderedWithSectionsWithLibraryItems() = runTest {
-
         // insert three unordered sessions
         sessionDao.insert(
             sessionCreationAttributes = SessionCreationAttributes(
@@ -667,102 +676,104 @@ class SessionDaoTest {
             modifiedAt = FakeTimeProvider.START_TIME
         )
 
-        assertThat(sessionsWithSectionsWithLibraryItems).isEqualTo(listOf(
-            SessionWithSectionsWithLibraryItems(
-                session = Session(
-                    id = UUIDConverter.fromInt(5),
-                    breakDurationSeconds = 600,
-                    rating = 3,
-                    comment = "Test comment",
-                    createdAt = FakeTimeProvider.START_TIME.plus(
-                        (2.minutes + 1.days).toJavaDuration()
+        assertThat(sessionsWithSectionsWithLibraryItems).isEqualTo(
+            listOf(
+                SessionWithSectionsWithLibraryItems(
+                    session = Session(
+                        id = UUIDConverter.fromInt(5),
+                        breakDurationSeconds = 600,
+                        rating = 3,
+                        comment = "Test comment",
+                        createdAt = FakeTimeProvider.START_TIME.plus(
+                            (2.minutes + 1.days).toJavaDuration()
+                        ),
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(
+                            (2.minutes + 1.days).toJavaDuration()
+                        )
                     ),
-                    modifiedAt = FakeTimeProvider.START_TIME.plus(
-                        (2.minutes + 1.days).toJavaDuration()
+                    sections = listOf(
+                        SectionWithLibraryItem(
+                            section = Section(
+                                id = UUIDConverter.fromInt(6),
+                                sessionId = UUIDConverter.fromInt(5),
+                                libraryItemId = UUIDConverter.fromInt(1),
+                                durationSeconds = 180,
+                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                    (2.minutes + 1.days).toJavaDuration()
+                                ),
+                            ),
+                            libraryItem = expectedItem
+                        )
                     )
                 ),
-                sections = listOf(
-                    SectionWithLibraryItem(
-                        section = Section(
-                            id = UUIDConverter.fromInt(6),
-                            sessionId = UUIDConverter.fromInt(5),
-                            libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 180,
-                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                (2.minutes + 1.days).toJavaDuration()
-                            ),
+                SessionWithSectionsWithLibraryItems(
+                    session = Session(
+                        id = UUIDConverter.fromInt(7),
+                        breakDurationSeconds = 600,
+                        rating = 3,
+                        comment = "Test comment",
+                        createdAt = FakeTimeProvider.START_TIME.plus(
+                            (1.minutes).toJavaDuration()
                         ),
-                        libraryItem = expectedItem
-                    )
-                )
-            ),
-            SessionWithSectionsWithLibraryItems(
-                session = Session(
-                    id = UUIDConverter.fromInt(7),
-                    breakDurationSeconds = 600,
-                    rating = 3,
-                    comment = "Test comment",
-                    createdAt = FakeTimeProvider.START_TIME.plus(
-                        (1.minutes).toJavaDuration()
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(
+                            (1.minutes).toJavaDuration()
+                        )
                     ),
-                    modifiedAt = FakeTimeProvider.START_TIME.plus(
-                        (1.minutes).toJavaDuration()
+                    sections = listOf(
+                        SectionWithLibraryItem(
+                            section = Section(
+                                id = UUIDConverter.fromInt(8),
+                                sessionId = UUIDConverter.fromInt(7),
+                                libraryItemId = UUIDConverter.fromInt(1),
+                                durationSeconds = 300,
+                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                    (1.minutes).toJavaDuration()
+                                ),
+                            ),
+                            libraryItem = expectedItem
+                        )
                     )
                 ),
-                sections = listOf(
-                    SectionWithLibraryItem(
-                        section = Section(
-                            id = UUIDConverter.fromInt(8),
-                            sessionId = UUIDConverter.fromInt(7),
-                            libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 300,
-                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                (1.minutes).toJavaDuration()
-                            ),
+                SessionWithSectionsWithLibraryItems(
+                    session = Session(
+                        id = UUIDConverter.fromInt(2),
+                        breakDurationSeconds = 600,
+                        rating = 3,
+                        comment = "Test comment",
+                        createdAt = FakeTimeProvider.START_TIME.plus(
+                            (2.minutes).toJavaDuration()
                         ),
-                        libraryItem = expectedItem
-                    )
-                )
-            ),
-            SessionWithSectionsWithLibraryItems(
-                session = Session(
-                    id = UUIDConverter.fromInt(2),
-                    breakDurationSeconds = 600,
-                    rating = 3,
-                    comment = "Test comment",
-                    createdAt = FakeTimeProvider.START_TIME.plus(
-                        (2.minutes).toJavaDuration()
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(
+                            (2.minutes).toJavaDuration()
+                        )
                     ),
-                    modifiedAt = FakeTimeProvider.START_TIME.plus(
-                        (2.minutes).toJavaDuration()
-                    )
-                ),
-                sections = listOf(
-                    SectionWithLibraryItem(
-                        section = Section(
-                            id = UUIDConverter.fromInt(3),
-                            sessionId = UUIDConverter.fromInt(2),
-                            libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 120,
-                            startTimestamp = FakeTimeProvider.START_TIME,
-                        ),
-                        libraryItem = expectedItem
-                    ),
-                    SectionWithLibraryItem(
-                        section = Section(
-                            id = UUIDConverter.fromInt(4),
-                            sessionId = UUIDConverter.fromInt(2),
-                            libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 240,
-                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                (2.minutes).toJavaDuration()
+                    sections = listOf(
+                        SectionWithLibraryItem(
+                            section = Section(
+                                id = UUIDConverter.fromInt(3),
+                                sessionId = UUIDConverter.fromInt(2),
+                                libraryItemId = UUIDConverter.fromInt(1),
+                                durationSeconds = 120,
+                                startTimestamp = FakeTimeProvider.START_TIME,
                             ),
+                            libraryItem = expectedItem
                         ),
-                        libraryItem = expectedItem
+                        SectionWithLibraryItem(
+                            section = Section(
+                                id = UUIDConverter.fromInt(4),
+                                sessionId = UUIDConverter.fromInt(2),
+                                libraryItemId = UUIDConverter.fromInt(1),
+                                durationSeconds = 240,
+                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                    (2.minutes).toJavaDuration()
+                                ),
+                            ),
+                            libraryItem = expectedItem
+                        )
                     )
                 )
             )
-        ))
+        )
     }
 
     @Test
@@ -822,7 +833,6 @@ class SessionDaoTest {
         )
     }
 
-
     @Test
     fun getFromTimeFrame() = runTest {
         insertSessionWithSection()
@@ -837,7 +847,7 @@ class SessionDaoTest {
 
         val sessions = sessionDao.getFromTimeframe(
             FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()) to
-            FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration())
+                FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration())
         ).first()
 
         assertThat(sessions).containsExactly(

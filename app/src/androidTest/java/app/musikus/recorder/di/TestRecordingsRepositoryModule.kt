@@ -29,12 +29,11 @@ object TestRecordingsRepositoryModule {
     fun provideRecordingsRepository(
         application: Application,
         @IoScope ioScope: CoroutineScope
-    ) : RecordingsRepository {
+    ): RecordingsRepository {
         return RecordingsRepositoryImpl(
             application = application,
             contentResolver = application.contentResolver,
             ioScope = ioScope
         )
     }
-
 }

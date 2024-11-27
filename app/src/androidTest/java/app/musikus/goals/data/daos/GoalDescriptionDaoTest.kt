@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.goals.data.daos
@@ -13,15 +13,15 @@ import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -68,14 +68,16 @@ class GoalDescriptionDaoTest {
     fun insertGoalDescriptions_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                goalDescriptionDao.insert(listOf(
-                    GoalDescriptionCreationAttributes(
-                        type = GoalType.NON_SPECIFIC,
-                        repeat = true,
-                        periodInPeriodUnits = 1,
-                        periodUnit = GoalPeriodUnit.DAY
+                goalDescriptionDao.insert(
+                    listOf(
+                        GoalDescriptionCreationAttributes(
+                            type = GoalType.NON_SPECIFIC,
+                            repeat = true,
+                            periodInPeriodUnits = 1,
+                            periodUnit = GoalPeriodUnit.DAY
+                        )
                     )
-                ))
+                )
             }
         }
 
@@ -90,11 +92,11 @@ class GoalDescriptionDaoTest {
             runBlocking {
                 goalDescriptionDao.insert(
                     GoalDescriptionCreationAttributes(
-                    type = GoalType.NON_SPECIFIC,
-                    repeat = true,
-                    periodInPeriodUnits = 1,
-                    periodUnit = GoalPeriodUnit.DAY
-                )
+                        type = GoalType.NON_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = 1,
+                        periodUnit = GoalPeriodUnit.DAY
+                    )
                 )
             }
         }
@@ -296,8 +298,6 @@ class GoalDescriptionDaoTest {
         )
     }
 
-
-
     @Test
     fun updateGoalDescriptions() = runTest {
         // insert two goals
@@ -362,7 +362,6 @@ class GoalDescriptionDaoTest {
         )
     }
 
-
     @Test
     fun updateGoalDescription() = runTest {
         val goalDescriptionDaoSpy = spyk(goalDescriptionDao)
@@ -373,7 +372,7 @@ class GoalDescriptionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             goalDescriptionDaoSpy.update(UUIDConverter.fromInt(1), GoalDescriptionUpdateAttributes())
         }
     }
@@ -411,10 +410,12 @@ class GoalDescriptionDaoTest {
                 )
             )
         }
-        goalDescriptionDao.delete(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(3),
-        ))
+        goalDescriptionDao.delete(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(3),
+            )
+        )
 
         val goalDescriptions = goalDescriptionDao.getAllAsFlow().first()
 
@@ -431,7 +432,7 @@ class GoalDescriptionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) { goalDescriptionDaoSpy.delete(listOf(UUIDConverter.fromInt(1))) }
+        coVerify(exactly = 1) { goalDescriptionDaoSpy.delete(listOf(UUIDConverter.fromInt(1))) }
     }
 
     @Test
@@ -464,17 +465,21 @@ class GoalDescriptionDaoTest {
             )
         }
 
-        goalDescriptionDao.delete(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(3),
-        ))
+        goalDescriptionDao.delete(
+            listOf(
+                UUIDConverter.fromInt(1),
+                UUIDConverter.fromInt(3),
+            )
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
-        goalDescriptionDao.restore(listOf(
+        goalDescriptionDao.restore(
+            listOf(
                 UUIDConverter.fromInt(1),
                 UUIDConverter.fromInt(3),
-        ))
+            )
+        )
 
         val goalDescriptions = goalDescriptionDao.getAllAsFlow().first()
 
@@ -518,7 +523,7 @@ class GoalDescriptionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             goalDescriptionDaoSpy.restore(listOf(UUIDConverter.fromInt(1)))
         }
     }
@@ -553,10 +558,12 @@ class GoalDescriptionDaoTest {
             )
         }
 
-        val goalDescriptions = goalDescriptionDao.getAsFlow(listOf(
+        val goalDescriptions = goalDescriptionDao.getAsFlow(
+            listOf(
                 UUIDConverter.fromInt(1),
                 UUIDConverter.fromInt(5),
-        )).first()
+            )
+        ).first()
 
         assertThat(goalDescriptions).containsExactly(
             GoalDescription(
@@ -598,7 +605,7 @@ class GoalDescriptionDaoTest {
             // ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             goalDescriptionDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(2)))
         }
     }

@@ -20,7 +20,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import javax.inject.Named
 
-
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -40,5 +39,4 @@ object TestSessionRepositoryModule {
             withDatabaseTransaction = { block -> database.withTransaction(block) }
         )
     }
-
 }

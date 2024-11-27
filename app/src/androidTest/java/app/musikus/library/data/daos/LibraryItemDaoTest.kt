@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.data.daos
@@ -37,7 +37,6 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-
 @HiltAndroidTest
 @SmallTest
 class LibraryItemDaoTest {
@@ -68,19 +67,20 @@ class LibraryItemDaoTest {
 
     @Test
     fun insertItems() = runTest {
-
-        val itemIds = libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 5,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 0,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+        val itemIds = libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                )
             )
-        ))
+        )
 
         // Check if the correct ids were returned
         assertThat(itemIds).containsExactly(
@@ -125,7 +125,7 @@ class LibraryItemDaoTest {
 
         libraryItemDaoSpy.insert(item)
 
-        coVerify (exactly = 1) { libraryItemDaoSpy.insert(listOf(item)) }
+        coVerify(exactly = 1) { libraryItemDaoSpy.insert(listOf(item)) }
     }
 
     @Test
@@ -134,10 +134,10 @@ class LibraryItemDaoTest {
             runBlocking {
                 libraryItemDao.insert(
                     LibraryItemCreationAttributes(
-                    name = "TestItem",
-                    colorIndex = 0,
-                    libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
-                )
+                        name = "TestItem",
+                        colorIndex = 0,
+                        libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
+                    )
                 )
             }
         }
@@ -150,18 +150,20 @@ class LibraryItemDaoTest {
     @Test
     fun updateItems() = runTest {
         // Insert items
-        libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 0,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 5,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+        libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                )
             )
-        ))
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
@@ -225,10 +227,12 @@ class LibraryItemDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
-            libraryItemDaoSpy.update(listOf(
-                UUIDConverter.fromInt(2) to updateAttributes
-            ))
+        coVerify(exactly = 1) {
+            libraryItemDaoSpy.update(
+                listOf(
+                    UUIDConverter.fromInt(2) to updateAttributes
+                )
+            )
         }
     }
 
@@ -253,10 +257,10 @@ class LibraryItemDaoTest {
         // Insert items
         libraryItemDao.insert(
             LibraryItemCreationAttributes(
-            name = "TestItem1",
-            colorIndex = 0,
-            libraryFolderId = Nullable(null)
-        )
+                name = "TestItem1",
+                colorIndex = 0,
+                libraryFolderId = Nullable(null)
+            )
         )
 
         val exception = assertThrows(SQLiteConstraintException::class.java) {
@@ -278,24 +282,28 @@ class LibraryItemDaoTest {
     @Test
     fun deleteItems() = runTest {
         // Insert items
-        libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 0,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 5,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+        libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                )
             )
-        ))
+        )
 
         // Delete the items
-        libraryItemDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3)
-        ))
+        libraryItemDao.delete(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(3)
+            )
+        )
 
         // Check if the items were deleted correctly
         val items = libraryItemDao.getAllAsFlow().first()
@@ -313,7 +321,7 @@ class LibraryItemDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) { libraryItemDaoSpy.delete(listOf(UUIDConverter.fromInt(2))) }
+        coVerify(exactly = 1) { libraryItemDaoSpy.delete(listOf(UUIDConverter.fromInt(2))) }
     }
 
     @Test
@@ -332,32 +340,38 @@ class LibraryItemDaoTest {
     @Test
     fun restoreItems() = runTest {
         // Insert items
-        libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 0,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 5,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+        libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                )
             )
-        ))
+        )
 
         // Delete the items
-        libraryItemDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3)
-        ))
+        libraryItemDao.delete(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(3)
+            )
+        )
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
         // Restore the items
-        libraryItemDao.restore(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3)
-        ))
+        libraryItemDao.restore(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(3)
+            )
+        )
 
         // Check if the items were restored correctly
         val items = libraryItemDao.getAllAsFlow().first()
@@ -394,7 +408,7 @@ class LibraryItemDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             libraryItemDaoSpy.restore(listOf(UUIDConverter.fromInt(2)))
         }
     }
@@ -415,29 +429,33 @@ class LibraryItemDaoTest {
     @Test
     fun getSpecificItems() = runTest {
         // Insert items
-        libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 0,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 5,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem3",
-                colorIndex = 2,
-                libraryFolderId = Nullable(null),
-            ),
-        ))
+        libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem3",
+                    colorIndex = 2,
+                    libraryFolderId = Nullable(null),
+                ),
+            )
+        )
 
         // Get the items
-        val items = libraryItemDao.getAsFlow(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3)
-        )).first()
+        val items = libraryItemDao.getAsFlow(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(3)
+            )
+        ).first()
 
         // Check if the items were retrieved correctly
         assertThat(items).containsExactly(
@@ -472,7 +490,7 @@ class LibraryItemDaoTest {
             // Ignore
         }
 
-        coVerify (exactly = 1) {
+        coVerify(exactly = 1) {
             libraryItemDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(2)))
         }
     }
@@ -512,23 +530,25 @@ class LibraryItemDaoTest {
 
     @Test
     fun cleanItems() = runTest {
-        libraryItemDao.insert(listOf(
-            LibraryItemCreationAttributes(
-                name = "TestItem1",
-                colorIndex = 0,
-                libraryFolderId = Nullable(null),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem2",
-                colorIndex = 5,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
-            ),
-            LibraryItemCreationAttributes(
-                name = "TestItem3",
-                colorIndex = 8,
-                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+        libraryItemDao.insert(
+            listOf(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(null),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                ),
+                LibraryItemCreationAttributes(
+                    name = "TestItem3",
+                    colorIndex = 8,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+                )
             )
-        ))
+        )
 
         database.sessionDao.insert(
             SessionCreationAttributes(
@@ -538,17 +558,19 @@ class LibraryItemDaoTest {
             ),
             listOf(
                 SectionCreationAttributes(
-                libraryItemId = UUIDConverter.fromInt(2),
-                startTimestamp = FakeTimeProvider.START_TIME,
-                duration = 1.seconds,
-            )
+                    libraryItemId = UUIDConverter.fromInt(2),
+                    startTimestamp = FakeTimeProvider.START_TIME,
+                    duration = 1.seconds,
+                )
             )
         )
 
-        libraryItemDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
-        ))
+        libraryItemDao.delete(
+            listOf(
+                UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(3),
+            )
+        )
 
         // advance time by a few days
         fakeTimeProvider.advanceTimeBy(4.days)
@@ -566,11 +588,13 @@ class LibraryItemDaoTest {
                 // Item with Id 2 should be still there because of the session
                 // Item with Id 3 should be impossible to restore because it is permanently deleted
                 // Item with Id 4 should should be still there because it was deleted less than a month ago
-                libraryItemDao.restore(listOf(
-                    UUIDConverter.fromInt(2),
-                    UUIDConverter.fromInt(3),
-                    UUIDConverter.fromInt(4),
-                ))
+                libraryItemDao.restore(
+                    listOf(
+                        UUIDConverter.fromInt(2),
+                        UUIDConverter.fromInt(3),
+                        UUIDConverter.fromInt(4),
+                    )
+                )
             }
         }
 
