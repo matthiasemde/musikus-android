@@ -78,6 +78,9 @@ class RecorderService : Service() {
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
+    @Inject
+    lateinit var notificationManager: NotificationManager
+
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
     inner class LocalBinder : Binder() {
@@ -293,8 +296,7 @@ class RecorderService : Service() {
 
     private fun updateNotification(duration: Duration) {
         val notification: Notification = getNotification(duration)
-        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+        notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
     private fun setFinalNotification() {
@@ -303,8 +305,7 @@ class RecorderService : Service() {
             text = getString(R.string.recorder_service_final_notification_text),
             persistent = false
         )
-        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+        notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
     private fun getNotification(duration: Duration): Notification {
