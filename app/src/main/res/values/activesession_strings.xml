@@ -13,11 +13,14 @@
     <string name="active_session_discard_session_dialog_confirm">Discard session? All progress will be lost!</string>
 
     <!-- ActiveSessionTopBar -->
+    <string name="active_session_top_bar_pause">Pause</string>
+    <string name="active_session_top_bar_delete">Delete</string>
     <string name="active_session_top_bar_save">Finish</string>
 
     <!-- ActiveSessionTimer -->
     <string name="active_session_timer_subheading">Practice Time</string>
     <string name="active_session_timer_subheading_paused">Paused %1$s</string>
+    <string name="active_session_timer_subheading_resume">Resume</string>
 
     <!-- SectionList -->
     <string name="active_session_section_list_title">Already practiced</string>
