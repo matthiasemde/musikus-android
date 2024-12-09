@@ -806,7 +806,10 @@ private fun ActiveSessionTopBar(
                     IconButton(
                         onClick = onDiscard,
                     ) {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = stringResource(id = R.string.active_session_top_bar_delete)
+                        )
                     }
 
                     TextButton(
@@ -829,7 +832,7 @@ private fun PauseButton(
     ) {
         Icon(
             imageVector = Icons.Filled.Pause,
-            contentDescription = null
+            contentDescription = stringResource(id = R.string.active_session_top_bar_pause)
         )
     }
 }
@@ -985,7 +988,12 @@ private fun PracticeTimer(
                         contentColor = MaterialTheme.colorScheme.onTertiary
                     )
                 ) {
-                    Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircle,
+                        contentDescription = stringResource(
+                            id = R.string.active_session_timer_subheading_resume
+                        )
+                    )
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
                     Text(text = uiState.value.subHeadingText.asString())
                 }
