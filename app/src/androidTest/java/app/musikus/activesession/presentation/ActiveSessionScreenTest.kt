@@ -24,7 +24,6 @@ import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
@@ -97,10 +96,6 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
-
-        runBlocking {
-            delay(100)
-        }
 
         // Pause timer shows correct time
         composeRule.onNodeWithText("Paused 01:30")
