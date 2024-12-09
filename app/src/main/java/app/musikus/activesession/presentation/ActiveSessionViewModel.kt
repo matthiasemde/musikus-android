@@ -17,6 +17,7 @@ import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.SessionStatus
 import app.musikus.core.data.Nullable
 import app.musikus.core.di.ApplicationScope
+import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiText
@@ -46,12 +47,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.Timer
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.concurrent.timer
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
@@ -61,11 +59,9 @@ class ActiveSessionViewModel @Inject constructor(
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
-    @ApplicationScope private val applicationScope: CoroutineScope
+    @ApplicationScope private val applicationScope: CoroutineScope,
+    timeProvider: TimeProvider
 ) : AndroidViewModel(application) {
-
-    private var _clock = MutableStateFlow(false)
-    private var _timer: Timer? = null
 
     /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
 
@@ -135,7 +131,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val timerUiState = combine(
         sessionState,
-        _clock // should update with clock
+        timeProvider.clock // should update with clock
     ) { timerState, _ ->
         val pause = timerState == ActiveSessionState.PAUSED
 
@@ -174,7 +170,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
         sessionState,
         runningLibraryItem,
-        _clock // should update with clock
+        timeProvider.clock // should update with clock
     ) { sessionState, item, _ ->
         if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
@@ -292,7 +288,6 @@ class ActiveSessionViewModel @Inject constructor(
     val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
 
     init {
-        startTimer()
         /** Hide the Tools Bottom Sheet on Startup */
         runBlocking(context = Dispatchers.IO) {
             viewModelScope.launch {
@@ -389,19 +384,6 @@ class ActiveSessionViewModel @Inject constructor(
             ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
             ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
             else -> {}
-        }
-    }
-
-    private fun startTimer() {
-        if (_timer != null) {
-            return
-        }
-        _timer = timer(
-            name = "Timer",
-            initialDelay = 0,
-            period = 100.milliseconds.inWholeMilliseconds
-        ) {
-            _clock.update { !it }
         }
     }
 
