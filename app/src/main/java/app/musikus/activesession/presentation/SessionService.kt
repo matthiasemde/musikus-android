@@ -176,9 +176,9 @@ class SessionService : Service() {
     private fun togglePause() {
         applicationScope.launch {
             if (useCases.isSessionPaused()) {
-                useCases.resume()
+                useCases.resume(timeProvider.now())
             } else {
-                useCases.pause()
+                useCases.pause(timeProvider.now())
             }
         }
         updateNotification()
@@ -202,8 +202,10 @@ class SessionService : Service() {
 
         // TODO: move this logic to use case
         try {
-            val totalPracticeDurationStr =
-                getDurationString(useCases.getPracticeDuration(), DurationFormat.HMS_DIGITAL)
+            val totalPracticeDurationStr = getDurationString(
+                useCases.getPracticeDuration(timeProvider.now()),
+                DurationFormat.HMS_DIGITAL
+            )
 
             val currentSectionName = useCases.getRunningItem().first()!!.name
 

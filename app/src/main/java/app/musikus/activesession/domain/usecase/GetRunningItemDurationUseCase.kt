@@ -9,7 +9,6 @@
 package app.musikus.activesession.domain.usecase
 
 import app.musikus.activesession.domain.ActiveSessionRepository
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.minus
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
@@ -18,11 +17,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class GetRunningItemDurationUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val timeProvider: TimeProvider
 ) {
-    suspend operator fun invoke(
-        at: ZonedDateTime = timeProvider.now()
-    ): Duration {
+    suspend operator fun invoke(at: ZonedDateTime): Duration {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("State is null. Cannot get running section!")
 
