@@ -50,6 +50,7 @@ import kotlinx.coroutines.runBlocking
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
@@ -60,7 +61,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
     @ApplicationScope private val applicationScope: CoroutineScope,
-    timeProvider: TimeProvider
+    private val timeProvider: TimeProvider
 ) : AndroidViewModel(application) {
 
     /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
@@ -132,16 +133,16 @@ class ActiveSessionViewModel @Inject constructor(
     private val timerUiState = combine(
         sessionState,
         timeProvider.clock // should update with clock
-    ) { timerState, _ ->
+    ) { timerState, now ->
         val pause = timerState == ActiveSessionState.PAUSED
 
         val practiceDuration = try {
-            activeSessionUseCases.getPracticeDuration()
+            activeSessionUseCases.getPracticeDuration(now)
         } catch (e: IllegalStateException) {
             Duration.ZERO // Session not yet started
         }
         val pauseDurStr = getDurationString(
-            activeSessionUseCases.getOngoingPauseDuration(),
+            activeSessionUseCases.getOngoingPauseDuration(now),
             DurationFormat.MS_DIGITAL
         )
         ActiveSessionTimerUiState(
@@ -171,11 +172,11 @@ class ActiveSessionViewModel @Inject constructor(
         sessionState,
         runningLibraryItem,
         timeProvider.clock // should update with clock
-    ) { sessionState, item, _ ->
+    ) { sessionState, item, now ->
         if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
         val currentItemDuration = try {
-            activeSessionUseCases.getRunningItemDuration()
+            activeSessionUseCases.getRunningItemDuration(now)
         } catch (e: IllegalStateException) {
             Duration.ZERO // Session not yet started
         }
@@ -354,20 +355,23 @@ class ActiveSessionViewModel @Inject constructor(
     private suspend fun selectItem(item: LibraryItem) {
         // resume session if paused
         if (sessionState.value == ActiveSessionState.PAUSED) {
-            activeSessionUseCases.resume()
+            activeSessionUseCases.resume(timeProvider.now())
         }
         // wait until the current item has been running for at least 1 second
         if (sessionState.value != ActiveSessionState.NOT_STARTED &&
-            activeSessionUseCases.getRunningItemDuration() < 1.seconds
+            activeSessionUseCases.getRunningItemDuration(timeProvider.now()) < 1.seconds
         ) {
-            delay(1000)
+            delay(1000.milliseconds)
         }
-        activeSessionUseCases.selectItem(item)
+        activeSessionUseCases.selectItem(
+            item = item,
+            at = timeProvider.now()
+        )
     }
 
     private suspend fun deleteSection(sectionId: UUID) {
         if (sessionState.value == ActiveSessionState.PAUSED) {
-            activeSessionUseCases.resume()
+            activeSessionUseCases.resume(timeProvider.now())
         }
         activeSessionUseCases.deleteSection(sectionId)
     }
@@ -381,15 +385,15 @@ class ActiveSessionViewModel @Inject constructor(
 
     private suspend fun togglePauseState() {
         when (sessionState.value) {
-            ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
-            ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
+            ActiveSessionState.RUNNING -> activeSessionUseCases.pause(timeProvider.now())
+            ActiveSessionState.PAUSED -> activeSessionUseCases.resume(timeProvider.now())
             else -> {}
         }
     }
 
     private suspend fun stopSession() {
         // complete running section
-        val savableState = activeSessionUseCases.getFinalizedSession()
+        val savableState = activeSessionUseCases.getFinalizedSession(timeProvider.now())
         // ignore empty sections (e.g. when paused and then stopped immediately))
         val sections = savableState.completedSections.filter { it.duration > 0.seconds }
         // store in database

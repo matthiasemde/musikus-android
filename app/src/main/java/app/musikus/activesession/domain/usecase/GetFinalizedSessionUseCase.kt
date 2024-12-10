@@ -15,21 +15,22 @@ import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.minus
 import app.musikus.core.domain.plus
 import kotlinx.coroutines.flow.first
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.seconds
 
 class GetFinalizedSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
-    private val getOngoingPauseDurationUseCase: GetOngoingPauseDurationUseCase,
+    private val getRunningItemDuration: GetRunningItemDurationUseCase,
+    private val getOngoingPauseDuration: GetOngoingPauseDurationUseCase,
     private val idProvider: IdProvider
 ) {
-    suspend operator fun invoke(): SessionState {
+    suspend operator fun invoke(at: ZonedDateTime): SessionState {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("State is null. Cannot finish session!")
 
         // take time
-        val runningSectionRoundedDuration = getRunningItemDurationUseCase().inWholeSeconds.seconds
-        val ongoingPauseDuration = getOngoingPauseDurationUseCase()
+        val runningSectionRoundedDuration = getRunningItemDuration(at).inWholeSeconds.seconds
+        val ongoingPauseDuration = getOngoingPauseDuration(at)
 
         // append finished section to completed sections
         val updatedSections = state.completedSections + PracticeSection(

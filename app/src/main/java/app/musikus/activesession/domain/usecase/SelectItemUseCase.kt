@@ -12,31 +12,33 @@ import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.PracticeSection
 import app.musikus.activesession.domain.SessionState
 import app.musikus.core.domain.IdProvider
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.minus
 import app.musikus.core.domain.plus
 import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.first
+import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.seconds
 
 class SelectItemUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
-    private val timeProvider: TimeProvider,
+    private val getRunningItemDuration: GetRunningItemDurationUseCase,
     private val idProvider: IdProvider
 ) {
-    suspend operator fun invoke(libraryItem: LibraryItem) {
+    suspend operator fun invoke(
+        item: LibraryItem,
+        at: ZonedDateTime,
+    ) {
         val state = activeSessionRepository.getSessionState().first()
 
         if (state != null) {
             /** another section is already running */
             // check same item
-            if (state.currentSectionItem == libraryItem) {
+            if (state.currentSectionItem == item) {
                 throw IllegalStateException("Must not select the same library item which is already running.")
             }
 
             // check too fast
-            if (getRunningItemDurationUseCase() < 1.seconds) {
+            if (getRunningItemDuration(at) < 1.seconds) {
                 throw IllegalStateException("Must wait for at least one second before starting a new section.")
             }
 
@@ -44,10 +46,10 @@ class SelectItemUseCase(
             if (state.isPaused) throw IllegalStateException("You must resume before selecting a new item.")
 
             // take time
-            val runningSectionTrueDuration = getRunningItemDurationUseCase()
+            val runningSectionTrueDuration = getRunningItemDuration(at)
             val changeSectionTimestamp = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
             // running section duration calculated until changeSectionTimestamp
-            val runningSectionRoundedDuration = getRunningItemDurationUseCase(at = changeSectionTimestamp)
+            val runningSectionRoundedDuration = getRunningItemDuration(at = changeSectionTimestamp)
 
             // append finished section to completed sections
             val updatedSections = state.completedSections + PracticeSection(
@@ -61,7 +63,7 @@ class SelectItemUseCase(
             activeSessionRepository.setSessionState(
                 state.copy(
                     completedSections = updatedSections,
-                    currentSectionItem = libraryItem,
+                    currentSectionItem = item,
                     startTimestampSection = changeSectionTimestamp, // new sections starts when the old one ends
                     startTimestampSectionPauseCompensated = changeSectionTimestamp,
                 )
@@ -70,11 +72,11 @@ class SelectItemUseCase(
         }
 
         /** starting the first section */
-        val changeOverTime = timeProvider.now()
+        val changeOverTime = at
         activeSessionRepository.setSessionState(
             SessionState( // create new session state
                 completedSections = emptyList(),
-                currentSectionItem = libraryItem,
+                currentSectionItem = item,
                 startTimestamp = changeOverTime,
                 startTimestampSection = changeOverTime,
                 startTimestampSectionPauseCompensated = changeOverTime,
