@@ -10,15 +10,16 @@ package app.musikus.activesession.domain.usecase
 
 import app.musikus.activesession.domain.ActiveSessionRepository
 import kotlinx.coroutines.flow.first
+import java.time.ZonedDateTime
 import kotlin.time.Duration
 
 class GetTotalPracticeDurationUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val runningItemDurationUseCase: GetRunningItemDurationUseCase
+    private val getRunningItemDuration: GetRunningItemDurationUseCase
 ) {
-    suspend operator fun invoke(): Duration {
+    suspend operator fun invoke(at: ZonedDateTime): Duration {
         val state = activeSessionRepository.getSessionState().first()
-        val runningItemDuration = runningItemDurationUseCase()
+        val runningItemDuration = getRunningItemDuration(at)
 
         if (state == null) {
             throw IllegalStateException("State is null. Cannot get total practice time!")

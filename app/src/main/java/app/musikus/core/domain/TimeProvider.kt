@@ -8,6 +8,15 @@
 
 package app.musikus.core.domain
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -20,6 +29,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 interface TimeProvider {
     fun now(): ZonedDateTime
+
+    val clock: Flow<ZonedDateTime>
 
     fun localZoneId(): ZoneId = now().zone
 
@@ -100,10 +111,35 @@ interface TimeProvider {
     }
 }
 
-class TimeProviderImpl : TimeProvider {
+class TimeProviderImpl(scope: CoroutineScope) : TimeProvider {
+
+    private var isClockRunning = false
+
+    override val clock: StateFlow<ZonedDateTime> = flow {
+        while (true) {
+            emit(ZonedDateTime.now()) // Emit the current time
+            delay(100.milliseconds) // Wait 100 milliseconds
+        }
+    }.onStart {
+        println("Clock started")
+        isClockRunning = true
+    }.onCompletion {
+        println("Clock stopped")
+        isClockRunning = false
+    }.stateIn(
+        scope = scope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = ZonedDateTime.now()
+    )
 
     override fun now(): ZonedDateTime {
-        return ZonedDateTime.now()
+        return if (isClockRunning) {
+            println("get running clock value")
+            clock.value
+        } else {
+            println("get zoned date time now")
+            ZonedDateTime.now()
+        }
     }
 }
 

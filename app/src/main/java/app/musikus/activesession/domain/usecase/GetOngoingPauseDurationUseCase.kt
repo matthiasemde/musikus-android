@@ -9,20 +9,19 @@
 package app.musikus.activesession.domain.usecase
 
 import app.musikus.activesession.domain.ActiveSessionRepository
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.minus
 import kotlinx.coroutines.flow.first
+import java.time.ZonedDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class GetOngoingPauseDurationUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val timeProvider: TimeProvider
 ) {
-    suspend operator fun invoke(): Duration {
+    suspend operator fun invoke(at: ZonedDateTime): Duration {
         val state = activeSessionRepository.getSessionState().first() ?: return 0.seconds
         if (state.currentPauseStartTimestamp == null) return 0.seconds
-        val duration = timeProvider.now() - state.currentPauseStartTimestamp
+        val duration = at - state.currentPauseStartTimestamp
         if (duration < 0.seconds) {
             throw IllegalStateException("Duration is negative. This should not happen.")
         }
