@@ -33,13 +33,23 @@ class GetFinalizedSessionUseCase(
         val ongoingPauseDuration = getOngoingPauseDuration(at)
 
         // append finished section to completed sections
-        val updatedSections = state.completedSections + PracticeSection(
-            id = idProvider.generateId(),
-            libraryItem = state.currentSectionItem,
-            pauseDuration = (state.startTimestampSectionPauseCompensated + ongoingPauseDuration) - state.startTimestampSection,
-            duration = runningSectionRoundedDuration,
-            startTimestamp = state.startTimestampSection
-        )
+        val updatedSections = state.completedSections
+            .plus(
+                PracticeSection(
+                    id = idProvider.generateId(),
+                    libraryItem = state.currentSectionItem,
+                    pauseDuration = (
+                        state.startTimestampSectionPauseCompensated + ongoingPauseDuration
+                        ) - state.startTimestampSection,
+                    duration = runningSectionRoundedDuration,
+                    startTimestamp = state.startTimestampSection
+                )
+            )
+            .filter { it.duration > 0.seconds }
+
+        if (updatedSections.isEmpty()) {
+            throw IllegalStateException("Completed sections are empty.")
+        }
 
         return state.copy(
             completedSections = updatedSections

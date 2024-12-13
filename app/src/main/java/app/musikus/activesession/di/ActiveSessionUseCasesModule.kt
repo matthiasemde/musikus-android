@@ -57,14 +57,13 @@ object ActiveSessionUseCasesModule {
                 getRunningItemDuration = getRunningItemDurationUseCase,
                 idProvider = idProvider
             ),
-            getPracticeDuration = GetTotalPracticeDurationUseCase(
+            getTotalPracticeDuration = GetTotalPracticeDurationUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningItemDuration = getRunningItemDurationUseCase
             ),
             deleteSection = DeleteSectionUseCase(activeSessionRepository),
             pause = PauseActiveSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
-                getRunningItemDuration = getRunningItemDurationUseCase,
             ),
             resume = resumeUseCase,
             getRunningItemDuration = getRunningItemDurationUseCase,

@@ -9,6 +9,7 @@
 package app.musikus.core.data
 
 import android.util.Log
+import app.musikus.core.domain.minus
 import app.musikus.goals.data.GoalRepositoryImpl
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
@@ -23,9 +24,9 @@ import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import java.time.temporal.ChronoUnit
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 suspend fun prepopulateDatabase(
     database: MusikusDatabase,
@@ -167,22 +168,24 @@ suspend fun prepopulateDatabase(
                 comment = "",
             )
         }.forEach { (sessionNum, session) ->
+            var partialSessionDuration = 0.seconds
             database.sessionDao.insert(
                 session,
                 (1..(1..5).random()).map {
                     val duration = (10..20).random().minutes
-                    SectionCreationAttributes(
+                    val newSection = SectionCreationAttributes(
                         libraryItemId = items.random().id,
-                        startTimestamp = database.timeProvider.now().minus(
+                        startTimestamp = database.timeProvider.now() - (
                             (
                                 (sessionNum / 2) * // two sessions per day initially
                                     24 * 60 * 60 *
                                     1.02.pow(sessionNum.toDouble()) // exponential growth
-                                ).toLong() + duration.inWholeSeconds,
-                            ChronoUnit.SECONDS
-                        ),
+                                ).toLong().seconds + duration + partialSessionDuration
+                            ),
                         duration = duration,
                     )
+                    partialSessionDuration += duration
+                    return@map newSection
                 }
             )
             delay(10)
