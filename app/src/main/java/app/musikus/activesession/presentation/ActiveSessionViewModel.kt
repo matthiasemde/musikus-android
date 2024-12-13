@@ -128,25 +128,71 @@ class ActiveSessionViewModel @Inject constructor(
     private val _exceptionChannel = Channel<ActiveSessionException>()
     val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
+    /** ------------------- Combined flows ---------------------------- */
+
+    private val totalPracticeDuration = combine(
+        sessionState,
+        timeProvider.clock
+    ) { sessionState, now ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
+        activeSessionUseCases.getTotalPracticeDuration(now)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Duration.ZERO
+    )
+
+    private val ongoingPauseDuration = combine(
+        sessionState,
+        timeProvider.clock
+    ) { sessionState, now ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
+        activeSessionUseCases.getOngoingPauseDuration(now)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Duration.ZERO
+    )
+
+    private val runningItemDuration = combine(
+        sessionState,
+        timeProvider.clock
+    ) { sessionState, now ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
+        activeSessionUseCases.getRunningItemDuration(now)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Duration.ZERO
+    )
+
+    val isFinishButtonEnabled = combine(
+        sessionState,
+        timeProvider.clock
+    ) { sessionState, now ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine false
+        activeSessionUseCases.getTotalPracticeDuration(now) > 1.seconds
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
     /** ------------------- Sub UI states  ------------------------------------------- */
 
     private val timerUiState = combine(
         sessionState,
-        timeProvider.clock // should update with clock
-    ) { timerState, now ->
-        val pause = timerState == ActiveSessionState.PAUSED
+        totalPracticeDuration,
+        ongoingPauseDuration,
+    ) { sessionState, totalPracticeDuration, ongoingPauseDuration ->
+        val pause = sessionState == ActiveSessionState.PAUSED
 
-        val practiceDuration = try {
-            activeSessionUseCases.getPracticeDuration(now)
-        } catch (e: IllegalStateException) {
-            Duration.ZERO // Session not yet started
-        }
         val pauseDurStr = getDurationString(
-            activeSessionUseCases.getOngoingPauseDuration(now),
+            ongoingPauseDuration,
             DurationFormat.MS_DIGITAL
         )
         ActiveSessionTimerUiState(
-            timerText = getFormattedTimerText(practiceDuration),
+            timerText = getFormattedTimerText(totalPracticeDuration),
             subHeadingText =
             if (pause) {
                 UiText.StringResource(R.string.active_session_timer_subheading_paused, pauseDurStr)
@@ -171,19 +217,14 @@ class ActiveSessionViewModel @Inject constructor(
     private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
         sessionState,
         runningLibraryItem,
-        timeProvider.clock // should update with clock
-    ) { sessionState, item, now ->
+        runningItemDuration
+    ) { sessionState, item, runningItemDuration ->
         if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
-        val currentItemDuration = try {
-            activeSessionUseCases.getRunningItemDuration(now)
-        } catch (e: IllegalStateException) {
-            Duration.ZERO // Session not yet started
-        }
         ActiveSessionCurrentItemUiState(
             name = item.name,
             durationText = getDurationString(
-                currentItemDuration,
+                runningItemDuration,
                 DurationFormat.MS_DIGITAL
             ).toString(),
             color = libraryItemColors[item.colorIndex]
@@ -281,7 +322,8 @@ class ActiveSessionViewModel @Inject constructor(
                 )
             ),
             newItemSelectorUiState = newItemSelectorUiState,
-            dialogUiState = dialogsUiStates
+            dialogUiState = dialogsUiStates,
+            isFinishButtonEnabled = isFinishButtonEnabled
         )
     ).asStateFlow()
 
@@ -392,21 +434,20 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     private suspend fun stopSession() {
+        // TODO this logic should be moved to the use case
         // complete running section
         val savableState = activeSessionUseCases.getFinalizedSession(timeProvider.now())
-        // ignore empty sections (e.g. when paused and then stopped immediately))
-        val sections = savableState.completedSections.filter { it.duration > 0.seconds }
         // store in database
         sessionUseCases.add(
             sessionCreationAttributes = SessionCreationAttributes(
                 // add up all pause durations
-                breakDuration = sections.fold(0.seconds) { acc, section ->
+                breakDuration = savableState.completedSections.fold(0.seconds) { acc, section ->
                     acc + section.pauseDuration
                 },
                 comment = _endDialogComment.value,
                 rating = _endDialogRating.value
             ),
-            sectionCreationAttributes = sections.map { section ->
+            sectionCreationAttributes = savableState.completedSections.map { section ->
                 SectionCreationAttributes(
                     libraryItemId = section.libraryItem.id,
                     duration = section.duration,

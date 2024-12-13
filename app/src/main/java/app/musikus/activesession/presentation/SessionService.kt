@@ -203,7 +203,7 @@ class SessionService : Service() {
         // TODO: move this logic to use case
         try {
             val totalPracticeDurationStr = getDurationString(
-                useCases.getPracticeDuration(timeProvider.now()),
+                useCases.getTotalPracticeDuration(timeProvider.now()),
                 DurationFormat.HMS_DIGITAL
             )
 

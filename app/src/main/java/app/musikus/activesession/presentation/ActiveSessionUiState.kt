@@ -32,6 +32,7 @@ data class ActiveSessionUiState(
     val mainContentUiState: StateFlow<ActiveSessionContentUiState>,
     val newItemSelectorUiState: StateFlow<NewItemSelectorUiState?>,
     val dialogUiState: StateFlow<ActiveSessionDialogsUiState>,
+    val isFinishButtonEnabled: StateFlow<Boolean>,
 )
 
 @Stable
