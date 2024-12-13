@@ -13,7 +13,7 @@ data class ActiveSessionUseCases(
     val deleteSection: DeleteSectionUseCase,
     val pause: PauseActiveSessionUseCase,
     val resume: ResumeActiveSessionUseCase,
-    val getPracticeDuration: GetTotalPracticeDurationUseCase,
+    val getTotalPracticeDuration: GetTotalPracticeDurationUseCase,
     val getRunningItemDuration: GetRunningItemDurationUseCase,
     val getRunningItem: GetRunningItemUseCase,
     val getCompletedSections: GetCompletedSectionsUseCase,

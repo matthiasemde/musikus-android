@@ -370,6 +370,7 @@ private fun ActiveSessionScreen(
         topBar = {
             ActiveSessionTopBar(
                 sessionState = uiState.value.sessionState.collectAsState(),
+                isFinishedButtonEnabled = uiState.value.isFinishButtonEnabled.collectAsState(),
                 onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
                 onNavigateUp = remember { { navigateUp() } },
                 onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
@@ -776,6 +777,7 @@ private fun ActiveSessionToolsLayout(
 @Composable
 private fun ActiveSessionTopBar(
     sessionState: State<ActiveSessionState>,
+    isFinishedButtonEnabled: State<Boolean>,
     onDiscard: () -> Unit,
     onNavigateUp: () -> Unit,
     onTogglePause: () -> Unit,
@@ -813,7 +815,8 @@ private fun ActiveSessionTopBar(
                     }
 
                     TextButton(
-                        onClick = onSave
+                        onClick = onSave,
+                        enabled = isFinishedButtonEnabled.value
                     ) {
                         Text(text = stringResource(id = R.string.active_session_top_bar_save))
                     }
@@ -1574,7 +1577,8 @@ private fun PreviewActiveSessionScreen(
                         sessionState = MutableStateFlow(ActiveSessionState.RUNNING),
                         mainContentUiState = MutableStateFlow(mainContent),
                         newItemSelectorUiState = MutableStateFlow(null),
-                        dialogUiState = MutableStateFlow(dialogs)
+                        dialogUiState = MutableStateFlow(dialogs),
+                        isFinishButtonEnabled = MutableStateFlow(true)
                     )
                 )
             },

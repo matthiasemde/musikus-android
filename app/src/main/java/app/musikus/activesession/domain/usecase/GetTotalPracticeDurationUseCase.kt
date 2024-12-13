@@ -19,11 +19,9 @@ class GetTotalPracticeDurationUseCase(
 ) {
     suspend operator fun invoke(at: ZonedDateTime): Duration {
         val state = activeSessionRepository.getSessionState().first()
-        val runningItemDuration = getRunningItemDuration(at)
+            ?: throw IllegalStateException("State is null. Cannot get total practice time!")
 
-        if (state == null) {
-            throw IllegalStateException("State is null. Cannot get total practice time!")
-        }
+        val runningItemDuration = getRunningItemDuration(at)
 
         // add up all completed section durations
         // add running section duration on top (by using initial value of fold)

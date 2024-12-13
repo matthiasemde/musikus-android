@@ -87,9 +87,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
         composeRule.onNodeWithText("TestItem1").performClick()
 
-        // Pause session after advancing time by 1 second
-        // (a session with 0 seconds can not be paused)
-        fakeTimeProvider.advanceTimeBy(1.seconds)
+        // Pause session
         composeRule.onNodeWithContentDescription("Pause").performClick()
 
         // Pause timer is displayed
