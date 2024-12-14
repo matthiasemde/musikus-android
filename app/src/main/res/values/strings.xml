@@ -24,6 +24,10 @@
 
     <!-- Components -->
 
+    <!-- RatingBar -->
+    <string name="components_rating_bar_rating_description">%1$d out of %1$d star rating</string>
+    <string name="components_rating_bar_individual_rating_description">Rate %1$d out of %1$d stars</string>
+
     <!-- MainMenu -->
     <string name="components_main_menu_item_settings">Settings</string>
     <string name="components_main_menu_item_about">About the app</string>

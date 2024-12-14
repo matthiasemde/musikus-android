@@ -10,31 +10,45 @@ package app.musikus.activesession.presentation
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import app.musikus.core.data.Nullable
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.core.domain.plus
 import app.musikus.core.presentation.MainActivity
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
+import app.musikus.sessions.data.daos.Section
+import app.musikus.sessions.data.daos.Session
+import app.musikus.sessions.domain.usecase.SessionsUseCases
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @HiltAndroidTest
 class ActiveSessionScreenTest {
     @Inject lateinit var libraryUseCases: LibraryUseCases
+    @Inject lateinit var sessionsUseCases: SessionsUseCases
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
@@ -152,7 +166,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
-    fun discardSession() {
+    fun discardSession() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
         composeRule.onNodeWithText("TestItem1").performClick()
@@ -163,10 +177,94 @@ class ActiveSessionScreenTest {
         // Confirm discard
         composeRule.onNodeWithText("Discard session?", substring = true).performClick()
 
-        // Session is discarded and screen is reset
-        composeRule.onNodeWithContentDescription("Start practicing").assertIsDisplayed()
+        // Navigate up is called
+        assertThat(wasNavigateUpCalled).isTrue()
+
+        // Sessions are still empty
+        val sessions = sessionsUseCases.getAll().first()
+        assertThat(sessions).isEmpty()
+    }
+
+    @Test
+    fun finishButtonDisabledForEmptySession() {
+        // Start session
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+        composeRule.onNodeWithText("TestItem1").performClick()
+
+        // Assert finish session disabled
+        composeRule.onNodeWithText("Finish").assertIsNotEnabled()
+
+        // Advance time
+        fakeTimeProvider.advanceTimeBy(1.seconds)
+
+        // Assert finish session enabled
+        composeRule.onNodeWithText("Finish").assertIsEnabled()
+    }
+
+    @Test
+    fun finishSession() = runTest {
+        // Start session
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+        composeRule.onNodeWithText("TestItem1").performClick()
+
+        // Advance time
+        fakeTimeProvider.advanceTimeBy(3.minutes)
+
+        // Pause session
+        composeRule.onNodeWithContentDescription("Pause").performClick()
+
+        // Advance time
+        fakeTimeProvider.advanceTimeBy(1.minutes)
+
+        // Finish session
+        composeRule.onNodeWithText("Finish").performClick()
+
+        // Add rating and comment
+        composeRule.onNodeWithContentDescription("Rate 5 out of 5 stars").performClick()
+        composeRule.onNodeWithText("Comment (optional)").performTextInput("Perfect 5 out of 7")
+
+        // Confirm finish
+        composeRule.onNodeWithText("Save").performClick()
+
+        // Wait for the navigation to finish
+        composeRule.awaitIdle()
 
         // Navigate up is called
         assertThat(wasNavigateUpCalled).isTrue()
+
+        // Sessions are still empty
+        val sessions = sessionsUseCases.getAll().first()
+        assertThat(sessions).containsExactly(
+            SessionWithSectionsWithLibraryItems(
+                session = Session(
+                    id = UUIDConverter.fromInt(6),
+                    breakDurationSeconds = 60,
+                    rating = 5,
+                    comment = "Perfect 5 out of 7",
+                    createdAt = FakeTimeProvider.START_TIME + 4.minutes,
+                    modifiedAt = FakeTimeProvider.START_TIME + 4.minutes,
+                ),
+                sections = listOf(
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(7),
+                            sessionId = UUIDConverter.fromInt(6),
+                            libraryItemId = UUIDConverter.fromInt(2),
+                            durationSeconds = 180,
+                            startTimestamp = FakeTimeProvider.START_TIME,
+                        ),
+                        libraryItem = LibraryItem(
+                            id = UUIDConverter.fromInt(2),
+                            name = "TestItem1",
+                            colorIndex = 1,
+                            libraryFolderId = null,
+                            customOrder = null,
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME
+                        ),
+                    )
+                )
+            )
+        )
     }
 }
