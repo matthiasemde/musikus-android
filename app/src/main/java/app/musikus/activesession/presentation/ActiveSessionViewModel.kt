@@ -50,7 +50,6 @@ import kotlinx.coroutines.runBlocking
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
@@ -65,6 +64,12 @@ class ActiveSessionViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
+
+    private val state = activeSessionUseCases.getState().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = null
+    )
 
     private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
         scope = viewModelScope,
@@ -130,48 +135,41 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ------------------- Combined flows ---------------------------- */
 
-    private val totalPracticeDuration = combine(
-        sessionState,
-        timeProvider.clock
-    ) { sessionState, now ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
-        activeSessionUseCases.getTotalPracticeDuration(now)
+    private val totalPracticeDuration = timeProvider.clock.map { now ->
+        // we intentionally do not collect events from the flow here in order to avoid race conditions
+        state.value?.let {
+            activeSessionUseCases.computeTotalPracticeDuration(it, now)
+        } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
-    private val ongoingPauseDuration = combine(
-        sessionState,
-        timeProvider.clock
-    ) { sessionState, now ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
-        activeSessionUseCases.getOngoingPauseDuration(now)
+    private val ongoingPauseDuration = timeProvider.clock.map { now ->
+        // we intentionally do not collect events from the flow here in order to avoid race conditions
+        state.value?.let {
+            activeSessionUseCases.computeOngoingPauseDuration(it, now)
+        } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
-    private val runningItemDuration = combine(
-        sessionState,
-        timeProvider.clock
-    ) { sessionState, now ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine Duration.ZERO
-        activeSessionUseCases.getRunningItemDuration(now)
+    private val runningItemDuration = timeProvider.clock.map { now ->
+        // we intentionally do not collect events from the flow here in order to avoid race conditions
+        state.value?.let {
+            activeSessionUseCases.computeRunningItemDuration(it, now)
+        } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
-    val isFinishButtonEnabled = combine(
-        sessionState,
-        timeProvider.clock
-    ) { sessionState, now ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine false
-        activeSessionUseCases.getTotalPracticeDuration(now) > 1.seconds
+    val isFinishButtonEnabled = totalPracticeDuration.map {
+        it > 1.seconds
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -399,12 +397,7 @@ class ActiveSessionViewModel @Inject constructor(
         if (sessionState.value == ActiveSessionState.PAUSED) {
             activeSessionUseCases.resume(timeProvider.now())
         }
-        // wait until the current item has been running for at least 1 second
-        if (sessionState.value != ActiveSessionState.NOT_STARTED &&
-            activeSessionUseCases.getRunningItemDuration(timeProvider.now()) < 1.seconds
-        ) {
-            delay(1000.milliseconds)
-        }
+
         activeSessionUseCases.selectItem(
             item = item,
             at = timeProvider.now()
@@ -412,9 +405,6 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     private suspend fun deleteSection(sectionId: UUID) {
-        if (sessionState.value == ActiveSessionState.PAUSED) {
-            activeSessionUseCases.resume(timeProvider.now())
-        }
         activeSessionUseCases.deleteSection(sectionId)
     }
 

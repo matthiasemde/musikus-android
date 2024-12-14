@@ -202,8 +202,11 @@ class SessionService : Service() {
 
         // TODO: move this logic to use case
         try {
+            val state = useCases.getState().first()
+            check(state != null) { "State is null. Cannot create notification." }
+
             val totalPracticeDurationStr = getDurationString(
-                useCases.getTotalPracticeDuration(timeProvider.now()),
+                useCases.computeTotalPracticeDuration(state, timeProvider.now()),
                 DurationFormat.HMS_DIGITAL
             )
 
