@@ -22,6 +22,7 @@ import app.musikus.core.presentation.MainActivity
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
+import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -43,8 +44,12 @@ class ActiveSessionScreenTest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    var wasNavigateUpCalled = false
+
     @Before
     fun setUp() {
+        wasNavigateUpCalled = false
+
         hiltRule.inject()
 
         composeRule.activity.setContent {
@@ -61,6 +66,12 @@ class ActiveSessionScreenTest {
                 libraryUseCases.addItem(
                     LibraryItemCreationAttributes(
                         name = "TestItem2",
+                        colorIndex = 2,
+                    )
+                )
+                libraryUseCases.addItem(
+                    LibraryItemCreationAttributes(
+                        name = "TestItem3",
                         colorIndex = 1,
                         libraryFolderId = Nullable(UUIDConverter.fromInt(1))
                     )
@@ -68,7 +79,7 @@ class ActiveSessionScreenTest {
             }
 
             ActiveSession(
-                navigateUp = {}
+                navigateUp = { wasNavigateUpCalled = true }
             )
         }
     }
@@ -102,5 +113,60 @@ class ActiveSessionScreenTest {
 
         // Pause timer is hidden
         composeRule.onNodeWithText("Paused", substring = true).assertIsNotDisplayed()
+    }
+
+    @Test
+    fun selectItemFromFolder() {
+        // Open item selector
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+
+        // Select folder
+        composeRule.onNodeWithText("TestFolder1").performClick()
+
+        // Select item
+        composeRule.onNodeWithText("TestItem3").performClick()
+
+        // Item is selected
+        composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+    }
+
+    @Test
+    fun practiceMultipleItemsInARow() {
+        // Open item selector
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+
+        // Select item
+        composeRule.onNodeWithText("TestItem1").performClick()
+
+        // Item is selected
+        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
+
+        // Open item selector again
+        composeRule.onNodeWithContentDescription("Next item").performClick()
+
+        // Select next item
+        composeRule.onNodeWithText("TestItem2").performClick()
+
+        // Item is selected
+        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+    }
+
+    @Test
+    fun discardSession() {
+        // Start session
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+        composeRule.onNodeWithText("TestItem1").performClick()
+
+        // Discard session
+        composeRule.onNodeWithContentDescription("Discard").performClick()
+
+        // Confirm discard
+        composeRule.onNodeWithText("Discard session?", substring = true).performClick()
+
+        // Session is discarded and screen is reset
+        composeRule.onNodeWithContentDescription("Start practicing").assertIsDisplayed()
+
+        // Navigate up is called
+        assertThat(wasNavigateUpCalled).isTrue()
     }
 }

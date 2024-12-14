@@ -37,11 +37,6 @@ class SelectItemUseCase(
                 throw IllegalStateException("Must not select the same library item which is already running.")
             }
 
-            // check too fast
-            if (computeRunningItemDuration(state, at) < 1.seconds) {
-                throw IllegalStateException("Must wait for at least one second before starting a new section.")
-            }
-
             // only start new item when not paused
             if (state.isPaused) throw IllegalStateException("You must resume before selecting a new item.")
 
