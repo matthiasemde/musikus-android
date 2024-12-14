@@ -15,7 +15,7 @@ import java.time.ZonedDateTime
 
 class ResumeActiveSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getOngoingPauseDurationUseCase: GetOngoingPauseDurationUseCase,
+    private val computeOngoingPauseDurationUseCase: ComputeOngoingPauseDurationUseCase,
 ) {
     suspend operator fun invoke(at: ZonedDateTime) {
         val state = activeSessionRepository.getSessionState().first()
@@ -25,7 +25,7 @@ class ResumeActiveSessionUseCase(
             throw IllegalStateException("Cannot resume when not paused")
         }
 
-        val currentPauseDuration = getOngoingPauseDurationUseCase(at)
+        val currentPauseDuration = computeOngoingPauseDurationUseCase(state, at)
         activeSessionRepository.setSessionState(
             state.copy(
                 startTimestampSectionPauseCompensated =

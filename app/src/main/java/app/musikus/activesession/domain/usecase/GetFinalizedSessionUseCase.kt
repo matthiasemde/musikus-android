@@ -20,8 +20,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class GetFinalizedSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningItemDuration: GetRunningItemDurationUseCase,
-    private val getOngoingPauseDuration: GetOngoingPauseDurationUseCase,
+    private val computeRunningItemDuration: ComputeRunningItemDurationUseCase,
+    private val computeOngoingPauseDuration: ComputeOngoingPauseDurationUseCase,
     private val idProvider: IdProvider
 ) {
     suspend operator fun invoke(at: ZonedDateTime): SessionState {
@@ -29,8 +29,8 @@ class GetFinalizedSessionUseCase(
             ?: throw IllegalStateException("State is null. Cannot finish session!")
 
         // take time
-        val runningSectionRoundedDuration = getRunningItemDuration(at).inWholeSeconds.seconds
-        val ongoingPauseDuration = getOngoingPauseDuration(at)
+        val runningSectionRoundedDuration = computeRunningItemDuration(state, at).inWholeSeconds.seconds
+        val ongoingPauseDuration = computeOngoingPauseDuration(state, at)
 
         // append finished section to completed sections
         val updatedSections = state.completedSections

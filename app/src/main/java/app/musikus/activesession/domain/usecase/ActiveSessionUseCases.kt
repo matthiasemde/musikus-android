@@ -9,15 +9,16 @@
 package app.musikus.activesession.domain.usecase
 
 data class ActiveSessionUseCases(
+    val getState: GetActiveSessionStateUseCase,
     val selectItem: SelectItemUseCase,
     val deleteSection: DeleteSectionUseCase,
     val pause: PauseActiveSessionUseCase,
     val resume: ResumeActiveSessionUseCase,
-    val getTotalPracticeDuration: GetTotalPracticeDurationUseCase,
-    val getRunningItemDuration: GetRunningItemDurationUseCase,
+    val computeTotalPracticeDuration: ComputeTotalPracticeDurationUseCase,
+    val computeRunningItemDuration: ComputeRunningItemDurationUseCase,
     val getRunningItem: GetRunningItemUseCase,
     val getCompletedSections: GetCompletedSectionsUseCase,
-    val getOngoingPauseDuration: GetOngoingPauseDurationUseCase,
+    val computeOngoingPauseDuration: ComputeOngoingPauseDurationUseCase,
     val getStartTime: GetStartTimeUseCase,
     val getFinalizedSession: GetFinalizedSessionUseCase,
     val reset: ResetSessionUseCase,
