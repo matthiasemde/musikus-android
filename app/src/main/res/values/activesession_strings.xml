@@ -14,7 +14,7 @@
 
     <!-- ActiveSessionTopBar -->
     <string name="active_session_top_bar_pause">Pause</string>
-    <string name="active_session_top_bar_delete">Delete</string>
+    <string name="active_session_top_bar_delete">Discard</string>
     <string name="active_session_top_bar_save">Finish</string>
 
     <!-- ActiveSessionTimer -->
