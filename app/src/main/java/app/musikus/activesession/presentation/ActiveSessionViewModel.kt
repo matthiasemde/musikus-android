@@ -169,7 +169,7 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
     val isFinishButtonEnabled = totalPracticeDuration.map {
-        it > 1.seconds
+        it >= 1.seconds
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
