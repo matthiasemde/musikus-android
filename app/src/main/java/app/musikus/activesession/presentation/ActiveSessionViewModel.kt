@@ -130,8 +130,12 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
     private val _newItemSelectorVisible = MutableStateFlow(false)
+
     private val _exceptionChannel = Channel<ActiveSessionException>()
     val exceptionChannel = _exceptionChannel.receiveAsFlow()
+
+    private val _eventChannel = Channel<ActiveSessionEvent>()
+    val eventChannel = _eventChannel.receiveAsFlow()
 
     /** ------------------- Combined flows ---------------------------- */
 
@@ -325,9 +329,6 @@ class ActiveSessionViewModel @Inject constructor(
         )
     ).asStateFlow()
 
-    private val navigationChannel = Channel<NavigationEvent>()
-    val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
-
     init {
         /** Hide the Tools Bottom Sheet on Startup */
         runBlocking(context = Dispatchers.IO) {
@@ -340,7 +341,7 @@ class ActiveSessionViewModel @Inject constructor(
                 //  also take into account whether recording is in progress or metronome is running
                 //  and open the respective tab in case
 //                viewModelScope.launch {
-//                    navigationChannel.send(NavigationEvent.HideTools)
+//                    _eventChannel.send(ActiveSessionEvent.HideTools)
 //                }
             }
         }
@@ -353,7 +354,7 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
             is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
             is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
-            ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> discardSession()
+            ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> activeSessionUseCases.reset()
             ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleNewItemSelector -> viewModelScope.launch {
@@ -408,13 +409,6 @@ class ActiveSessionViewModel @Inject constructor(
         activeSessionUseCases.deleteSection(sectionId)
     }
 
-    private fun discardSession() {
-        activeSessionUseCases.reset()
-        viewModelScope.launch {
-            navigationChannel.send(NavigationEvent.NavigateUp)
-        }
-    }
-
     private suspend fun togglePauseState() {
         when (sessionState.value) {
             ActiveSessionState.RUNNING -> activeSessionUseCases.pause(timeProvider.now())
@@ -446,13 +440,9 @@ class ActiveSessionViewModel @Inject constructor(
             }
         )
         activeSessionUseCases.reset() // reset the active session state
-        viewModelScope.launch {
-            navigationChannel.send(NavigationEvent.NavigateUp)
-        }
     }
 }
 
-sealed interface NavigationEvent {
-    object NavigateUp : NavigationEvent
-    object HideTools : NavigationEvent
+sealed interface ActiveSessionEvent {
+    object HideTools : ActiveSessionEvent
 }

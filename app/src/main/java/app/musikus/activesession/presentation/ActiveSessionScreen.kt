@@ -91,8 +91,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
@@ -152,6 +150,8 @@ import app.musikus.R
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.MainUiEvent
+import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
@@ -159,7 +159,6 @@ import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.SwipeToDeleteContainer
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.fadingEdge
-import app.musikus.core.presentation.components.showSnackbar
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2
@@ -188,7 +187,6 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -229,6 +227,7 @@ data class ScreenSizeClass(
 @Composable
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
+    mainEventHandler: MainUiEventHandler,
     deepLinkAction: ActiveSessionActions? = null,
     navigateUp: () -> Unit,
 ) {
@@ -237,7 +236,6 @@ fun ActiveSession(
     val scope = rememberCoroutineScope()
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
-    val snackbarHostState = remember { SnackbarHostState() }
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             skipHiddenState = false,
@@ -256,18 +254,15 @@ fun ActiveSession(
             type = ActiveSessionTab.RECORDER,
             title = stringResource(id = R.string.active_session_toolbar_recorder),
             icon = UiIcon.DynamicIcon(Icons.Default.Mic),
-            content = { RecorderUi(snackbarHostState = snackbarHostState) }
+            content = { RecorderUi(showSnackbar = { mainEventHandler(it) }) }
         )
     ).toImmutableList()
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
 
-    ObserveAsEvents(viewModel.navigationEventsChannelFlow) { event ->
+    ObserveAsEvents(viewModel.eventChannel) { event ->
         when (event) {
-            is NavigationEvent.NavigateUp -> {
-                navigateUp()
-            }
-            is NavigationEvent.HideTools -> {
+            is ActiveSessionEvent.HideTools -> {
                 scope.launch {
                     bottomSheetScaffoldState.bottomSheetState.hide()
                 }
@@ -294,7 +289,7 @@ fun ActiveSession(
         tabs = tabs,
         bottomSheetScaffoldState = bottomSheetScaffoldState,
         bottomSheetPagerState = bottomSheetPagerState,
-        snackbarHostState = snackbarHostState,
+        showSnackbar = { mainEventHandler(it) },
         sizeClass = ScreenSizeClass(
             windowsSizeClass.widthSizeClass,
             windowsSizeClass.heightSizeClass
@@ -362,12 +357,11 @@ private fun ActiveSessionScreen(
     bottomSheetScaffoldState: BottomSheetScaffoldState,
     bottomSheetPagerState: PagerState,
     sizeClass: ScreenSizeClass,
-    snackbarHostState: SnackbarHostState,
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
 ) {
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
         screenSizeClass = sizeClass,
-        snackbarHostState = snackbarHostState,
         bottomSheetScaffoldState = bottomSheetScaffoldState,
         topBar = {
             ActiveSessionTopBar(
@@ -392,7 +386,7 @@ private fun ActiveSessionScreen(
                 contentPadding = padding,
                 uiState = uiState.value.mainContentUiState.collectAsState(),
                 sessionState = uiState.value.sessionState.collectAsState(),
-                snackbarHostState = snackbarHostState,
+                showSnackbar = showSnackbar,
                 eventHandler = eventHandler,
                 screenSizeClass = sizeClass
             )
@@ -450,9 +444,8 @@ private fun ActiveSessionScreen(
                 )
             },
             onConfirm = {
-                eventHandler(
-                    dialogEvent(ActiveSessionEndDialogUiEvent.Confirmed)
-                )
+                eventHandler(dialogEvent(ActiveSessionEndDialogUiEvent.Confirmed))
+                navigateUp()
             }
         )
     }
@@ -488,7 +481,6 @@ private fun ActiveSessionAdaptiveScaffold(
     mainContent: @Composable (State<PaddingValues>) -> Unit,
     toolsContent: @Composable () -> Unit,
     bottomSheetScaffoldState: BottomSheetScaffoldState,
-    snackbarHostState: SnackbarHostState,
 ) {
     if (screenSizeClass.height == WindowHeightSizeClass.Compact) {
         /** Landscape / small height. Use two columns with main content left, bottom sheet right. */
@@ -497,7 +489,6 @@ private fun ActiveSessionAdaptiveScaffold(
             // Scaffold needed for topBar
             modifier = modifier,
             topBar = topBar,
-            snackbarHost = { SnackbarHost(snackbarHostState) }
         ) {
             Row(
                 modifier = Modifier
@@ -546,7 +537,6 @@ private fun ActiveSessionAdaptiveScaffold(
             modifier = modifier,
             topBar = topBar,
             bottomBar = bottomBar,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             content = { paddingValues ->
                 Surface(Modifier.padding(paddingValues)) { // don't overlap with bottomBar
                     ToolsBottomSheetScaffold(
@@ -616,7 +606,7 @@ private fun ActiveSessionMainContent(
     contentPadding: State<PaddingValues>,
     uiState: State<ActiveSessionContentUiState>,
     sessionState: State<ActiveSessionState>,
-    snackbarHostState: SnackbarHostState,
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     eventHandler: ActiveSessionUiEventHandler,
 ) {
     // condense UI a bit if there is limited space
@@ -694,10 +684,9 @@ private fun ActiveSessionMainContent(
                 if (pastItemsState.value != null) {
                     SectionList(
                         uiState = pastItemsState,
-                        scope = rememberCoroutineScope(),
                         nestedScrollConnection = nestedScrollConnection, // for hiding the FAB
                         listState = sectionsListState,
-                        snackbarHostState = snackbarHostState,
+                        showSnackbar = showSnackbar,
                         onSectionDeleted = remember {
                             {
                                     section ->
@@ -1090,11 +1079,10 @@ private fun CurrentPracticingItem(
 @Composable
 private fun SectionList(
     uiState: State<ActiveSessionCompletedSectionsUiState?>,
-    scope: CoroutineScope,
     onSectionDeleted: (CompletedSectionUiState) -> Unit,
     nestedScrollConnection: NestedScrollConnection,
     listState: LazyListState,
-    snackbarHostState: SnackbarHostState,
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     additionalBottomContentPadding: Dp = 0.dp,
 ) {
     val listUiState = uiState.value ?: return
@@ -1129,9 +1117,8 @@ private fun SectionList(
             ) { item ->
                 SectionListElement(
                     modifier = Modifier.animateItem(),
-                    scope = scope,
                     item = item,
-                    snackbarHostState = snackbarHostState,
+                    showSnackbar = showSnackbar,
                     onSectionDeleted = onSectionDeleted,
                 )
             }
@@ -1151,9 +1138,8 @@ private fun SectionList(
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
-    scope: CoroutineScope,
     item: CompletedSectionUiState,
-    snackbarHostState: SnackbarHostState,
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -1176,13 +1162,10 @@ private fun SectionListElement(
         onDeleted = {
             onSectionDeleted(item)
             showSnackbar(
-                context = context,
-                scope = scope,
-                hostState = snackbarHostState,
-                message = context.getString(R.string.active_session_sections_list_element_deleted),
-                onUndo = {
-                    TODO("Fix this using soft delete of sections in repository")
-                }
+                MainUiEvent.ShowSnackbar(
+                    message = context.getString(R.string.active_session_sections_list_element_deleted),
+                    onUndo = { }
+                )
             )
         }
     ) {
@@ -1602,7 +1585,7 @@ private fun PreviewActiveSessionScreen(
             navigateUp = {},
             bottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
             bottomSheetPagerState = rememberPagerState(pageCount = { 2 }),
-            snackbarHostState = remember { SnackbarHostState() }
+            showSnackbar = {}
         )
     }
 }
@@ -1628,8 +1611,7 @@ private fun PreviewSectionItem(
     MusikusThemedPreview(theme) {
         SectionListElement(
             item = dummySections.first(),
-            snackbarHostState = remember { SnackbarHostState() },
-            scope = rememberCoroutineScope()
+            showSnackbar = { },
         )
     }
 }
