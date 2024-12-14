@@ -18,6 +18,9 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.navigation.NavHostController
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -25,6 +28,8 @@ import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.domain.plus
 import app.musikus.core.presentation.MainActivity
+import app.musikus.core.presentation.MainUiEvent
+import app.musikus.core.presentation.MainViewModel
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
@@ -35,6 +40,9 @@ import app.musikus.sessions.domain.usecase.SessionsUseCases
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -48,6 +56,7 @@ import kotlin.time.Duration.Companion.seconds
 @HiltAndroidTest
 class ActiveSessionScreenTest {
     @Inject lateinit var libraryUseCases: LibraryUseCases
+
     @Inject lateinit var sessionsUseCases: SessionsUseCases
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
@@ -58,42 +67,45 @@ class ActiveSessionScreenTest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    var wasNavigateUpCalled = false
+    lateinit var navController: NavHostController
+    lateinit var mainViewModel: MainViewModel
 
     @Before
     fun setUp() {
-        wasNavigateUpCalled = false
-
         hiltRule.inject()
 
-        composeRule.activity.setContent {
-            runBlocking {
-                libraryUseCases.addFolder(
-                    LibraryFolderCreationAttributes("TestFolder1")
-                )
-                libraryUseCases.addItem(
-                    LibraryItemCreationAttributes(
-                        name = "TestItem1",
-                        colorIndex = 1,
-                    )
-                )
-                libraryUseCases.addItem(
-                    LibraryItemCreationAttributes(
-                        name = "TestItem2",
-                        colorIndex = 2,
-                    )
-                )
-                libraryUseCases.addItem(
-                    LibraryItemCreationAttributes(
-                        name = "TestItem3",
-                        colorIndex = 1,
-                        libraryFolderId = Nullable(UUIDConverter.fromInt(1))
-                    )
-                )
-            }
+        navController = mockk<NavHostController>(relaxed = true)
+        mainViewModel = mockk<MainViewModel>(relaxed = true)
 
+        runBlocking {
+            libraryUseCases.addFolder(
+                LibraryFolderCreationAttributes("TestFolder1")
+            )
+            libraryUseCases.addItem(
+                LibraryItemCreationAttributes(
+                    name = "TestItem1",
+                    colorIndex = 1,
+                )
+            )
+            libraryUseCases.addItem(
+                LibraryItemCreationAttributes(
+                    name = "TestItem2",
+                    colorIndex = 2,
+                )
+            )
+            libraryUseCases.addItem(
+                LibraryItemCreationAttributes(
+                    name = "TestItem3",
+                    colorIndex = 1,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1))
+                )
+            )
+        }
+
+        composeRule.activity.setContent {
             ActiveSession(
-                navigateUp = { wasNavigateUpCalled = true }
+                navigateUp = navController::navigateUp,
+                mainEventHandler = mainViewModel::onUiEvent,
             )
         }
     }
@@ -178,11 +190,47 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("Discard session?", substring = true).performClick()
 
         // Navigate up is called
-        assertThat(wasNavigateUpCalled).isTrue()
+        verify(exactly = 1) {
+            navController.navigateUp()
+        }
 
         // Sessions are still empty
         val sessions = sessionsUseCases.getAll().first()
         assertThat(sessions).isEmpty()
+    }
+
+    @Test
+    fun deleteSection() = runTest {
+        // Start session
+        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+        composeRule.onNodeWithText("TestItem1").performClick()
+
+        // Advance time
+        fakeTimeProvider.advanceTimeBy(3.minutes)
+
+        // Start next section
+        composeRule.onNodeWithContentDescription("Next item").performClick()
+        composeRule.onNodeWithText("TestItem2").performClick()
+
+        // Delete previous section
+        composeRule.onNodeWithText("TestItem1").performTouchInput { swipeLeft() }
+
+        composeRule.awaitIdle()
+
+        // Assert showSnackbar is called
+        val uiEventSlot = slot<MainUiEvent>()
+
+        verify(exactly = 1) {
+            mainViewModel.onUiEvent(capture(uiEventSlot))
+        }
+
+        val uiEvent = uiEventSlot.captured
+        check(uiEvent is MainUiEvent.ShowSnackbar)
+        assertThat(uiEvent.message).isEqualTo("Section deleted")
+        assertThat(uiEvent.onUndo).isNotNull()
+
+        // Assert section is deleted
+        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
     }
 
     @Test
@@ -230,7 +278,9 @@ class ActiveSessionScreenTest {
         composeRule.awaitIdle()
 
         // Navigate up is called
-        assertThat(wasNavigateUpCalled).isTrue()
+        verify(exactly = 1) {
+            navController.navigateUp()
+        }
 
         // Sessions are still empty
         val sessions = sessionsUseCases.getAll().first()
