@@ -37,8 +37,10 @@ object MainModule {
 
     @Provides
     @Singleton
-    fun provideTimeProvider(): TimeProvider {
-        return TimeProviderImpl()
+    fun provideTimeProvider(
+        @ApplicationScope scope: CoroutineScope
+    ): TimeProvider {
+        return TimeProviderImpl(scope)
     }
 
     @Provides

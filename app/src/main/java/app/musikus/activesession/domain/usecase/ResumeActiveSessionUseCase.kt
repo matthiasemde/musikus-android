@@ -11,12 +11,13 @@ package app.musikus.activesession.domain.usecase
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.core.domain.plus
 import kotlinx.coroutines.flow.first
+import java.time.ZonedDateTime
 
 class ResumeActiveSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getOngoingPauseDurationUseCase: GetOngoingPauseDurationUseCase,
+    private val computeOngoingPauseDurationUseCase: ComputeOngoingPauseDurationUseCase,
 ) {
-    suspend operator fun invoke() {
+    suspend operator fun invoke(at: ZonedDateTime) {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("Cannot resume when state is null")
 
@@ -24,7 +25,7 @@ class ResumeActiveSessionUseCase(
             throw IllegalStateException("Cannot resume when not paused")
         }
 
-        val currentPauseDuration = getOngoingPauseDurationUseCase()
+        val currentPauseDuration = computeOngoingPauseDurationUseCase(state, at)
         activeSessionRepository.setSessionState(
             state.copy(
                 startTimestampSectionPauseCompensated =

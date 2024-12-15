@@ -9,16 +9,13 @@
 package app.musikus.activesession.domain.usecase
 
 import app.musikus.activesession.domain.ActiveSessionRepository
-import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.first
-import kotlin.time.Duration.Companion.seconds
+import java.time.ZonedDateTime
 
 class PauseActiveSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
-    private val timeProvider: TimeProvider
 ) {
-    suspend operator fun invoke() {
+    suspend operator fun invoke(at: ZonedDateTime) {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("Cannot pause when state is null")
 
@@ -26,13 +23,9 @@ class PauseActiveSessionUseCase(
             throw IllegalStateException("Cannot pause when already paused.")
         }
 
-        // ignore pause if first section is running and less than 1 second has passed
-        // (prevents finishing empty session)
-        if (state.completedSections.isEmpty() && getRunningItemDurationUseCase() < 1.seconds) return
-
         activeSessionRepository.setSessionState(
             state.copy(
-                currentPauseStartTimestamp = timeProvider.now(),
+                currentPauseStartTimestamp = at,
                 isPaused = true
             )
         )

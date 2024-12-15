@@ -103,6 +103,7 @@ fun MusikusNavHost(
 
             ActiveSession(
                 deepLinkAction = deepLinkAction,
+                mainEventHandler = mainEventHandler,
                 navigateUp = navController::navigateUp,
             )
         }
