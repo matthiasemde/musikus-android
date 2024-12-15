@@ -118,14 +118,16 @@ class LibraryFolderDetailsScreenTest {
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
+        composeRule.awaitIdle()
+
         // Check if items are displayed in correct order
         var itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
         itemNodes.assertCountEquals(3)
 
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains(namesAndColors[namesAndColors.lastIndex - i].first)
-        }
+        itemNodes[0].assertTextContains("TestItem2")
+        itemNodes[1].assertTextContains("TestItem1")
+        itemNodes[2].assertTextContains("TestItem3")
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
