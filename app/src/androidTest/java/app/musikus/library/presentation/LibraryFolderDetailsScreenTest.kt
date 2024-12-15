@@ -130,6 +130,8 @@ class LibraryFolderDetailsScreenTest {
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
+        composeRule.awaitIdle()
+
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
@@ -141,6 +143,8 @@ class LibraryFolderDetailsScreenTest {
 
         // Change sorting mode to name ascending
         clickSortMode("items", "Name")
+
+        composeRule.awaitIdle()
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
