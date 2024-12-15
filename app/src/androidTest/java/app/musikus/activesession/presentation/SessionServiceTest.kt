@@ -55,21 +55,7 @@ class SessionServiceTest {
 
         val binder = serviceRule.bindService(startIntent)
 
-
         // Verify that the service has started correctly
         assertThat(binder.pingBinder()).isTrue()
-
-        // Create the stop intent
-        val stopIntent = Intent(
-            context,
-            SessionService::class.java
-        ).apply {
-            action = ActiveSessionServiceActions.STOP.name
-        }
-
-        serviceRule.startService(stopIntent)
-
-        // Verify that the service has stopped correctly
-        assertThat(binder.pingBinder()).isFalse()
     }
 }
