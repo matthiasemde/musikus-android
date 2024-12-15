@@ -48,8 +48,10 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Build
-      run: ./gradlew assembleDebug
+    - name: Build (Unit tests & Android tests)
+      run: |
+        ./gradlew assembleDebugUnitTest
+        ./gradlew assembleDebugAndroidTest
 
     - name: Tar build files
       run: tar -cvf build.tar app/build .gradle
