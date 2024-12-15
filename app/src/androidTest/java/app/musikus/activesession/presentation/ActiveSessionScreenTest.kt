@@ -21,6 +21,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.navigation.NavHostController
+import app.MinApiVersion
+import app.MinApiVersionRule
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -62,10 +64,14 @@ class ActiveSessionScreenTest {
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
     @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
+    val minApiVersionRule = MinApiVersionRule()
 
     @get:Rule(order = 1)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 2)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
 
     lateinit var navController: NavHostController
     lateinit var mainViewModel: MainViewModel
@@ -200,6 +206,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
+    @MinApiVersion(25)
     fun deleteAndRedoSection() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
