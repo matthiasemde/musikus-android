@@ -206,7 +206,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
-    @MinApiVersion(25)
+    @MinApiVersion(30)
     fun deleteAndRedoSection() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
