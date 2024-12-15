@@ -117,14 +117,12 @@ class TimeProviderImpl(scope: CoroutineScope) : TimeProvider {
 
     override val clock: StateFlow<ZonedDateTime> = flow {
         while (true) {
-            emit(ZonedDateTime.now()) // Emit the current time
-            delay(100.milliseconds) // Wait 100 milliseconds
+            emit(ZonedDateTime.now())
+            delay(100.milliseconds)
         }
     }.onStart {
-        println("Clock started")
         isClockRunning = true
     }.onCompletion {
-        println("Clock stopped")
         isClockRunning = false
     }.stateIn(
         scope = scope,
@@ -134,10 +132,8 @@ class TimeProviderImpl(scope: CoroutineScope) : TimeProvider {
 
     override fun now(): ZonedDateTime {
         return if (isClockRunning) {
-            println("get running clock value")
             clock.value
         } else {
-            println("get zoned date time now")
             ZonedDateTime.now()
         }
     }
