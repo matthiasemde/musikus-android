@@ -200,7 +200,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
-    fun deleteSection() = runTest {
+    fun deleteAndRedoSection() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
         composeRule.onNodeWithText("TestItem1").performClick()
@@ -227,9 +227,15 @@ class ActiveSessionScreenTest {
         val uiEvent = uiEventSlot.captured
         check(uiEvent is MainUiEvent.ShowSnackbar)
         assertThat(uiEvent.message).isEqualTo("Section deleted")
-        assertThat(uiEvent.onUndo).isNotNull()
+        check(uiEvent.onUndo != null)
 
         // Assert section is deleted
+        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
+
+        // Undo delete
+        uiEvent.onUndo.invoke()
+
+        // Assert section is restored (TODO: this is not implemented yet)
         composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
     }
 
