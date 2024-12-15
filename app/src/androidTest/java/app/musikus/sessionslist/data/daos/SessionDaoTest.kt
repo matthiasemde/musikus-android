@@ -10,6 +10,8 @@ package app.musikus.sessionslist.data.daos
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
+import app.MinApiVersion
+import app.MinApiVersionRule
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
@@ -55,7 +57,10 @@ class SessionDaoTest {
     @Inject
     lateinit var fakeTimeProvider: FakeTimeProvider
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val minApiVersionRule = MinApiVersionRule()
+
+    @get:Rule(order = 1)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -246,12 +251,13 @@ class SessionDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun updateSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
             sessionDaoSpy.update(UUIDConverter.fromInt(1), SessionUpdateAttributes())
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // ignore
         }
 
@@ -299,12 +305,13 @@ class SessionDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun deleteSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
             sessionDaoSpy.delete(UUIDConverter.fromInt(1))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // ignore
         }
 
@@ -387,12 +394,13 @@ class SessionDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun restoreSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
             sessionDaoSpy.restore(UUIDConverter.fromInt(1))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // ignore
         }
 
@@ -446,12 +454,13 @@ class SessionDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun getSpecificSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
             sessionDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // ignore
         }
 
@@ -599,7 +608,8 @@ class SessionDaoTest {
             }
         }
 
-        assertThat(exception.message).isEqualTo(
+        assertThat(exception.message).isAnyOf(
+            "FOREIGN KEY constraint failed (code 787)",
             "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
         )
     }
