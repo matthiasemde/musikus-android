@@ -100,7 +100,7 @@ jobs:
 
     strategy:
       matrix:
-        api-level: [34]
+        api-level: [24-35]
 
     steps:
       - uses: actions/checkout@v4
