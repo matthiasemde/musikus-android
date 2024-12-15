@@ -76,7 +76,6 @@ fun htmlResource(@StringRes resId: Int, vararg formatArgs: Any): AnnotatedString
     return AnnotatedString.Builder().apply {
         append(spanned.toString())
         spanned.getSpans(0, spanned.length, Any::class.java).forEach { span ->
-            println(span)
             val start = spanned.getSpanStart(span)
             val end = spanned.getSpanEnd(span)
 
