@@ -34,6 +34,7 @@ import app.musikus.core.presentation.utils.TestTags
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
+import app.waitUntilRuns
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -121,40 +122,42 @@ class LibraryFolderDetailsScreenTest {
         composeRule.awaitIdle()
 
         // Check if items are displayed in correct order
-        var itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
+        composeRule.waitUntilRuns {
+            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
-        itemNodes.assertCountEquals(3)
+            itemNodes.assertCountEquals(3)
 
-        itemNodes[0].assertTextContains("TestItem2")
-        itemNodes[1].assertTextContains("TestItem1")
-        itemNodes[2].assertTextContains("TestItem3")
+            itemNodes[0].assertTextContains("TestItem2")
+            itemNodes[1].assertTextContains("TestItem1")
+            itemNodes[2].assertTextContains("TestItem3")
+        }
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
-        composeRule.awaitIdle()
-
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
+        composeRule.waitUntilRuns {
+            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
-        itemNodes.assertCountEquals(namesAndColors.size)
+            itemNodes.assertCountEquals(namesAndColors.size)
 
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
+            for (i in namesAndColors.indices) {
+                itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
+            }
         }
 
         // Change sorting mode to name ascending
         clickSortMode("items", "Name")
 
-        composeRule.awaitIdle()
-
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
+        composeRule.waitUntilRuns {
+            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
-        itemNodes.assertCountEquals(namesAndColors.size)
+            itemNodes.assertCountEquals(namesAndColors.size)
 
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${i + 1}")
+            for (i in namesAndColors.indices) {
+                itemNodes[i].assertTextContains("TestItem${i + 1}")
+            }
         }
     }
 
