@@ -8,9 +8,6 @@ on:
 env:
     JAVA_VERSION: 17
     JAVA_DISTRO: 'zulu'
-    ANDROID_USER_HOME: /home/runner/.android
-    ANDROID_EMULATOR_HOME: /home/runner/.android
-    ANDROID_AVD_HOME: /home/runner/.android/avd
 
 jobs:
   checks:
@@ -100,7 +97,7 @@ jobs:
   instrumentation-tests:
     name: Instrumentation tests
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     strategy:
@@ -146,7 +143,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
     
       - name: Run instrumented tests
-        uses: reactivecircus/android-emulator-runner@v2.32.0
+        uses: reactivecircus/android-emulator-runner@v2.33.0
         with:
           api-level: ${{ matrix.api-level }}
           arch: ${{ steps.avd-info.outputs.arch }}
