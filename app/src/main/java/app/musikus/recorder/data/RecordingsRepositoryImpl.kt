@@ -71,7 +71,7 @@ class RecordingsRepositoryImpl(
 
             repeat(mediaExtractor.trackCount) { trackIndex ->
                 mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
-                if (mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                if (mediaFormat.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
                     mediaExtractor.selectTrack(trackIndex)
                     return@repeat
                 }
@@ -162,7 +162,7 @@ class RecordingsRepositoryImpl(
                         if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             coroutine.resume(
                                 value = Result.success(recordingBuffer.toShortArray()),
-                                onCancellation = null
+                                onCancellation = { _, _, _ -> null }
                             )
                             return
                         }
@@ -176,7 +176,7 @@ class RecordingsRepositoryImpl(
 
                     override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
                         Log.e("RecordingsRepository", "Error in mediacodec callback: $e")
-                        coroutine.resume(Result.failure(e), onCancellation = null)
+                        coroutine.resume(Result.failure(e)) { _, _, _ -> null }
                     }
 
                     override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

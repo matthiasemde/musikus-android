@@ -175,7 +175,7 @@ fun SessionsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .animateItemPlacement(),
+                                .animateItem(),
                         ) {
                             MonthHeader(
                                 month = monthDatum.month,
