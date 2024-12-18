@@ -8,6 +8,9 @@ on:
 env:
     JAVA_VERSION: 17
     JAVA_DISTRO: 'zulu'
+    ANDROID_USER_HOME: /home/runner/.android
+    ANDROID_EMULATOR_HOME: /home/runner/.android
+    ANDROID_AVD_HOME: /home/runner/.android/avd
 
 jobs:
   checks:
