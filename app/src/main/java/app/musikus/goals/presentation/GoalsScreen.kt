@@ -195,7 +195,7 @@ fun GoalsScreen(
                 ) { goal ->
                     val descriptionId = goal.description.description.id
                     Selectable(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                         selected = descriptionId in contentUiState.selectedGoalIds,
                         onShortClick = {
                             eventHandler(

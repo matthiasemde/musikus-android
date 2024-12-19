@@ -7,6 +7,7 @@ on:
 
 env:
     JAVA_VERSION: 17
+    JAVA_DISTRO: 'zulu'
 
 jobs:
   checks:
@@ -20,7 +21,7 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
+        distribution: ${{ env.JAVA_DISTRO }}
         cache: gradle
 
     - name: Check Gradle wrapper
@@ -45,14 +46,14 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
+        distribution: ${{ env.JAVA_DISTRO }}
         cache: gradle
 
-    - name: Build
-      run: ./gradlew assembleDebug
+    - name: Build (Unit tests & Android tests)
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Tar build files
-      run: tar -cvf build.tar app/build .gradle
+      run: tar -cf build.tar app/build .gradle
 
     - name: Upload build tar
       uses: actions/upload-artifact@v4
@@ -70,7 +71,7 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
+        distribution: ${{ env.JAVA_DISTRO }}
         cache: gradle
 
     - name: Download build artifact
@@ -81,12 +82,13 @@ jobs:
 
     - name: Extract build files
       run: |
-        tar -xvf build.tar
+        tar -xf build.tar
 
-    - name: Unit tests
+    - name: Run unit tests
       run: ./gradlew testDebugUnitTest
 
     - name: Upload test results
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: unit-test-results
@@ -94,31 +96,37 @@ jobs:
 
   instrumentation-tests:
     name: Instrumentation tests
-    needs: build
+    # needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 60
-
     strategy:
       matrix:
-        api-level: [34]
+        api-level: [24, 26, 28, 29, 30, 31, 33, 35]
+      fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      #- name: Copy CI gradle.properties
+      #  run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
+          distribution: ${{ env.JAVA_DISTRO }}
+          #cache: gradle
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: .
+      #- name: Download build artifact
+      #  uses: actions/download-artifact@v4
+      #  with:
+      #    name: build
+      #    path: .
 
-      - name: Extract build files
-        run: |
-          tar -xvf build.tar
+      #- name: Extract build files
+      #  run: |
+      #    tar -xf build.tar
 
       # API 30+ emulators only have x86_64 system images.
       - name: Get AVD info
@@ -133,15 +141,17 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
     
-      - name: Instrumentation tests
+      - name: Run instrumented tests
         uses: reactivecircus/android-emulator-runner@v2.33.0
         with:
           api-level: ${{ matrix.api-level }}
           arch: ${{ steps.avd-info.outputs.arch }}
           target: ${{ steps.avd-info.outputs.target }}
-          script: ./gradlew connectedDebugAndroidTest
+          disable-animations: true
+          script: ./gradlew connectedCheck --stacktrace
 
       - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}

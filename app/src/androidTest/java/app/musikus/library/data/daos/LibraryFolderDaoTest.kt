@@ -9,6 +9,8 @@
 package app.musikus.library.data.daos
 
 import androidx.test.filters.SmallTest
+import app.MinApiVersion
+import app.MinApiVersionRule
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
@@ -46,7 +48,10 @@ class LibraryFolderDaoTest {
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val minApiVersionRule = MinApiVersionRule()
+
+    @get:Rule(order = 1)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -93,6 +98,7 @@ class LibraryFolderDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun insertFolder() = runTest {
         val folder = LibraryFolderCreationAttributes(name = "TestFolder")
 
@@ -149,6 +155,7 @@ class LibraryFolderDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun updateFolder() = runTest {
         val updateAttributes = LibraryFolderUpdateAttributes("UpdatedFolder1")
 
@@ -159,7 +166,7 @@ class LibraryFolderDaoTest {
                 UUIDConverter.fromInt(1),
                 updateAttributes
             )
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -213,12 +220,13 @@ class LibraryFolderDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun deleteFolder() = runTest {
         val libraryFolderDaoSpy = spyk(libraryFolderDao)
 
         try {
             libraryFolderDaoSpy.delete(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -288,12 +296,13 @@ class LibraryFolderDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun restoreFolder() = runTest {
         val libraryFolderDaoSpy = spyk(libraryFolderDao)
 
         try {
             libraryFolderDaoSpy.restore(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -354,12 +363,13 @@ class LibraryFolderDaoTest {
     }
 
     @Test
+    @MinApiVersion(28)
     fun getSpecificFolder() = runTest {
         val libraryFolderDaoSpy = spyk(libraryFolderDao)
 
         try {
             libraryFolderDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
