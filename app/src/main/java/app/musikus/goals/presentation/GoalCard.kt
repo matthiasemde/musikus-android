@@ -188,8 +188,6 @@ fun GoalCard(
                             .height(40.dp),
                         color = libraryItemColor ?: MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                        drawStopIndicator = {},
-                        gapSize = 0.dp
                     )
                     Row(
                         modifier = Modifier
