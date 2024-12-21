@@ -126,7 +126,7 @@ jobs:
 
       #- name: Extract build files
       #  run: |
-      #    tar -xf build.tar
+      #    tar -xvf build.tar
 
       # API 30+ emulators only have x86_64 system images.
       - name: Get AVD info

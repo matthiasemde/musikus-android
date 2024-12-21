@@ -181,7 +181,7 @@ fun SessionStatisticsLibraryItemSelector(
         ) { (item, checked, duration) ->
             Row(
                 modifier = Modifier
-                    .animateItem()
+                    .animateItemPlacement()
                     .fillMaxWidth()
                     .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically

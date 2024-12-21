@@ -82,8 +82,9 @@ class PermissionChecker(
                 val result: PermissionResult = suspendCancellableCoroutine { coroutine ->
                     resultCallback = { permissionResult ->
                         coroutine.resume(
-                            value = permissionResult
-                        ) { _, _, _ -> null }
+                            value = permissionResult,
+                            onCancellation = null
+                        )
                     }
                     coroutine.invokeOnCancellation { resultCallback = null }
                     activity.resultLauncher.launch(arrayOf(*permissions))

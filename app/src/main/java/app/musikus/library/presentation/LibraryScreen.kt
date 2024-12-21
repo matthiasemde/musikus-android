@@ -273,7 +273,7 @@ fun LibraryContent(
                         val folder = folderWithItems.folder
                         Row(
                             modifier = Modifier
-                                .animateItem()
+                                .animateItemPlacement()
                         ) {
                             LibraryFolderComponent(
                                 folder = folder,

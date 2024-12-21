@@ -128,6 +128,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -142,7 +143,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
@@ -1114,7 +1114,7 @@ private fun SectionList(
                 key = { item -> item.id },
             ) { item ->
                 SectionListElement(
-                    modifier = Modifier.animateItem(),
+                    modifier = Modifier.animateItemPlacement(),
                     item = item,
                     showSnackbar = showSnackbar,
                     onSectionDeleted = onSectionDeleted,

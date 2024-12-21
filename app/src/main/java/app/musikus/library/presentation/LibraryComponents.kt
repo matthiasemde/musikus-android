@@ -210,7 +210,7 @@ fun LazyListScope.libraryItemsComponent(
         key = { (item, _) -> item.id }
     ) { (item, lastPracticedDate) ->
         Box(
-            modifier = Modifier.animateItem()
+            modifier = Modifier.animateItemPlacement()
         ) {
             LibraryItemComponent(
                 item = item,

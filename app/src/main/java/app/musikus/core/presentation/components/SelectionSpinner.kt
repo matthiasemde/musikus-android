@@ -18,7 +18,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,7 +69,8 @@ fun SelectionSpinner(
         CompositionLocalProvider(LocalTextInputService provides null) {
             OutlinedTextField(
                 readOnly = true,
-                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                modifier = Modifier
+                    .menuAnchor(),
                 value = selected?.name?.asString() ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
