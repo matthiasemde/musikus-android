@@ -83,6 +83,7 @@ android {
     testOptions {
         animationsDisabled = true
 
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
         packaging {
             jniLibs { useLegacyPackaging = true }
         }
@@ -356,6 +357,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumentation tests
+    androidTestUtil(libs.androidx.test.orchestrator)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.junit)
