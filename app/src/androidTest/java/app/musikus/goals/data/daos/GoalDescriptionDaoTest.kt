@@ -8,9 +8,8 @@
 
 package app.musikus.goals.data.daos
 
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
-import app.MinApiVersion
-import app.MinApiVersionRule
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
@@ -57,9 +56,6 @@ class GoalDescriptionDaoTest {
     lateinit var fakeTimeProvider: FakeTimeProvider
 
     @get:Rule(order = 0)
-    val minApiVersionRule = MinApiVersionRule()
-
-    @get:Rule(order = 1)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -368,7 +364,7 @@ class GoalDescriptionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun updateGoalDescription() = runTest {
         val goalDescriptionDaoSpy = spyk(goalDescriptionDao)
 
@@ -429,7 +425,7 @@ class GoalDescriptionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun deleteGoalDescription() = runTest {
         val goalDescriptionDaoSpy = spyk(goalDescriptionDao)
 
@@ -521,7 +517,7 @@ class GoalDescriptionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun restoreDescription() = runTest {
         val goalDescriptionDaoSpy = spyk(goalDescriptionDao)
 
@@ -604,7 +600,7 @@ class GoalDescriptionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificDescription() = runTest {
         val goalDescriptionDaoSpy = spyk(goalDescriptionDao)
 

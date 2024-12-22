@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.navigation.NavHostController
+import androidx.test.filters.SdkSuppress
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -200,6 +201,7 @@ class ActiveSessionScreenTest {
     }
 
 //    @Test
+//    @SdkSuppress(minSdkVersion = 30)
 //    fun deleteAndRedoSection() = runTest {
 //        // Start session
 //        composeRule.onNodeWithContentDescription("Start practicing").performClick()

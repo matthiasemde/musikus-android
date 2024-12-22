@@ -9,9 +9,8 @@
 package app.musikus.sessionslist.data.daos
 
 import android.database.sqlite.SQLiteConstraintException
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
-import app.MinApiVersion
-import app.MinApiVersionRule
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
@@ -58,9 +57,6 @@ class SessionDaoTest {
     lateinit var fakeTimeProvider: FakeTimeProvider
 
     @get:Rule(order = 0)
-    val minApiVersionRule = MinApiVersionRule()
-
-    @get:Rule(order = 1)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -251,7 +247,7 @@ class SessionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun updateSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
@@ -305,7 +301,7 @@ class SessionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun deleteSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
@@ -394,7 +390,7 @@ class SessionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun restoreSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
@@ -454,7 +450,7 @@ class SessionDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 

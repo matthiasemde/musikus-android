@@ -8,9 +8,8 @@
 
 package app.musikus.goals.data.daos
 
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
-import app.MinApiVersion
-import app.MinApiVersionRule
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.core.data.GoalInstanceWithDescription
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
@@ -56,9 +55,6 @@ class GoalInstanceDaoTest {
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
     @get:Rule(order = 0)
-    val minApiVersionRule = MinApiVersionRule()
-
-    @get:Rule(order = 1)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -437,7 +433,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun updateInstance() = runTest {
         val updateAttributes = GoalInstanceUpdateAttributes(
             endTimestamp = Nullable(fakeTimeProvider.now()),
@@ -764,7 +760,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    @MinApiVersion(28)
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificInstance() = runTest {
         val goalInstanceDaoSpy = spyk(goalInstanceDao)
 
