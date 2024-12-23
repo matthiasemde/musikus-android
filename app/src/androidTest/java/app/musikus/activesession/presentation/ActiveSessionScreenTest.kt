@@ -8,6 +8,7 @@
 
 package app.musikus.activesession.presentation
 
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -67,6 +68,9 @@ class ActiveSessionScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+//
+//    @get:Rule(order = 3)
+//    val screenshotRule = ScreenshotRule(composeRule)
 
     lateinit var navController: NavHostController
     lateinit var mainViewModel: MainViewModel
@@ -125,11 +129,15 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
         composeRule.onNodeWithText("TestItem1").performClick()
 
+        Log.d("ActiveSessionScreenTest", "pauseAndResumeSession: 1")
+
         // Pause session
         composeRule.onNodeWithContentDescription("Pause").performClick()
 
         // Pause timer is displayed
         composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
+        assertThat(1).isEqualTo(2)
+
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
 
@@ -152,6 +160,8 @@ class ActiveSessionScreenTest {
 
         // Select item
         composeRule.onNodeWithText("TestItem3").performClick()
+        assertThat(1).isEqualTo(2)
+
 
         // Item is selected
         composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
@@ -170,6 +180,8 @@ class ActiveSessionScreenTest {
 
         // Open item selector again
         composeRule.onNodeWithContentDescription("Next item").performClick()
+        assertThat(1).isEqualTo(2)
+
 
         // Select next item
         composeRule.onNodeWithText("TestItem2").performClick()

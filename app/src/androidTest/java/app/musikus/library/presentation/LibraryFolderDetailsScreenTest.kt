@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.ScreenshotRule
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -57,6 +58,9 @@ class LibraryFolderDetailsScreenTest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
+
     @Before
     fun setUp() {
         hiltRule.inject()
@@ -84,6 +88,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithContentDescription("Add item").performClick()
         composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem2")
         composeRule.onNodeWithContentDescription("Create").performClick()
+
 
         // Check if item is displayed
         composeRule.onNodeWithText("TestItem2").assertIsDisplayed()

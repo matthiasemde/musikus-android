@@ -1,0 +1,47 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
+package app
+
+import android.graphics.Bitmap
+import android.util.Log
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onRoot
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+import java.io.File
+
+class ScreenshotRule(
+    private val composeTestRule: ComposeTestRule,
+    private val outputDir: File = File(
+        InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null),
+        "screenshots"
+    )
+) : TestWatcher() {
+
+    override fun failed(e: Throwable?, description: Description) {
+        // Ensure the directory exists
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
+
+        val screenshotName = "${description.methodName}.png"
+        val screenshotFile = File(outputDir, screenshotName)
+        Log.d("ComposeScreenshotRule", "Saving screenshot to ${screenshotFile.absolutePath}")
+
+        // Capture the screenshot and save it
+        composeTestRule.onRoot().captureToImage().asAndroidBitmap().apply {
+            screenshotFile.outputStream().use { outputStream ->
+                compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            }
+        }
+    }
+}

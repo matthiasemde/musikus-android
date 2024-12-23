@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
+import app.ScreenshotRule
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -51,6 +52,9 @@ class LibraryScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     @Before
     fun setUp() {

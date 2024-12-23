@@ -79,11 +79,50 @@ android {
         targetCompatibility = javaVersion
     }
 
-    // needed for mockk
     testOptions {
         animationsDisabled = true
 
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+//        resultsDir = "$reportsPath/androidTests"
+//        reportDir = "$reportsPath/androidTests"
+//
+        managedDevices {
+            localDevices {
+//                create("api28") {
+//                    device = "Pixel 6a"
+//                    apiLevel = 28
+//                    systemImageSource = "aosp"
+//                }
+                create("api29") {
+                    device = "Pixel 6a"
+                    apiLevel = 29
+                    systemImageSource = "aosp"
+                }
+//                create("api30") {
+//                    device = "Pixel 6a"
+//                    apiLevel = 30
+//                    systemImageSource = "aosp"
+//                }
+//                create("api31") {
+//                    device = "Pixel 6a"
+//                    apiLevel = 31
+//                    systemImageSource = "aosp"
+//                }
+//                create("api33") {
+//                    device = "Pixel 6a"
+//                    apiLevel = 33
+//                    systemImageSource = "aosp"
+//                }
+//                create("api35") {
+//                    device = "Pixel 6a"
+//                    apiLevel = 35
+//                    systemImageSource = "aosp"
+//                }
+            }
+        }
+
+        // needed for mockk
         packaging {
             jniLibs { useLegacyPackaging = true }
         }
@@ -256,6 +295,30 @@ tasks.register("fixLicense") {
             workingDir = file("$rootDir/tools")
             commandLine("python", "fix_license_headers.py")
         }
+    }
+}
+
+val emulatorScreenshotPath = "/storage/emulated/0/Android/data/app.musikus/files/screenshots"
+
+val clearScreenshotsTask = tasks.register<Exec>("clearScreenshots") {
+    executable(android.adbExecutable.toString())
+    args("shell", "rm", "-r", emulatorScreenshotPath)
+}
+
+val fetchScreenshotsTask = tasks.register<Exec>("fetchScreenshots") {
+    executable(android.adbExecutable.toString())
+    args("pull", "$emulatorScreenshotPath/.", "$reportsPath/androidTests/screenshots")
+
+    finalizedBy(clearScreenshotsTask)
+
+    doFirst {
+        File("$reportsPath/androidTests/screenshots").mkdirs()
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.endsWith("DebugAndroidTest")) {
+        finalizedBy(fetchScreenshotsTask)
     }
 }
 
