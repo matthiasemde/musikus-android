@@ -36,6 +36,10 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+
+/**
+ * ViewModel state for the dialog which is displayed when adding or changing a goal.
+ */
 data class GoalDialogData(
     val target: Duration = 0.seconds,
     val periodInPeriodUnits: Int = 1,
@@ -290,6 +294,9 @@ class GoalsViewModel @Inject constructor(
 
             is GoalsUiEvent.ClearActionMode -> clearActionMode()
 
+            /**
+             * Event handler for changes within the dialogs
+             */
             is GoalsUiEvent.DialogUiEvent -> {
                 when (event.dialogEvent) {
                     is GoalDialogUiEvent.TargetChanged -> onTargetChanged(event.dialogEvent.target)

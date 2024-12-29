@@ -39,6 +39,9 @@ data class GoalsContentUiState(
     val showHint: Boolean,
 )
 
+/**
+ * UI state for the dialog which is displayed when adding or changing a goal.
+ */
 data class GoalsAddOrEditDialogUiState(
     val mode: DialogMode,
     val goalToEditId: UUID?,
@@ -51,6 +54,9 @@ data class GoalsDeleteOrArchiveDialogUiState(
     val numberOfSelections: Int,
 )
 
+/**
+ * Container for both dialogs that can be shown in the goals screen.
+ */
 data class GoalsDialogUiState(
     val addOrEditDialogUiState: GoalsAddOrEditDialogUiState?,
     val deleteOrArchiveDialogUiState: GoalsDeleteOrArchiveDialogUiState?,
