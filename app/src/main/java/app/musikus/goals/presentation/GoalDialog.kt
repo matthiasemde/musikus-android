@@ -51,7 +51,7 @@ import app.musikus.library.presentation.DialogMode
 import app.musikus.menu.domain.ColorSchemeSelections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 typealias GoalDialogUiEventHandler = (GoalDialogUiEvent) -> Boolean
 
@@ -188,6 +188,13 @@ fun GoalDialog(
                     ToggleButtonOption(it.ordinal, it.toUiText())
                 }
 
+                Text(
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    text = stringResource(id = R.string.goals_goal_dialog_goal_type_description),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
                     ToggleButton(
@@ -240,7 +247,7 @@ fun GoalDialog(
                 onConfirmHandler = {
                     eventHandler(
                         GoalDialogUiEvent.Confirm(
-                            target = (hoursState.currentValue.value!!).hours + (minutesState.currentValue.value!!).seconds,
+                            target = (hoursState.currentValue.value!!).hours + (minutesState.currentValue.value!!).minutes,
                             period = periodAmountInputState.currentValue.value!!,
                             periodUnit = periodUnitSelectionState.currentSelection.value,
                             goalType = selectedGoalType.value,

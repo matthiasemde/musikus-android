@@ -184,7 +184,7 @@ class GoalsViewModel @Inject constructor(
             goalToEditId = goalToEditId,
             libraryItems = items,
             initialTargetHours = dialogData.initialTarget.inWholeHours.toInt(),
-            initialTargetMinutes = dialogData.initialTarget.inWholeMinutes.toInt(),
+            initialTargetMinutes = dialogData.initialTarget.inWholeMinutes.toInt() % 60,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -431,7 +431,7 @@ class GoalsViewModel @Inject constructor(
                 goalsUseCases.edit(
                     descriptionId = goalToEditId,
                     instanceUpdateAttributes = GoalInstanceUpdateAttributes(
-                        target = dialogData.initialTarget,
+                        target = target,
                     ),
                 )
             } ?: goalsUseCases.add(
