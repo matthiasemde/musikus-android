@@ -12,6 +12,7 @@
 
 package app.musikus.core.presentation.components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -47,6 +48,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -182,11 +186,13 @@ fun NumberInput(
     textStyle: TextStyle = MaterialTheme.typography.displaySmall,
     imeAction: ImeAction = ImeAction.Done,
     label: @Composable ((Modifier) -> Unit)? = null,
-    padStart: Boolean = true
+    padStart: Boolean = true,
+    onEntryComplete: (() -> Unit)? = null,
+    onBackspaceWhenEmpty: (() -> Unit)? = null,
+    focusRequester: FocusRequester = remember { FocusRequester() }
 ) {
     val localFocusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
-    val focusRequester = remember { FocusRequester() }
 
     val containerColor = if (!focused) {
         MaterialTheme.colorScheme.surfaceContainerHigh
@@ -196,7 +202,10 @@ fun NumberInput(
     // maximum length in characters
     val maxLength = state.maxValue.toString().length
 
-    // actual string to display
+    // backup of last valid value, used to detect if user actually changed input
+    var lastValue = state.currentValue.value
+
+    // actual string to display. null = empty string
     val valueString = state.currentValue.value?.toString() ?: ""
     val displayValue: MutableState<TextFieldValue> = remember {
         if (padStart && !focused) {
@@ -214,6 +223,14 @@ fun NumberInput(
                 .height(IntrinsicSize.Min)
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
+                .onKeyEvent { event ->
+                    Log.d("NumberInput", "onKeyEvent: ${event.key}")
+                    // trigger onBackspaceWhenEmpty, e.g. to move focus to previous field if user deletes all input
+                    if (event.key == Key.Backspace && state.currentValue.value == null && lastValue == null) {
+                        onBackspaceWhenEmpty?.invoke()
+                    }
+                    false
+                }
                 .onFocusChanged {
                     focused = it.isFocused
 
@@ -221,6 +238,7 @@ fun NumberInput(
                     val newText = if (!focused && padStart) displayValue.value.text.padStart(maxLength, '0')
                                   else displayValue.value.text.trimStart('0')
                     displayValue.value = displayValue.value.copy(text = newText)
+
                 },
             value = displayValue.value,   // convert to TextFieldValue so we can get cursor position in onValueChange
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -250,6 +268,7 @@ fun NumberInput(
                     return@BasicTextField
                 }
 
+                lastValue = state.currentValue.value
                 // assign valid value to state
                 state.currentValue.value = number
 
@@ -262,6 +281,11 @@ fun NumberInput(
                     displayValue.value = newValue.copy(text = newTextFieldContent)
                 }
 
+                // trigger onEntryComplete, e.g. to move focus to next field if max length is reached.
+                // only if value actually changed, a.k.a. if user actually changed input (see first comment)
+                if (lastValue != state.currentValue.value && newValue.selection.end == maxLength) {
+                    onEntryComplete?.invoke()
+                }
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -364,7 +388,7 @@ private fun NumberInputPreview() {
     MusikusThemedPreview() {
         NumberInput(
             state = rememberNumberInputState(
-                initialValue = 2,
+                initialValue = 42,
                 minValue = 0,
                 maxValue = 99
             ),

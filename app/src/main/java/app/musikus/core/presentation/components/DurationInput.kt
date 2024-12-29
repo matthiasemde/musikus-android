@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,8 @@ fun DurationInput(
     hoursState: NumberInputState,
     minutesState: NumberInputState
 ) {
+    val focusRequesterHours = remember { FocusRequester() }
+    val focusRequesterMinutes = remember { FocusRequester() }
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center
@@ -44,14 +48,18 @@ fun DurationInput(
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
             },
+            focusRequester = focusRequesterHours,
+            onEntryComplete = { focusRequesterMinutes.requestFocus() }
         )
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
             state = minutesState,
             imeAction = ImeAction.Done,
+            focusRequester = focusRequesterMinutes,
             label = { modifier ->
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
-            }
+            },
+            onBackspaceWhenEmpty = { focusRequesterHours.requestFocus() }
         )
     }
 }
