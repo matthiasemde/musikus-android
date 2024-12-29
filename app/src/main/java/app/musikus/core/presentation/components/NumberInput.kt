@@ -214,7 +214,14 @@ fun NumberInput(
                 .height(IntrinsicSize.Min)
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
-                .onFocusChanged { focused = it.isFocused },
+                .onFocusChanged {
+                    focused = it.isFocused
+
+                    // add / remove padding on focus change
+                    val newText = if (!focused && padStart) displayValue.value.text.padStart(maxLength, '0')
+                                  else displayValue.value.text.trimStart('0')
+                    displayValue.value = displayValue.value.copy(text = newText)
+                },
             value = displayValue.value,   // convert to TextFieldValue so we can get cursor position in onValueChange
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             textStyle = if (focused) {
