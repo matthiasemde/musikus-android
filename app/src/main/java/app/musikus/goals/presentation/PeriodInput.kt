@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -51,7 +52,8 @@ fun PeriodInput(
         NumberInput(
             state = periodAmountInputState,
             imeAction = ImeAction.Next,
-            padStart = false
+            padStart = false,
+            textStyle = MaterialTheme.typography.titleLarge,
         )
 
         Spacer(modifier = Modifier.width(8.dp))
