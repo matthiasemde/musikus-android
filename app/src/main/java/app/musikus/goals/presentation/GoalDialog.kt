@@ -17,10 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,9 +72,6 @@ fun GoalDialog(
      * Local GoalDialog state objects (internal Compose State)
      */
 
-//    var libraryItemsSelectorExpanded by remember { mutableStateOf(false) }
-    var periodUnitSelectorExpanded by remember { mutableStateOf(false) }
-
     // state for the HOURS duration input field
     val hoursState = rememberNumberInputState(
         initialValue = dialogData.target.inWholeHours.toInt(),
@@ -133,8 +126,8 @@ fun GoalDialog(
                 hoursState = hoursState,
                 minutesState = minutesState,
             )
-            confirmButtonEnabled = confirmButtonEnabled &&
-                    hoursState.currentValue.intValue > 0 || minutesState.currentValue.intValue > 0
+            confirmButtonEnabled = confirmButtonEnabled &&      // https://stackoverflow.com/a/55404768
+                    (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
 
             if (!isEditMode) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
