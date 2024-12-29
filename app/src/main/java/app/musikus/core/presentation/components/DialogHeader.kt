@@ -25,7 +25,6 @@ fun DialogHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
