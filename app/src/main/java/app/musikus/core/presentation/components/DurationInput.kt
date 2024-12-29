@@ -11,7 +11,6 @@ package app.musikus.core.presentation.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,59 +19,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.menu.domain.ColorSchemeSelections
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
+/**
+ * A duration input field that allows the user to input a duration in hours and minutes.
+ * Consists of two NumberInput fields, one for hours and one for minutes.
+ */
 @Composable
 fun DurationInput(
-    value: Duration,
-    onValueChanged: (Duration) -> Unit,
+    modifier: Modifier = Modifier,
+    hoursState: NumberInputState,
+    minutesState: NumberInputState
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.Center
     ) {
-        var hours = value.inWholeHours.toString().padStart(2, '0')
-        var minutes = (value - value.inWholeHours.hours).inWholeMinutes.toString().padStart(2, '0')
-
         NumberInput(
-            value = hours,
-            onValueChange = {
-                hours = it
-                onValueChanged(
-                    (hours.toIntOrNull() ?: 0).hours +
-                        (minutes.toIntOrNull() ?: 0).minutes
-                )
-            },
-            showLeadingZero = true,
-            textSize = 40.sp,
-            maxValue = 99,
+            state = hoursState,
             imeAction = ImeAction.Next,
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
-            }
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        NumberInput(
-            value = minutes,
-            onValueChange = {
-                minutes = it
-                onValueChanged(
-                    (hours.toIntOrNull() ?: 0).hours +
-                        (minutes.toIntOrNull() ?: 0).minutes
-                )
             },
-            showLeadingZero = true,
-            textSize = 40.sp,
-            maxValue = 59,
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        NumberInput(
+            state = minutesState,
             imeAction = ImeAction.Done,
             label = { modifier ->
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
@@ -88,8 +63,8 @@ private fun DurationInputPreview(
 ) {
     MusikusThemedPreview(theme = theme) {
         DurationInput(
-            value = 2.hours + 30.minutes,
-            onValueChanged = {}
+            minutesState = rememberNumberInputState(initialValue = 42, maxValue = 59),
+            hoursState = rememberNumberInputState(initialValue = 42, maxValue = 99),
         )
     }
 }

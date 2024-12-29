@@ -18,9 +18,18 @@
     <string name="goals_goal_progress_type_time">Time</string>
     <string name="goals_goal_progress_type_session_count">Sessions</string>
 
-    <string name="goals_goal_period_unit_day">Day</string>
-    <string name="goals_goal_period_unit_week">Week</string>
-    <string name="goals_goal_period_unit_month">Month</string>
+    <plurals name="goals_goal_period_unit_day">
+        <item quantity="one">Day</item>
+        <item quantity="other">Days</item>
+    </plurals>
+    <plurals name="goals_goal_period_unit_week">
+        <item quantity="one">Week</item>
+        <item quantity="other">Weeks</item>
+    </plurals>
+    <plurals name="goals_goal_period_unit_month">
+        <item quantity="one">Month</item>
+        <item quantity="other">Months</item>
+    </plurals>
 
     <plurals name="goals_goal_subtitle_day">
         <item quantity="one">in one day</item>

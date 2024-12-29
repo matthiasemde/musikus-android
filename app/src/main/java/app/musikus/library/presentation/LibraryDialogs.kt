@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,11 +42,8 @@ import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
-import app.musikus.core.presentation.components.SelectionSpinner
-import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.TestTags
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
 
@@ -158,52 +154,52 @@ fun LibraryItemDialog(
                     singleLine = true,
                 )
                 if (uiState.folders.isNotEmpty()) {
-                    SelectionSpinner(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .padding(horizontal = 24.dp),
-                        expanded = folderSelectorExpanded,
-                        label = {
-                            Text(
-                                text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = stringResource(
-                                    id = R.string.library_item_dialog_folder_selector_label
-                                ),
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        },
-                        options = uiState.folders.map { folder ->
-                            UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
-                        },
-                        selected = UUIDSelectionSpinnerOption(
-                            id = uiState.itemData.folderId,
-                            name = uiState.folders.firstOrNull {
-                                it.id == uiState.itemData.folderId
-                            }?.name?.let {
-                                UiText.DynamicString(it)
-                            } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
-                        ),
-                        specialOption = UUIDSelectionSpinnerOption(
-                            null,
-                            UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
-                        ),
-                        semanticDescription = stringResource(
-                            id = R.string.library_item_dialog_folder_selector_description
-                        ),
-                        dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
-                        onExpandedChange = { folderSelectorExpanded = it },
-                        onSelectedChange = {
-                            eventHandler(
-                                LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id)
-                            )
-                            folderSelectorExpanded = false
-                        },
-                    )
+//                    SelectionSpinner(
+//                        modifier = Modifier
+//                            .padding(top = 16.dp)
+//                            .padding(horizontal = 24.dp),
+//                        expanded = folderSelectorExpanded,
+//                        label = {
+//                            Text(
+//                                text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
+//                            )
+//                        },
+//                        leadingIcon = {
+//                            Icon(
+//                                imageVector = Icons.Default.Folder,
+//                                contentDescription = stringResource(
+//                                    id = R.string.library_item_dialog_folder_selector_label
+//                                ),
+//                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+//                            )
+//                        },
+//                        options = uiState.folders.map { folder ->
+//                            UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
+//                        },
+//                        selectedOption = UUIDSelectionSpinnerOption(
+//                            id = uiState.itemData.folderId,
+//                            name = uiState.folders.firstOrNull {
+//                                it.id == uiState.itemData.folderId
+//                            }?.name?.let {
+//                                UiText.DynamicString(it)
+//                            } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+//                        ),
+//                        specialOption = UUIDSelectionSpinnerOption(
+//                            null,
+//                            UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+//                        ),
+//                        semanticDescription = stringResource(
+//                            id = R.string.library_item_dialog_folder_selector_description
+//                        ),
+//                        dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
+//                        onExpandedChange = { folderSelectorExpanded = it },
+//                        onSelectedChange = {
+//                            eventHandler(
+//                                LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id)
+//                            )
+//                            folderSelectorExpanded = false
+//                        },
+//                    )
                 }
                 Row(
                     modifier = Modifier

@@ -32,37 +32,38 @@ class IntSelectionSpinnerOption(val id: Int?, name: UiText) : SelectionSpinnerOp
 @Composable
 fun SelectionSpinner(
     modifier: Modifier = Modifier,
-    expanded: Boolean,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     options: List<SelectionSpinnerOption>,
-    selected: SelectionSpinnerOption?,
+    selectedOption: SelectionSpinnerOption?,
     specialOption: SelectionSpinnerOption? = null,
     semanticDescription: String,
     dropdownTestTag: String,
-    onExpandedChange: (Boolean) -> Unit,
-    onSelectedChange: (SelectionSpinnerOption) -> Unit
+    onSelectedChange: (SelectionSpinnerOption) -> Unit = {},
 ) {
-    if (selected == null && (label == null && placeholder == null)) {
+    require (selectedOption != null || label != null || placeholder != null) {
         throw IllegalArgumentException(
             "SelectionSpinner needs either a label or a placeholder if no option is selected"
         )
     }
+
+    var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         modifier = modifier.semantics {
             contentDescription = semanticDescription
         },
         expanded = expanded,
-        onExpandedChange = onExpandedChange
+        onExpandedChange = { expanded = it }
     ) {
         CompositionLocalProvider(LocalTextInputService provides null) {
+
             OutlinedTextField(
                 readOnly = true,
                 modifier = Modifier
                     .menuAnchor(),
-                value = selected?.name?.asString() ?: "", // if no option is selected, show nothing
+                value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
                 placeholder = placeholder,
@@ -72,10 +73,11 @@ fun SelectionSpinner(
                 },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             )
+
             ExposedDropdownMenu(
                 modifier = Modifier.testTag(dropdownTestTag),
                 expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) },
+                onDismissRequest = { expanded = false },
             ) {
                 val scrollState = rememberScrollState()
                 val singleDropdownItemHeight = 48.dp
@@ -100,7 +102,10 @@ fun SelectionSpinner(
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight - 2.dp),
                             text = { Text(text = it.name.asString()) },
-                            onClick = { onSelectedChange(it) }
+                            onClick = {
+                                expanded = false
+                                onSelectedChange(it)
+                            }
                         )
                         HorizontalDivider(
                             Modifier
@@ -113,7 +118,10 @@ fun SelectionSpinner(
                             modifier = Modifier
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight),
-                            onClick = { onSelectedChange(option) },
+                            onClick = {
+                                expanded = false
+                                onSelectedChange(option)
+                          },
                             text = { Text(text = option.name.asString()) }
                         )
                     }
