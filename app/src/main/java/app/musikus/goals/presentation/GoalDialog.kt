@@ -17,6 +17,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,13 +30,17 @@ import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
+import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButton
 import app.musikus.core.presentation.components.ToggleButtonOption
+import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.components.rememberNumberInputState
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.data.daos.LibraryItem
@@ -46,14 +53,14 @@ import kotlin.time.Duration.Companion.seconds
 typealias GoalDialogUiEventHandler = (GoalDialogUiEvent) -> Boolean
 
 sealed class GoalDialogUiEvent {
-    // callback when the duration of the goal is changed
-    data class TargetChanged(val target: Duration) : GoalDialogUiEvent()
-    // callback when the period of the goal is changed
-    data class PeriodChanged(val period: Int) : GoalDialogUiEvent()
-    data class PeriodUnitChanged(val periodUnit: GoalPeriodUnit) : GoalDialogUiEvent()
-    data class GoalTypeChanged(val goalType: GoalType) : GoalDialogUiEvent()
-    data class LibraryItemsSelected(val selectedLibraryItems: List<LibraryItem>) : GoalDialogUiEvent()
-    data object Confirm : GoalDialogUiEvent()
+    data class Confirm(
+        val target: Duration,
+        val period: Int,
+        val periodUnit: GoalPeriodUnit,
+        val goalType: GoalType,
+        val selectedLibraryItems: List<LibraryItem>
+    ) : GoalDialogUiEvent()
+
     data object Dismiss : GoalDialogUiEvent()
 }
 
@@ -66,7 +73,6 @@ fun GoalDialog(
      * Passed uiState
      */
     val isEditMode = uiState.mode == DialogMode.EDIT
-    val dialogData = uiState.dialogData
 
     /**
      * Local GoalDialog state objects (internal Compose State)
@@ -74,29 +80,32 @@ fun GoalDialog(
 
     // state for the HOURS duration input field
     val hoursState = rememberNumberInputState(
-        initialValue = dialogData.target.inWholeHours.toInt(),
+        initialValue = uiState.initialTargetHours,
         minValue = 0,
         maxValue = 99
     )
     // state for the MINUTES duration input field
     val minutesState = rememberNumberInputState(
-        initialValue = (dialogData.target - dialogData.target.inWholeHours.hours).inWholeMinutes.toInt(),
+        initialValue = uiState.initialTargetMinutes,
         minValue = 0,
         maxValue = 59
     )
 
     // state for the period amount input field
     val periodAmountInputState = rememberNumberInputState(
-        initialValue = dialogData.periodInPeriodUnits,
+        initialValue = 1,
         minValue = 1,
         maxValue = 99
     )
 
     // state for the period unit selection
     val periodUnitSelectionState = rememberPeriodUnitSelectionState(
-            initialPeriodUnit = dialogData.periodUnit,
-            allowedPeriodUnits = GoalPeriodUnit.entries.toList()
+        initialPeriodUnit = GoalPeriodUnit.DEFAULT,
+        allowedPeriodUnits = GoalPeriodUnit.entries.toList()
     )
+
+    val selectedGoalType = remember { mutableStateOf(GoalType.DEFAULT) }
+    val selectedLibraryItems: MutableState<List<LibraryItem>> = remember { mutableStateOf(emptyList()) }
 
     Dialog(
         onDismissRequest = { eventHandler(GoalDialogUiEvent.Dismiss) },
@@ -140,78 +149,70 @@ fun GoalDialog(
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.large))
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
+                val toggleButtonOptions = GoalType.entries.map {
+                    ToggleButtonOption(it.ordinal, it.toUiText())
+                }
+
                 ToggleButton(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
-                    options = GoalType.entries.map {
-                        ToggleButtonOption(it.ordinal, it.toUiText())
-                    },
-                    selected = ToggleButtonOption(
-                        dialogData.goalType.ordinal,
-                        dialogData.goalType.toUiText()
-                    ),
+                    options = toggleButtonOptions,
+                    selected = toggleButtonOptions[selectedGoalType.value.ordinal],
                     onSelectedChanged = { option ->
-                        eventHandler(GoalDialogUiEvent.GoalTypeChanged(GoalType.entries[option.id]))
+                        selectedGoalType.value = GoalType.entries[option.id]
                     }
                 )
 
-//                if (dialogData.goalType == GoalType.ITEM_SPECIFIC) {
-                if (false) {
+                if (selectedGoalType.value == GoalType.ITEM_SPECIFIC) {
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                     val libraryItems = uiState.libraryItems
 
                     if (libraryItems.isNotEmpty()) {
-//                        SelectionSpinner(
-//                            placeholder = {
-//                                Text(
-//                                    text = stringResource(
-//                                        id = R.string.goals_goal_dialog_item_selector_placeholder
-//                                    )
-//                                )
-//                            },
-//                            options = libraryItems.map {
-//                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-//                            },
-//                            selectedOption = dialogData.selectedLibraryItems.firstOrNull()?.let {
-//                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-//                            },
-//                            semanticDescription = stringResource(
-//                                id = R.string.goals_goal_dialog_item_selector_description
-//                            ),
-//                            dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
-//                            onExpandedChange = {
-//                                libraryItemsSelectorExpanded = it
-//                                periodUnitSelectorExpanded = false
-//                            },
-//                            onSelectedChange = { selection ->
-//                                eventHandler(
-//                                    GoalDialogUiEvent.LibraryItemsSelected(
-//                                        libraryItems.filter {
-//                                            it.id == (selection as UUIDSelectionSpinnerOption).id
-//                                        }
-//                                    )
-//                                )
-//                                libraryItemsSelectorExpanded = false
-//                            }
-//                        )
+                        SelectionSpinner(
+                            placeholder = {
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.goals_goal_dialog_item_selector_placeholder
+                                    )
+                                )
+                            },
+                            options = libraryItems.map {
+                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+                            },
+                            // select the first item if it is not null
+                            selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
+                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+                            },
+                            semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
+                            dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
+                            onSelectedChange = { selection ->
+                                selectedLibraryItems.value = libraryItems.filter { it.id == (selection as UUIDSelectionSpinnerOption).id }
+                            }
+                        )
                     } else {
                         Text(text = stringResource(id = R.string.goals_goal_dialog_item_selector_no_items))
                     }
                 }
-
-                confirmButtonEnabled = confirmButtonEnabled && (
-                    dialogData.goalType == GoalType.NON_SPECIFIC ||
-                        dialogData.selectedLibraryItems.isNotEmpty()
-                    )
+                confirmButtonEnabled =
+                    confirmButtonEnabled && (selectedGoalType.value == GoalType.NON_SPECIFIC || selectedLibraryItems.value.isNotEmpty())
             }
 
             DialogActions(
-                onConfirmHandler = { eventHandler(GoalDialogUiEvent.Confirm) },
+                onConfirmHandler = {
+                    eventHandler(
+                        GoalDialogUiEvent.Confirm(
+                            target = (hoursState.currentValue.value!!).hours + (minutesState.currentValue.value!!).seconds,
+                            period = periodAmountInputState.currentValue.value!!,
+                            periodUnit = periodUnitSelectionState.currentSelection.value,
+                            goalType = selectedGoalType.value,
+                            selectedLibraryItems = selectedLibraryItems.value
+                        )
+                    )
+                },
                 onDismissHandler = { eventHandler(GoalDialogUiEvent.Dismiss) },
                 confirmButtonEnabled = confirmButtonEnabled,
                 confirmButtonText = stringResource(
-                    id =
-                    if (isEditMode) {
+                    id = if (isEditMode) {
                         R.string.goals_goal_dialog_confirm_edit
                     } else {
                         R.string.goals_goal_dialog_confirm
@@ -221,7 +222,6 @@ fun GoalDialog(
         }
     }
 }
-
 
 
 @MusikusPreviewElement1
@@ -235,13 +235,8 @@ private fun PreviewGoalDialog(
                 mode = DialogMode.ADD,
                 libraryItems = emptyList(),
                 goalToEditId = null,
-                dialogData = GoalDialogData(
-                    target = 10.seconds,
-                    periodInPeriodUnits = 1,
-                    periodUnit = GoalPeriodUnit.DAY,
-                    goalType = GoalType.NON_SPECIFIC,
-                    selectedLibraryItems = emptyList()
-                ),
+                initialTargetHours = 0,
+                initialTargetMinutes = 0,
             ),
             eventHandler = { true }
         )

@@ -45,7 +45,8 @@ data class GoalsContentUiState(
 data class GoalsAddOrEditDialogUiState(
     val mode: DialogMode,
     val goalToEditId: UUID?,
-    val dialogData: GoalDialogData,
+    val initialTargetHours: Int,
+    val initialTargetMinutes: Int,
     val libraryItems: List<LibraryItem>,
 )
 
