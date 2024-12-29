@@ -32,9 +32,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
@@ -55,6 +55,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -196,10 +197,13 @@ fun NumberInput(
     val maxLength = state.maxValue.toString().length
 
     // actual string to display
-    val displayValue = if (padStart) {
-        (state.currentValue.intValue.toString()).padStart(maxLength, '0')
-    } else {
-        state.currentValue.intValue.toString()
+    val valueString = state.currentValue.value?.toString() ?: ""
+    val displayValue: MutableState<TextFieldValue> = remember {
+        if (padStart && !focused) {
+            mutableStateOf(TextFieldValue(valueString.padStart(maxLength, '0')))
+        } else {
+            mutableStateOf(TextFieldValue(valueString))
+        }
     }
 
     Row {
@@ -211,17 +215,46 @@ fun NumberInput(
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
                 .onFocusChanged { focused = it.isFocused },
-            value = displayValue,
+            value = displayValue.value,   // convert to TextFieldValue so we can get cursor position in onValueChange
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             textStyle = if (focused) {
-                textStyle.copy(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                textStyle.copy(color = MaterialTheme.colorScheme.onPrimaryContainer, textAlign = TextAlign.Center)
             } else {
-                textStyle.copy(color = MaterialTheme.colorScheme.onSurface)
+                textStyle.copy(color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center)
             },
             onValueChange = { newValue ->
-                val number = newValue.toIntOrNull()
-                if (number != null && number in state.minValue..state.maxValue) {
-                    state.currentValue.intValue = number
+                /*
+                 * Remember that entering a TextField triggers onValueChange if the cursor
+                 * position changed from the last time the field was focused!
+                 * */
+
+                var newText = newValue.text
+
+                // If the box is full (= entered over max length) and the user enters a number
+                // at the beginning (= selection collapsed and start at 1) [collapsed means cursor is just a vertical line (=no selection)],
+                // we overwrite all the text with the new number
+                if (newText.length > maxLength && newValue.selection.collapsed && newValue.selection.start == 1) {
+                    newText = newText.take(1)
                 }
+
+                // return/ignore if invalid input
+                val number = newText.toIntOrNull()
+                if (number !in state.minValue..state.maxValue && number != null) {
+                    return@BasicTextField
+                }
+
+                // assign valid value to state
+                state.currentValue.value = number
+
+                // update display state
+                val newTextFieldContent = number?.toString() ?: ""
+                if (padStart && !focused) {
+                    // copy all properties of newValue to retain cursor position, but change text
+                    displayValue.value = newValue.copy(text = newTextFieldContent.padStart(maxLength, '0'))
+                } else {
+                    displayValue.value = newValue.copy(text = newTextFieldContent)
+                }
+
             },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -243,7 +276,7 @@ fun NumberInput(
                         }
                         // invisible placeholder preserves width
                         Text(
-                            text = if (padStart) "9".padStart(maxLength, '9') else "9",
+                            text = if (padStart) "9".padStart(maxLength, '9') else "99",
                             style = textStyle,
                             color = Color.Transparent
                         )
@@ -260,17 +293,19 @@ fun NumberInput(
 
 @Stable
 class NumberInputState (
-    initialValue: Int,
+    initialValue: Int?,
     val minValue: Int,
     val maxValue: Int,
 ) {
     init {
         require(maxValue > minValue) { "maxValue must be larger than minValue" }
-        require(initialValue in minValue..maxValue) { "initialValue not in allowed range" }
+        if (initialValue != null) {
+            require(initialValue in minValue..maxValue) { "initialValue not in allowed range" }
+        }
     }
 
-    // the value (as int) of the input field which is displayed (as string, may be padded)
-    val currentValue = mutableIntStateOf(initialValue)
+    // the value (as int) of the input field which is displayed (as string, may be padded). Null means no text entered.
+    val currentValue: MutableState<Int?> = mutableStateOf(initialValue)
 
     companion object {
         /**
@@ -279,7 +314,7 @@ class NumberInputState (
         fun Saver(): Saver<NumberInputState, *> = Saver(
             save = {
                 listOf(
-                    it.currentValue.intValue,
+                    it.currentValue.value,
                     it.minValue,
                     it.maxValue
                 )
@@ -287,8 +322,8 @@ class NumberInputState (
             restore = {
                 NumberInputState(
                     initialValue = it[0],
-                    minValue = it[1],
-                    maxValue = it[2]
+                    minValue = it[1] as Int,
+                    maxValue = it[2] as Int
                 )
             }
         )
@@ -301,7 +336,7 @@ class NumberInputState (
  */
 @Composable
 fun rememberNumberInputState(
-    initialValue: Int,
+    initialValue: Int?,
     minValue: Int = 0,
     maxValue: Int,
 ): NumberInputState = rememberSaveable(
@@ -322,10 +357,11 @@ private fun NumberInputPreview() {
     MusikusThemedPreview() {
         NumberInput(
             state = rememberNumberInputState(
-                initialValue = 42,
+                initialValue = 2,
                 minValue = 0,
                 maxValue = 99
             ),
+            padStart = false,
             imeAction = ImeAction.Done,
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)

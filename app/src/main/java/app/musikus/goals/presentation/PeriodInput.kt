@@ -61,10 +61,10 @@ fun PeriodInput(
             modifier = Modifier.width(130.dp),
             // map the SelectionSpinnerOption based on its id to the GoalPeriodUnit ordinal
             options = periodUnitSelectionState.allowedPeriodUnits.map {
-                IntSelectionSpinnerOption(it.ordinal, it.toUiText(quantity = periodAmountInputState.currentValue.intValue))
+                IntSelectionSpinnerOption(it.ordinal, it.toUiText(quantity = periodAmountInputState.currentValue.value ?: 0))
           },
             selectedOption = IntSelectionSpinnerOption(selectedUnit.ordinal,
-                                                       selectedUnit.toUiText(quantity = periodAmountInputState.currentValue.intValue)),
+                                                       selectedUnit.toUiText(quantity = periodAmountInputState.currentValue.value ?: 0)),
             semanticDescription = stringResource(id = R.string.goals_goal_dialog_period_input_description),
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onSelectedChange = { selection ->
