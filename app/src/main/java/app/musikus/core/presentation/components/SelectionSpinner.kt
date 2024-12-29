@@ -68,9 +68,8 @@ fun SelectionSpinner(
 
         OutlinedTextField(
             readOnly = true,
-            modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
-        value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+            value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
             onValueChange = {},
             label = label,
             placeholder = placeholder,
