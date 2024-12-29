@@ -239,6 +239,11 @@ fun NumberInput(
                                   else displayValue.value.text.trimStart('0')
                     displayValue.value = displayValue.value.copy(text = newText)
 
+                    // if focus is lost and no value was entered, set to minValue
+                    if (!focused && state.currentValue.value == null) {
+                        state.currentValue.value = state.minValue
+                        displayValue.value = displayValue.value.copy(text = state.minValue.toString())
+                    }
                 },
             value = displayValue.value,   // convert to TextFieldValue so we can get cursor position in onValueChange
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
