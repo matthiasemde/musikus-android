@@ -83,6 +83,7 @@
     <string name="goals_goal_dialog_start_annotation_day">starting today</string>
     <string name="goals_goal_dialog_start_annotation_week">starting this week</string>
     <string name="goals_goal_dialog_start_annotation_month">starting this month</string>
+    <string name="goals_goal_dialog_goal_type_description">Items counting towards this goal:</string>
 
     <!-- PeriodInput -->
     <string name="goals_goal_dialog_period_input_prefix">Period</string>
