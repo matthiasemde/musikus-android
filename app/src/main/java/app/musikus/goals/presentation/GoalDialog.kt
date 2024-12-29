@@ -120,7 +120,6 @@ fun GoalDialog(
                     }
                 )
             )
-
             DurationInput(
                 modifier = Modifier.padding(top = MaterialTheme.spacing.medium),
                 hoursState = hoursState,
