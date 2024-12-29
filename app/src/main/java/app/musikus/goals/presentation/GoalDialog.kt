@@ -9,8 +9,11 @@
 package app.musikus.goals.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
@@ -117,7 +120,7 @@ fun GoalDialog(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surface),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
         ) {
             DialogHeader(
                 title = stringResource(
@@ -129,72 +132,108 @@ fun GoalDialog(
                     }
                 )
             )
-            DurationInput(
-                modifier = Modifier.padding(top = MaterialTheme.spacing.medium),
-                hoursState = hoursState,
-                minutesState = minutesState,
-            )
-            confirmButtonEnabled = confirmButtonEnabled &&      // https://stackoverflow.com/a/55404768
-                    (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
 
-            if (!isEditMode) {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                PeriodInput(
-                    periodAmountInputState = periodAmountInputState,
-                    periodUnitSelectionState = periodUnitSelectionState,
+            Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    modifier = Modifier.alignByBaseline(),
+                    text = stringResource(id = R.string.goals_goal_dialog_target_description),
+                    style = MaterialTheme.typography.bodyMedium
                 )
+                DurationInput(
+                    modifier = Modifier.alignByBaseline(),
+                    hoursState = hoursState,
+                    minutesState = minutesState,
+                    requestFocusOnInit = true
+                )
+                confirmButtonEnabled = confirmButtonEnabled &&      // https://stackoverflow.com/a/55404768
+                        (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+            }
+            if (!isEditMode) {
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        modifier = Modifier.alignByBaseline(),
+                        text = stringResource(id = R.string.goals_goal_dialog_period_description),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Column (modifier = Modifier.alignByBaseline()) {
+                        PeriodInput(
+                            periodAmountInputState = periodAmountInputState,
+                            periodUnitSelectionState = periodUnitSelectionState,
+                        )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+                        Text(
+                            modifier = Modifier.align(Alignment.End),
+                            text = when(periodUnitSelectionState.currentSelection.value) {
+                                GoalPeriodUnit.DAY -> stringResource(R.string.goals_goal_dialog_start_annotation_day)
+                                GoalPeriodUnit.WEEK -> stringResource(R.string.goals_goal_dialog_start_annotation_week)
+                                GoalPeriodUnit.MONTH -> stringResource(R.string.goals_goal_dialog_start_annotation_month)
+                            },
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.large))
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 val toggleButtonOptions = GoalType.entries.map {
                     ToggleButtonOption(it.ordinal, it.toUiText())
                 }
 
-                ToggleButton(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
-                    options = toggleButtonOptions,
-                    selected = toggleButtonOptions[selectedGoalType.value.ordinal],
-                    onSelectedChanged = { option ->
-                        selectedGoalType.value = GoalType.entries[option.id]
-                    }
-                )
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
-                if (selectedGoalType.value == GoalType.ITEM_SPECIFIC) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                    ToggleButton(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                        options = toggleButtonOptions,
+                        selected = toggleButtonOptions[selectedGoalType.value.ordinal],
+                        onSelectedChanged = { option ->
+                            selectedGoalType.value = GoalType.entries[option.id]
+                        }
+                    )
 
-                    val libraryItems = uiState.libraryItems
+                    if (selectedGoalType.value == GoalType.ITEM_SPECIFIC) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                    if (libraryItems.isNotEmpty()) {
-                        SelectionSpinner(
-                            placeholder = {
-                                Text(
-                                    text = stringResource(
-                                        id = R.string.goals_goal_dialog_item_selector_placeholder
+                        val libraryItems = uiState.libraryItems
+
+                        if (libraryItems.isNotEmpty()) {
+                            SelectionSpinner(
+                                placeholder = {
+                                    Text(
+                                        text = stringResource(
+                                            id = R.string.goals_goal_dialog_item_selector_placeholder
+                                        )
                                     )
-                                )
-                            },
-                            options = libraryItems.map {
-                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-                            },
-                            // select the first item if it is not null
-                            selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
-                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-                            },
-                            semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
-                            dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
-                            onSelectedChange = { selection ->
-                                selectedLibraryItems.value = libraryItems.filter { it.id == (selection as UUIDSelectionSpinnerOption).id }
-                            }
-                        )
-                    } else {
-                        Text(text = stringResource(id = R.string.goals_goal_dialog_item_selector_no_items))
+                                },
+                                options = libraryItems.map {
+                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+                                },
+                                // select the first item if it is not null
+                                selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
+                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+                                },
+                                semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
+                                dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
+                                onSelectedChange = { selection ->
+                                    selectedLibraryItems.value =
+                                        libraryItems.filter { it.id == (selection as UUIDSelectionSpinnerOption).id }
+                                }
+                            )
+                        } else {
+                            Text(text = stringResource(id = R.string.goals_goal_dialog_item_selector_no_items))
+                        }
                     }
+                    confirmButtonEnabled =
+                        confirmButtonEnabled && (selectedGoalType.value == GoalType.NON_SPECIFIC || selectedLibraryItems.value.isNotEmpty())
                 }
-                confirmButtonEnabled =
-                    confirmButtonEnabled && (selectedGoalType.value == GoalType.NON_SPECIFIC || selectedLibraryItems.value.isNotEmpty())
             }
 
             DialogActions(

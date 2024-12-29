@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -34,10 +35,18 @@ import app.musikus.menu.domain.ColorSchemeSelections
 fun DurationInput(
     modifier: Modifier = Modifier,
     hoursState: NumberInputState,
-    minutesState: NumberInputState
+    minutesState: NumberInputState,
+    requestFocusOnInit: Boolean = false
 ) {
     val focusRequesterHours = remember { FocusRequester() }
     val focusRequesterMinutes = remember { FocusRequester() }
+
+    LaunchedEffect(requestFocusOnInit) {
+        if (requestFocusOnInit) {
+            focusRequesterHours.requestFocus()
+        }
+    }
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center

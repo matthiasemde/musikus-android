@@ -73,14 +73,19 @@
     <!-- GoalDialog -->
     <string name="goals_goal_dialog_title">Create a new goal</string>
     <string name="goals_goal_dialog_title_edit">Edit goal target</string>
+    <string name="goals_goal_dialog_target_description">Target:</string>
+    <string name="goals_goal_dialog_period_description">Period:</string>
     <string name="goals_goal_dialog_item_selector_placeholder">Select a library item</string>
     <string name="goals_goal_dialog_item_selector_description">Select library item</string>
     <string name="goals_goal_dialog_item_selector_no_items">No items in your library.</string>
     <string name="goals_goal_dialog_confirm">Create</string>
     <string name="goals_goal_dialog_confirm_edit">Edit</string>
+    <string name="goals_goal_dialog_start_annotation_day">starting today</string>
+    <string name="goals_goal_dialog_start_annotation_week">starting this week</string>
+    <string name="goals_goal_dialog_start_annotation_month">starting this month</string>
 
     <!-- PeriodInput -->
-    <string name="goals_goal_dialog_period_input_prefix">in</string>
+    <string name="goals_goal_dialog_period_input_prefix">Period</string>
     <string name="goals_goal_dialog_period_input_description">Select period unit</string>
 
 </resources>
