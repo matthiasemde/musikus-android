@@ -8,7 +8,6 @@
 
 package app.musikus.core.presentation.components
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -220,7 +219,6 @@ fun NumberInput(
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
                 .onKeyEvent { event ->
-                    Log.d("NumberInput", "onKeyEvent: ${event.key}")
                     // trigger onBackspaceWhenEmpty, e.g. to move focus to previous field if user deletes all input
                     if (event.key == Key.Backspace && state.currentValue.value == null && lastValue == null) {
                         onBackspaceWhenEmpty?.invoke()
@@ -241,7 +239,7 @@ fun NumberInput(
                         displayValue.value = displayValue.value.copy(text = state.minValue.toString())
                     }
                 },
-            value = displayValue.value,   // convert to TextFieldValue so we can get cursor position in onValueChange
+            value = displayValue.value,
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             textStyle = if (focused) {
                 textStyle.copy(color = MaterialTheme.colorScheme.onPrimaryContainer, textAlign = TextAlign.Center)
@@ -275,12 +273,8 @@ fun NumberInput(
 
                 // update display state
                 val newTextFieldContent = number?.toString() ?: ""
-                if (padStart && !focused) {
-                    // copy all properties of newValue to retain cursor position, but change text
-                    displayValue.value = newValue.copy(text = newTextFieldContent.padStart(maxLength, '0'))
-                } else {
-                    displayValue.value = newValue.copy(text = newTextFieldContent)
-                }
+                // copy all properties of newValue to retain cursor position, but change text
+                displayValue.value = newValue.copy(text = newTextFieldContent)
 
                 // trigger onEntryComplete, e.g. to move focus to next field if max length is reached.
                 // only if value actually changed, a.k.a. if user actually changed input (see first comment)
