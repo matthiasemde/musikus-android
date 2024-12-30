@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -43,6 +46,7 @@ import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
@@ -76,6 +80,7 @@ fun GoalDialog(
      * Passed uiState
      */
     val isEditMode = uiState.mode == DialogMode.EDIT
+    val isOneShotGoal = uiState.oneShotGoal
 
     /**
      * Local GoalDialog state objects (internal Compose State)
@@ -122,6 +127,7 @@ fun GoalDialog(
                 .background(MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.Start,
         ) {
+
             DialogHeader(
                 title = stringResource(
                     id =
@@ -130,7 +136,12 @@ fun GoalDialog(
                     } else {
                         R.string.goals_goal_dialog_title
                     }
-                )
+                ),
+                icon = if (isOneShotGoal) {
+                    UiIcon.DynamicIcon(Icons.Filled.LocalFireDepartment)
+                } else {
+                    UiIcon.DynamicIcon(Icons.Rounded.Repeat)
+                },
             )
 
             Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
@@ -281,6 +292,7 @@ private fun PreviewGoalDialog(
                 goalToEditId = null,
                 initialTargetHours = 0,
                 initialTargetMinutes = 0,
+                oneShotGoal = true
             ),
             eventHandler = { true }
         )
