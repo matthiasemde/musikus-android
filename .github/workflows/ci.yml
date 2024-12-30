@@ -114,11 +114,11 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
 
-      - name: Accept licenses
-        run: |
-          ls -la $ANDROID_HOME 
-          ls -la ~/Android/Sdk/tools/bin 
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+#      - name: Accept licenses
+#        run: |
+#          ls -la $ANDROID_HOME
+#          ls -la ~/Android/Sdk/tools/bin
+#          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 
       - name: Enable KVM group perms
         run: |
