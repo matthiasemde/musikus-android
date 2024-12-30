@@ -59,6 +59,7 @@ fun PeriodInput(
             imeAction = ImeAction.Next,
             padStart = false,
             textStyle = MaterialTheme.typography.titleLarge,
+            inputTestTag = TestTags.GOAL_DIALOG_PERIOD_INPUT,
         )
 
         Spacer(modifier = Modifier.width(8.dp))

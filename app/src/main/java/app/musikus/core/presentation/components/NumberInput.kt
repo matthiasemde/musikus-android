@@ -47,6 +47,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -184,7 +185,8 @@ fun NumberInput(
     padStart: Boolean = true,
     onEntryComplete: (() -> Unit)? = null,
     onBackspaceWhenEmpty: (() -> Unit)? = null,
-    focusRequester: FocusRequester = remember { FocusRequester() }
+    focusRequester: FocusRequester = remember { FocusRequester() },
+    inputTestTag: String,
 ) {
     val localFocusManager = LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
@@ -213,6 +215,7 @@ fun NumberInput(
     Row {
         BasicTextField(
             modifier = modifier
+                .testTag(inputTestTag)
                 .alignByBaseline()
                 .width(IntrinsicSize.Min)
                 .height(IntrinsicSize.Min)
@@ -302,7 +305,7 @@ fun NumberInput(
                         }
                         // invisible placeholder preserves width
                         Text(
-                            text = if (padStart) "9".padStart(maxLength, '9') else "99",
+                            text = if (padStart) "9".padStart(maxLength, '9') else "9",
                             style = textStyle,
                             color = Color.Transparent
                         )
@@ -391,7 +394,8 @@ private fun NumberInputPreview() {
             imeAction = ImeAction.Done,
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
-            }
+            },
+            inputTestTag = "NumberInputTestTag"
         )
     }
 }

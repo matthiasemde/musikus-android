@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
+import app.musikus.core.presentation.utils.TestTags
 import app.musikus.menu.domain.ColorSchemeSelections
 
 /**
@@ -58,7 +59,8 @@ fun DurationInput(
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
             },
             focusRequester = focusRequesterHours,
-            onEntryComplete = { focusRequesterMinutes.requestFocus() }
+            onEntryComplete = { focusRequesterMinutes.requestFocus() },
+            inputTestTag = TestTags.GOAL_DIALOG_HOURS_INPUT
         )
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
@@ -68,7 +70,8 @@ fun DurationInput(
             label = { modifier ->
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
             },
-            onBackspaceWhenEmpty = { focusRequesterHours.requestFocus() }
+            onBackspaceWhenEmpty = { focusRequesterHours.requestFocus() },
+            inputTestTag = TestTags.GOAL_DIALOG_MINUTES_INPUT
         )
     }
 }
