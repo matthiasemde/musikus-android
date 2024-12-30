@@ -47,19 +47,15 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: ${{ env.JAVA_DISTRO }}
-        cache: gradle
 
-    - name: Build (Unit tests & Android tests)
-      run: ./gradlew assembleDebug --stacktrace
-
-    - name: Tar build files
-      run: tar -cf build.tar app/build .gradle
-
-    - name: Upload build tar
-      uses: actions/upload-artifact@v4
+    # See https://community.gradle.org/github-actions/docs/setup-gradle/ for more information
+    - uses: gradle/actions/setup-gradle@v4            # creates build cache when on main branch
       with:
-          name: build
-          path: build.tar
+        cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+        dependency-graph: generate-and-submit         # submit Github Dependency Graph info
+
+    - name: Build
+      run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:compileDebugSource
 
   unit-tests:
     name: Unit tests
@@ -72,20 +68,14 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: ${{ env.JAVA_DISTRO }}
-        cache: gradle
 
-    - name: Download build artifact
-      uses: actions/download-artifact@v4
+    - uses: gradle/actions/setup-gradle@v4
       with:
-        name: build
-        path: .
-
-    - name: Extract build files
-      run: |
-        tar -xf build.tar
+        cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+        cache-read-only: true
 
     - name: Run unit tests
-      run: ./gradlew testDebugUnitTest
+      run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn testDebugUnitTest
 
     - name: Upload test results
       if: always()
@@ -96,7 +86,7 @@ jobs:
 
   instrumentation-tests:
     name: Instrumentation tests
-    # needs: build
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -108,12 +98,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # API 30+ emulators only have x86_64 system images.
-      - name: Get AVD info
-        uses: ./.github/actions/get-avd-info
-        id: avd-info
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          api-level: ${{ matrix.api-level }}
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
       - name: Enable KVM group perms
         run: |
@@ -121,13 +109,14 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Instrumentation tests
-        uses: reactivecircus/android-emulator-runner@v2.33.0
+      - name: Cache AVD
+        uses: actions/cache@v4
         with:
-          api-level: ${{ matrix.api-level }}
-          arch: ${{ steps.avd-info.outputs.arch }}
-          target: ${{ steps.avd-info.outputs.target }}
-          script: ./gradlew connectedDebugAndroidTest
+          path: ~/.config/.android/avd
+          key: avd-${{ hashFiles('app/build.gradle.kts') }}   # gradle-managed devices are defined there
+
+      - name: Run device tests
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:api${{ matrix.api-level }}Check
 
       - name: Upload test results
         if: always()
@@ -138,7 +127,7 @@ jobs:
 
   final-check:
     name: CI checks passed
-    needs: [ checks, build, unit-tests, instrumentation-tests ]
+    needs: [ unit-tests, instrumentation-tests ]
     runs-on: ubuntu-latest
 
     steps:
