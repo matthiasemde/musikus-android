@@ -144,8 +144,12 @@ fun GoalDialog(
                 },
             )
 
-            Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
-                horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.large),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
                     modifier = Modifier.alignByBaseline(),
                     text = stringResource(id = R.string.goals_goal_dialog_target_description),
@@ -164,14 +168,18 @@ fun GoalDialog(
             if (!isEditMode) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
-                    horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.spacing.large),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
                         modifier = Modifier.alignByBaseline(),
                         text = stringResource(id = R.string.goals_goal_dialog_period_description),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Column (modifier = Modifier.alignByBaseline()) {
+                    Column(modifier = Modifier.alignByBaseline()) {
                         PeriodInput(
                             periodAmountInputState = periodAmountInputState,
                             periodUnitSelectionState = periodUnitSelectionState,
@@ -179,7 +187,7 @@ fun GoalDialog(
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
                         Text(
                             modifier = Modifier.align(Alignment.End),
-                            text = when(periodUnitSelectionState.currentSelection.value) {
+                            text = when (periodUnitSelectionState.currentSelection.value) {
                                 GoalPeriodUnit.DAY -> stringResource(R.string.goals_goal_dialog_start_annotation_day)
                                 GoalPeriodUnit.WEEK -> stringResource(R.string.goals_goal_dialog_start_annotation_week)
                                 GoalPeriodUnit.MONTH -> stringResource(R.string.goals_goal_dialog_start_annotation_month)
@@ -204,10 +212,15 @@ fun GoalDialog(
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.spacing.large),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
 
                     ToggleButton(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                        modifier = Modifier.fillMaxWidth(),
                         options = toggleButtonOptions,
                         selected = toggleButtonOptions[selectedGoalType.value.ordinal],
                         onSelectedChanged = { option ->
