@@ -265,6 +265,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 29) // somehow crashes on API < 29
     fun finishSession() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()

@@ -86,36 +86,46 @@ android {
 
         managedDevices {
             localDevices {
-//                create("api28") {
-//                    device = "Pixel 6a"
-//                    apiLevel = 28
-//                    systemImageSource = "aosp"
-//                }
+                create("api28") {
+                    device = "Pixel 6a"
+                    apiLevel = 28
+                    systemImageSource = "aosp"
+                }
                 create("api29") {
                     device = "Pixel 6a"
                     apiLevel = 29
                     systemImageSource = "aosp"
                 }
-//                create("api30") {
-//                    device = "Pixel 6a"
-//                    apiLevel = 30
-//                    systemImageSource = "aosp"
-//                }
-//                create("api31") {
-//                    device = "Pixel 6a"
-//                    apiLevel = 31
-//                    systemImageSource = "aosp"
-//                }
-//                create("api33") {
-//                    device = "Pixel 6a"
-//                    apiLevel = 33
-//                    systemImageSource = "aosp"
-//                }
-//                create("api35") {
-//                    device = "Pixel 6a"
-//                    apiLevel = 35
-//                    systemImageSource = "aosp"
-//                }
+                create("api30") {
+                    device = "Pixel 6a"
+                    apiLevel = 30
+                    systemImageSource = "aosp"
+                }
+                create("api31") {
+                    device = "Pixel 6a"
+                    apiLevel = 31
+                    systemImageSource = "aosp"
+                }
+                create("api33") {
+                    device = "Pixel 6a"
+                    apiLevel = 33
+                    systemImageSource = "aosp"
+                }
+                create("api35") {
+                    device = "Pixel 6a"
+                    apiLevel = 35
+                    systemImageSource = "aosp"
+                }
+            }
+            groups {
+                create("all") {
+                    targetDevices.add(devices["api28"])
+                    targetDevices.add(devices["api29"])
+                    targetDevices.add(devices["api30"])
+                    targetDevices.add(devices["api31"])
+                    targetDevices.add(devices["api33"])
+                    targetDevices.add(devices["api35"])
+                }
             }
         }
 
