@@ -44,6 +44,7 @@ data class GoalsContentUiState(
  */
 data class GoalsAddOrEditDialogUiState(
     val mode: DialogMode,
+    val oneShotGoal: Boolean,
     val goalToEditId: UUID?,
     val initialTargetHours: Int,
     val initialTargetMinutes: Int,

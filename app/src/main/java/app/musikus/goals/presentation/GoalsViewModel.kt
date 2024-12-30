@@ -185,6 +185,7 @@ class GoalsViewModel @Inject constructor(
             libraryItems = items,
             initialTargetHours = dialogData.initialTarget.inWholeHours.toInt(),
             initialTargetMinutes = dialogData.initialTarget.inWholeMinutes.toInt() % 60,
+            oneShotGoal = dialogData.oneShot,
         )
     }.stateIn(
         scope = viewModelScope,
