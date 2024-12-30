@@ -361,7 +361,7 @@ val embedScreenshotsTask = tasks.register("embedScreenshots") {
 }
 
 tasks.whenTaskAdded {
-    if (name.endsWith("DebugAndroidTest")) {
+    if (name.matches(regex = Regex("api[0-9]{2}DebugAndroidTest"))) {
         finalizedBy(embedScreenshotsTask)
     }
 }
