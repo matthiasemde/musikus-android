@@ -10,35 +10,10 @@ env:
     JAVA_DISTRO: 'zulu'
 
 jobs:
-  checks:
-    name: Checks
-    # Only run checks if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
-    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: ${{ env.JAVA_DISTRO }}
-        cache: gradle
-
-    - name: Check Gradle wrapper
-      uses: gradle/wrapper-validation-action@v3
-
-    - name: Check lint
-      run: ./gradlew lint
-
-    - name: Upload lint results
-      uses: actions/upload-artifact@v4
-      with:
-        name: lint-results
-        path: app/build/reports/lint-results-debug.html
-
   build:
     name: Build
-    needs: checks
+    # Only run CI if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
+    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
     runs-on: ubuntu-latest
 
     steps:
@@ -56,6 +31,36 @@ jobs:
 
     - name: Build
       run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:compileDebugSource
+
+  checks:
+    name: Checks
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+          cache: gradle
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
+
+      - name: Check Gradle wrapper
+        uses: gradle/wrapper-validation-action@v3
+
+      - name: Check lint
+        run: ./gradlew lint
+
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results-debug.html
 
   unit-tests:
     name: Unit tests
