@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: ['main']
   pull_request:
     # Triggers when a PR is opened, updated or labeled
     types: [opened, synchronize, reopened, unlabeled]
@@ -10,10 +12,11 @@ env:
     JAVA_DISTRO: 'zulu'
 
 jobs:
+  # This job runs only when a commit is pushed to main.
+  # It builds the project and updates the build cache which is used by other jobs.
   build:
     name: Build
-    # Only run CI if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
-    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -24,17 +27,18 @@ jobs:
         distribution: ${{ env.JAVA_DISTRO }}
 
     # See https://community.gradle.org/github-actions/docs/setup-gradle/ for more information
-    - uses: gradle/actions/setup-gradle@v4
+    - uses: gradle/actions/setup-gradle@v4 # creates build cache when on main branch
       with:
         cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
-        dependency-graph: generate-and-submit         # submit Github Dependency Graph info
+        dependency-graph: generate-and-submit # submit Github Dependency Graph info
 
     - name: Build
       run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:compileDebugSource
 
   checks:
     name: Checks
-    needs: build
+    # Only run CI if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
+    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
     runs-on: ubuntu-latest
 
     steps:
@@ -63,7 +67,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: build
+    needs: checks
     runs-on: ubuntu-latest
 
     steps: 
@@ -90,7 +94,7 @@ jobs:
 
   instrumentation-tests:
     name: Instrumentation tests
-    needs: build
+    needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:

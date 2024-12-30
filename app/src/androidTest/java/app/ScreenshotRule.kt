@@ -26,21 +26,35 @@ import java.io.File
 
 class ScreenshotRule(
     private val composeTestRule: ComposeTestRule,
-    @Suppress("Deprecation")
-    private val outputDir: File = File(
-        InstrumentationRegistry.getInstrumentation().targetContext.externalMediaDirs.first(),
-        "additional_test_output"
-    )
 ) : TestWatcher() {
 
-    override fun failed(e: Throwable?, description: Description) {
+    var outputDir: File
+
+    init {
+        @Suppress("Deprecation")
+        outputDir = File(
+            InstrumentationRegistry.getInstrumentation().targetContext.externalMediaDirs.first(),
+            "additional_test_output"
+        )
+
         // Ensure the directory exists
         if (!outputDir.exists()) {
             outputDir.mkdirs()
         }
+    }
+
+    override fun failed(e: Throwable?, description: Description) {
+        val testClassDir = File(
+            outputDir,
+            description.className
+        )
+
+        if (!testClassDir.exists()) {
+            testClassDir.mkdirs()
+        }
 
         val screenshotName = "${description.methodName}.png"
-        val screenshotFile = File(outputDir, screenshotName)
+        val screenshotFile = File(testClassDir, screenshotName)
         Log.d("ComposeScreenshotRule", "Saving screenshot to ${screenshotFile.absolutePath}")
 
         // Capture the screenshot and save it
@@ -49,5 +63,7 @@ class ScreenshotRule(
                 compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             }
         }
+
+//        runBlocking { delay(100000) }
     }
 }

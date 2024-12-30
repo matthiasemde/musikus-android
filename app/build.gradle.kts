@@ -305,6 +305,67 @@ tasks.register("fixLicense") {
     }
 }
 
+val embedScreenshotsTask = tasks.register("embedScreenshots") {
+    doFirst {
+        val additionalTestOutputDir = file(
+            "$projectDir/build/intermediates/managed_device_android_test_additional_output/debugAndroidTest"
+        )
+
+        // api29DebugAndroidTest
+        val deviceDirectory = additionalTestOutputDir.listFiles().first()
+        val deviceName = deviceDirectory.name.replace("DebugAndroidTest", "")
+
+        val managedDeviceReportDirectory = File("$reportsPath/androidTests/managedDevice/debug")
+        val screenshotDirectory = File("$managedDeviceReportDirectory/$deviceName", "screenshots")
+
+        copy {
+            from(deviceDirectory)
+            into(screenshotDirectory)
+        }
+
+        if (!screenshotDirectory.exists()) {
+            println("Could not find screenshot directory. Skipping...")
+            return@doFirst
+        }
+
+        screenshotDirectory.listFiles()?.forEach { failedTestClassDirectory ->
+            println("Processing screenshots for test class '${failedTestClassDirectory.name}'...")
+
+            val failedTestClassName = failedTestClassDirectory.name
+
+            failedTestClassDirectory.listFiles()?.forEach { failedTestFile ->
+                println("Embedding screenshot for test '$failedTestFile'...")
+                val failedTestName = failedTestFile.name
+                val failedTestNameWithoutExtension = failedTestName.substringBeforeLast('.')
+                val failedTestClassJunitReportFile = File(
+                    "$managedDeviceReportDirectory/$deviceName",
+                    "$failedTestClassName.html"
+                )
+
+                if (!failedTestClassJunitReportFile.exists()) {
+                    println("Could not find JUnit report file for test class '$failedTestClassJunitReportFile'")
+                    return@forEach
+                }
+
+                var failedTestJunitReportContent = failedTestClassJunitReportFile.readText()
+
+                val patternToFind = "<h3 class=\"failures\">$failedTestNameWithoutExtension</h3>"
+                val patternToReplace = "$patternToFind <img src=\"screenshots/$failedTestClassName/$failedTestName\" width=\"360\" /></br>"
+
+                failedTestJunitReportContent = failedTestJunitReportContent.replace(patternToFind, patternToReplace)
+
+                failedTestClassJunitReportFile.writeText(failedTestJunitReportContent)
+            }
+        }
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.endsWith("DebugAndroidTest")) {
+        finalizedBy(embedScreenshotsTask)
+    }
+}
+
 dependencies {
     detektPlugins(libs.detekt.formatting)
 
