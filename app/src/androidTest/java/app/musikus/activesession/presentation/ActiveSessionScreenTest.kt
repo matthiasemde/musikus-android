@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.navigation.NavHostController
 import androidx.test.filters.SdkSuppress
+import app.ScreenshotRule
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -68,9 +69,9 @@ class ActiveSessionScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
-//
-//    @get:Rule(order = 3)
-//    val screenshotRule = ScreenshotRule(composeRule)
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     lateinit var navController: NavHostController
     lateinit var mainViewModel: MainViewModel
@@ -136,8 +137,6 @@ class ActiveSessionScreenTest {
 
         // Pause timer is displayed
         composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
-        assertThat(1).isEqualTo(2)
-
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
 
@@ -160,8 +159,6 @@ class ActiveSessionScreenTest {
 
         // Select item
         composeRule.onNodeWithText("TestItem3").performClick()
-        assertThat(1).isEqualTo(2)
-
 
         // Item is selected
         composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
@@ -180,8 +177,6 @@ class ActiveSessionScreenTest {
 
         // Open item selector again
         composeRule.onNodeWithContentDescription("Next item").performClick()
-        assertThat(1).isEqualTo(2)
-
 
         // Select next item
         composeRule.onNodeWithText("TestItem2").performClick()

@@ -19,11 +19,17 @@ import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import java.io.File
 
+// Store screenshots in "/sdcard/Android/media/app.musikus/additional_test_output"
+// This way, the files will get automatically synced to app/build/outputs/managed_device_android_test_additional_output
+// before the emulator gets shut down.
+// Source: https://stackoverflow.com/questions/74069309/copy-data-from-an-android-emulator-that-is-run-by-gradle-managed-devices
+
 class ScreenshotRule(
     private val composeTestRule: ComposeTestRule,
+    @Suppress("Deprecation")
     private val outputDir: File = File(
-        InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null),
-        "screenshots"
+        InstrumentationRegistry.getInstrumentation().targetContext.externalMediaDirs.first(),
+        "additional_test_output"
     )
 ) : TestWatcher() {
 

@@ -84,9 +84,6 @@ android {
 
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
 
-//        resultsDir = "$reportsPath/androidTests"
-//        reportDir = "$reportsPath/androidTests"
-//
         managedDevices {
             localDevices {
 //                create("api28") {
@@ -295,30 +292,6 @@ tasks.register("fixLicense") {
             workingDir = file("$rootDir/tools")
             commandLine("python", "fix_license_headers.py")
         }
-    }
-}
-
-val emulatorScreenshotPath = "/storage/emulated/0/Android/data/app.musikus/files/screenshots"
-
-val clearScreenshotsTask = tasks.register<Exec>("clearScreenshots") {
-    executable(android.adbExecutable.toString())
-    args("shell", "rm", "-r", emulatorScreenshotPath)
-}
-
-val fetchScreenshotsTask = tasks.register<Exec>("fetchScreenshots") {
-    executable(android.adbExecutable.toString())
-    args("pull", "$emulatorScreenshotPath/.", "$reportsPath/androidTests/screenshots")
-
-    finalizedBy(clearScreenshotsTask)
-
-    doFirst {
-        File("$reportsPath/androidTests/screenshots").mkdirs()
-    }
-}
-
-tasks.whenTaskAdded {
-    if (name.endsWith("DebugAndroidTest")) {
-        finalizedBy(fetchScreenshotsTask)
     }
 }
 
