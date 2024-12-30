@@ -140,7 +140,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
-          path: app/build/reports/androidTests/connected/debug
+          path: app/build/reports/androidTests/managed/debug/api${{ matrix.api-level }}
 
   final-check:
     name: CI checks passed
