@@ -134,6 +134,7 @@ class ActiveSessionScreenTest {
 
         // Pause session
         composeRule.onNodeWithContentDescription("Pause").performClick()
+        assert(false)
 
         // Pause timer is displayed
         composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
