@@ -103,8 +103,11 @@ jobs:
       fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -114,6 +117,7 @@ jobs:
       - name: Accept licenses
         run: |
           ls -la $ANDROID_HOME 
+          ls -la ~/Android/Sdk/tools/bin 
           yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 
       - name: Enable KVM group perms
