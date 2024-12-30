@@ -133,8 +133,6 @@ fun GoalDialog(
                 )
             )
 
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-
             Row(Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacing.large),
                 horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
