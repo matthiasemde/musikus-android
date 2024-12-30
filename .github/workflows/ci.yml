@@ -113,7 +113,7 @@ jobs:
 
       - name: Accept licenses
         run: |
-          ls -la $ANDROID_HOME/tools/bin/ 
+          ls -la $ANDROID_HOME 
           yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 
       - name: Enable KVM group perms
