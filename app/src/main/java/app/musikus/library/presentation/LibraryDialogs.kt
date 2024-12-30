@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
@@ -75,6 +79,10 @@ fun LibraryFolderDialog(
                         DialogMode.EDIT -> R.string.library_folder_dialog_title_edit
                     }
                 ),
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.CreateNewFolder)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
+                }
             )
             Column {
                 OutlinedTextField(
@@ -133,6 +141,10 @@ fun LibraryItemDialog(
                 title = when (uiState.mode) {
                     DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_title)
                     DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_title_edit)
+                },
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.AddToPhotos)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
                 }
             )
             Column {
