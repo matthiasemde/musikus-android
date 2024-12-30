@@ -55,4 +55,8 @@
     <!-- Snackbar -->
     <string name="components_snackbar_undo">Undo</string>
 
+    <!-- DurationInput -->
+    <string name="components_duration_input_hours_content_description">Target hours input</string>
+    <string name="components_duration_input_minutes_content_description">Target minutes input</string>
+
 </resources>

@@ -19,9 +19,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import app.musikus.R
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
@@ -60,7 +62,8 @@ fun DurationInput(
             },
             focusRequester = focusRequesterHours,
             onEntryComplete = { focusRequesterMinutes.requestFocus() },
-            inputTestTag = TestTags.GOAL_DIALOG_HOURS_INPUT
+            inputTestTag = TestTags.GOAL_DIALOG_HOURS_INPUT,
+            contentDescr = stringResource(R.string.components_duration_input_hours_content_description)
         )
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
@@ -71,7 +74,8 @@ fun DurationInput(
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
             },
             onBackspaceWhenEmpty = { focusRequesterHours.requestFocus() },
-            inputTestTag = TestTags.GOAL_DIALOG_MINUTES_INPUT
+            inputTestTag = TestTags.GOAL_DIALOG_MINUTES_INPUT,
+            contentDescr = stringResource(R.string.components_duration_input_minutes_content_description)
         )
     }
 }
