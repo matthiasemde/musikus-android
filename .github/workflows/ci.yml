@@ -112,7 +112,7 @@ jobs:
           cache-read-only: true
 
       - name: Accept licenses
-        run: yes | $ANDROID_HOME/Sdk/tools/bin/sdkmanager --licenses
+        run: yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
 
       - name: Enable KVM group perms
         run: |
