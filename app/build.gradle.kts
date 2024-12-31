@@ -307,25 +307,25 @@ tasks.register("fixLicense") {
 
 val embedScreenshotsTask = tasks.register("embedScreenshots") {
     doFirst {
+        println("Embedding screenshots into JUnit reports...")
+
         val additionalTestOutputDir = file(
             "$projectDir/build/intermediates/managed_device_android_test_additional_output/debugAndroidTest"
         )
 
-        // api29DebugAndroidTest
         val deviceDirectory = additionalTestOutputDir.listFiles().first()
         val deviceName = deviceDirectory.name.replace("DebugAndroidTest", "")
+
+        println("Processing screenshots for device '$deviceName'...")
 
         val managedDeviceReportDirectory = File("$reportsPath/androidTests/managedDevice/debug")
         val screenshotDirectory = File("$managedDeviceReportDirectory/$deviceName", "screenshots")
 
+        println("Copying screenshots to '$screenshotDirectory'...")
+
         copy {
             from(deviceDirectory)
             into(screenshotDirectory)
-        }
-
-        if (!screenshotDirectory.exists()) {
-            println("Could not find screenshot directory. Skipping...")
-            return@doFirst
         }
 
         screenshotDirectory.listFiles()?.forEach { failedTestClassDirectory ->
