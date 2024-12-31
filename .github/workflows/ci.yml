@@ -133,7 +133,7 @@ jobs:
           key: avd-${{ hashFiles('app/build.gradle.kts') }}   # gradle-managed devices are defined there
 
       - name: Run device tests
-        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:api${{ matrix.api-level }}Check -Pandroid.testInstrumentationRunnerArguments.class=app.musikus.activesession.presentation.ActiveSessionScreenTest#pauseAndResumeSession --info --stacktrace
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:api${{ matrix.api-level }}DebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.musikus.activesession.presentation.ActiveSessionScreenTest#pauseAndResumeSession --stacktrace
 
       - name: Upload test results
         if: always()
