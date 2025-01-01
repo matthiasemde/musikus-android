@@ -86,6 +86,11 @@ android {
 
         managedDevices {
             localDevices {
+                create("api27") {
+                    device = "Pixel 6a"
+                    apiLevel = 27
+                    systemImageSource = "aosp"
+                }
                 create("api29") {
                     device = "Pixel 6a"
                     apiLevel = 29
@@ -307,7 +312,12 @@ val embedScreenshotsTask = tasks.register("embedScreenshots") {
             "$projectDir/build/intermediates/managed_device_android_test_additional_output/debugAndroidTest"
         )
 
-        val deviceDirectory = additionalTestOutputDir.listFiles().first()
+        val deviceDirectory = additionalTestOutputDir.listFiles().firstOrNull()
+
+        if (deviceDirectory == null) {
+            println("No device directory found in '$additionalTestOutputDir'")
+            return@doFirst
+        }
         val deviceName = deviceDirectory.name.replace("DebugAndroidTest", "")
 
         println("Processing screenshots for device '$deviceName'...")
@@ -327,7 +337,7 @@ val embedScreenshotsTask = tasks.register("embedScreenshots") {
 
             val failedTestClassName = failedTestClassDirectory.name
 
-            failedTestClassDirectory.listFiles()?.forEach { failedTestFile ->
+            failedTestClassDirectory.listFiles()?.forEach filesLoop@{ failedTestFile ->
                 println("Embedding screenshot for test '$failedTestFile'...")
                 val failedTestName = failedTestFile.name
                 val failedTestNameWithoutExtension = failedTestName.substringBeforeLast('.')
@@ -338,7 +348,7 @@ val embedScreenshotsTask = tasks.register("embedScreenshots") {
 
                 if (!failedTestClassJunitReportFile.exists()) {
                     println("Could not find JUnit report file for test class '$failedTestClassJunitReportFile'")
-                    return@forEach
+                    return@filesLoop
                 }
 
                 var failedTestJunitReportContent = failedTestClassJunitReportFile.readText()
