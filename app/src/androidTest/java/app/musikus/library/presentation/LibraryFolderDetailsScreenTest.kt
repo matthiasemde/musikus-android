@@ -9,9 +9,7 @@
 package app.musikus.library.presentation
 
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasContentDescription
@@ -28,6 +26,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
+import app.assertNodesInVerticalOrder
 import app.assertWithLease
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
@@ -125,17 +124,13 @@ class LibraryFolderDetailsScreenTest {
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
-        composeRule.awaitIdle()
-
         // Check if items are displayed in correct order
         composeRule.assertWithLease {
-            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-            itemNodes.assertCountEquals(3)
-
-            itemNodes[0].assertTextContains("TestItem2")
-            itemNodes[1].assertTextContains("TestItem1")
-            itemNodes[2].assertTextContains("TestItem3")
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem1"),
+                composeRule.onNodeWithText("TestItem3")
+            )
         }
 
         // Change sorting mode to name descending
@@ -143,13 +138,11 @@ class LibraryFolderDetailsScreenTest {
 
         // Check if items are displayed in correct order
         composeRule.assertWithLease {
-            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-            itemNodes.assertCountEquals(namesAndColors.size)
-
-            for (i in namesAndColors.indices) {
-                itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
-            }
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem3"),
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem1")
+            )
         }
 
         // Change sorting mode to name ascending
@@ -157,13 +150,11 @@ class LibraryFolderDetailsScreenTest {
 
         // Check if items are displayed in correct order
         composeRule.assertWithLease {
-            val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-            itemNodes.assertCountEquals(namesAndColors.size)
-
-            for (i in namesAndColors.indices) {
-                itemNodes[i].assertTextContains("TestItem${i + 1}")
-            }
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem1"),
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem3")
+            )
         }
     }
 

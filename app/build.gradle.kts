@@ -307,7 +307,7 @@ val embedScreenshotsTask = tasks.register("embedScreenshots") {
             "$projectDir/build/intermediates/managed_device_android_test_additional_output/debugAndroidTest"
         )
 
-        val deviceDirectory = additionalTestOutputDir.listFiles().firstOrNull()
+        val deviceDirectory = additionalTestOutputDir.listFiles()?.firstOrNull()
 
         if (deviceDirectory == null) {
             println("No device directory found in '$additionalTestOutputDir'")
