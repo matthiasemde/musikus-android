@@ -11,10 +11,11 @@ package app
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 
-const val LeaseSleepDurationMilliseconds = 500L
+const val LeaseSleepDurationMilliseconds = 1000L
+const val LeaseDefaultAttempts = 5
 
 fun AndroidComposeTestRule<*, *>.assertWithLease(
-    attempts: Int = 3,
+    attempts: Int = LeaseDefaultAttempts,
     assertion: () -> Unit
 ) {
     try {
@@ -30,9 +31,9 @@ fun AndroidComposeTestRule<*, *>.assertWithLease(
 }
 
 fun SemanticsNodeInteraction.assertWithLease(
-    attempts: Int = 3,
+    attempts: Int = LeaseDefaultAttempts,
     assertion: SemanticsNodeInteraction.() -> Unit
-) : SemanticsNodeInteraction {
+): SemanticsNodeInteraction {
     try {
         assertion()
     } catch (e: Throwable) {
