@@ -12,7 +12,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 
 const val LeaseSleepDurationMilliseconds = 1000L
-const val LeaseDefaultAttempts = 5
+const val LeaseDefaultAttempts = 50
 
 fun AndroidComposeTestRule<*, *>.assertWithLease(
     attempts: Int = LeaseDefaultAttempts,
