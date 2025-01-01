@@ -10,6 +10,7 @@ package app.musikus.library.presentation
 
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
@@ -26,7 +27,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.ScreenshotRule
-import app.assertIsDisplayedWithLease
+import app.assertWithLease
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -35,7 +36,6 @@ import app.musikus.core.presentation.utils.TestTags
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
-import app.waitUntilRuns
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
@@ -91,7 +91,7 @@ class LibraryFolderDetailsScreenTest {
 
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
     }
 
     private fun clickSortMode(
@@ -127,7 +127,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.awaitIdle()
 
         // Check if items are displayed in correct order
-        composeRule.waitUntilRuns {
+        composeRule.assertWithLease {
             val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
             itemNodes.assertCountEquals(3)
@@ -141,7 +141,7 @@ class LibraryFolderDetailsScreenTest {
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        composeRule.waitUntilRuns {
+        composeRule.assertWithLease {
             val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
             itemNodes.assertCountEquals(namesAndColors.size)
@@ -155,7 +155,7 @@ class LibraryFolderDetailsScreenTest {
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        composeRule.waitUntilRuns {
+        composeRule.assertWithLease {
             val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
             itemNodes.assertCountEquals(namesAndColors.size)
@@ -177,7 +177,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if folder name is displayed
-        composeRule.onNodeWithText("TestFolder2").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestFolder2").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -196,7 +196,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if edited item name is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
 
         // Edit item using action mode
         composeRule.onNodeWithText("TestItem2").performTouchInput { longClick() }
@@ -211,7 +211,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if edited item name is displayed
-        composeRule.onNodeWithText("TestItem3").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestItem3").assertWithLease { assertIsDisplayed() }
     }
 
     @Test

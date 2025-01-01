@@ -11,6 +11,7 @@ package app.musikus.library.presentation
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -29,7 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.navigation.toRoute
 import app.ScreenshotRule
-import app.assertIsDisplayedWithLease
+import app.assertWithLease
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.HomeTab
 import app.musikus.core.presentation.HomeTabNavType
@@ -126,7 +127,7 @@ class LibraryIntegrationTest {
         composeRule.onNodeWithText("TestFolder").performClick()
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem1").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestItem1").assertWithLease { assertIsDisplayed() }
 
         // Add an item from inside the folder (folder should be pre-selected)
         composeRule.onNodeWithContentDescription("Add item").performClick()
@@ -134,6 +135,6 @@ class LibraryIntegrationTest {
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayedWithLease()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
     }
 }

@@ -1,6 +1,5 @@
 #!/bin/sh
-yes | "$ANDROID_HOME"/tools/bin/sdkmanager "build-tools;28.0.3"
-#
+yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses
 # Copyright © 2015-2021 the original authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

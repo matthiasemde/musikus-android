@@ -89,12 +89,12 @@ android {
                 create("api28") {
                     device = "Pixel 6a"
                     apiLevel = 28
-                    systemImageSource = "aosp-atd"
+                    systemImageSource = "aosp"
                 }
                 create("api29") {
                     device = "Pixel 6a"
                     apiLevel = 29
-                    systemImageSource = "aosp-atd"
+                    systemImageSource = "aosp"
                 }
                 create("api30") {
                     device = "Pixel 6a"

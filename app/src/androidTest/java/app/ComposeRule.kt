@@ -9,10 +9,11 @@
 package app
 
 import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 
-fun AndroidComposeTestRule<*, *>.waitUntilRuns(
+const val LeaseSleepDurationMilliseconds = 500L
+
+fun AndroidComposeTestRule<*, *>.assertWithLease(
     attempts: Int = 3,
     assertion: () -> Unit
 ) {
@@ -20,23 +21,24 @@ fun AndroidComposeTestRule<*, *>.waitUntilRuns(
         assertion()
     } catch (e: Throwable) {
         if (attempts > 0) {
-            Thread.sleep(1000)
-            waitUntilRuns(attempts - 1, assertion)
+            Thread.sleep(LeaseSleepDurationMilliseconds)
+            assertWithLease(attempts - 1, assertion)
         } else {
             throw e
         }
     }
 }
 
-fun SemanticsNodeInteraction.assertIsDisplayedWithLease(
+fun SemanticsNodeInteraction.assertWithLease(
     attempts: Int = 3,
-): SemanticsNodeInteraction {
+    assertion: SemanticsNodeInteraction.() -> Unit
+) : SemanticsNodeInteraction {
     try {
-        assertIsDisplayed()
+        assertion()
     } catch (e: Throwable) {
         if (attempts > 0) {
-            Thread.sleep(1000)
-            assertIsDisplayedWithLease(attempts - 1)
+            Thread.sleep(LeaseSleepDurationMilliseconds)
+            assertWithLease(attempts - 1, assertion)
         } else {
             throw e
         }
