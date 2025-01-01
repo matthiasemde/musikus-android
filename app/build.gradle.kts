@@ -1,5 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
+import com.android.build.api.dsl.ManagedVirtualDevice
 import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
 import java.util.Scanner
@@ -85,12 +86,14 @@ android {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
 
         managedDevices {
-            localDevices {
-                create("api28") {
+            devices {
+                register("api28", ManagedVirtualDevice::class) {
                     device = "Pixel 6a"
                     apiLevel = 28
                     systemImageSource = "aosp"
                 }
+            }
+            localDevices {
                 create("api29") {
                     device = "Pixel 6a"
                     apiLevel = 29
