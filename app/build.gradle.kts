@@ -114,7 +114,6 @@ android {
             }
             groups {
                 create("all") {
-                    targetDevices.add(devices["api28"])
                     targetDevices.add(devices["api29"])
                     targetDevices.add(devices["api30"])
                     targetDevices.add(devices["api31"])
