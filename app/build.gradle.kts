@@ -86,11 +86,6 @@ android {
 
         managedDevices {
             localDevices {
-                create("api27") {
-                    device = "Pixel 6a"
-                    apiLevel = 27
-                    systemImageSource = "aosp"
-                }
                 create("api29") {
                     device = "Pixel 6a"
                     apiLevel = 29
@@ -119,7 +114,6 @@ android {
             }
             groups {
                 create("all") {
-                    targetDevices.add(devices["api27"])
                     targetDevices.add(devices["api29"])
                     targetDevices.add(devices["api30"])
                     targetDevices.add(devices["api31"])
