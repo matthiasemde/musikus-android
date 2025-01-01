@@ -9,6 +9,7 @@
 package app.musikus.activesession.presentation
 
 import androidx.activity.compose.setContent
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -20,6 +21,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavHostController
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
+import app.assertWithLease
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems

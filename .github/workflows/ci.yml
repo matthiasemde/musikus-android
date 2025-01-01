@@ -99,7 +99,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [29, 30, 31, 33, 35]
+        api-level: [28, 29, 30, 31, 33, 35]
       fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
@@ -114,11 +114,8 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
 
-#      - name: Accept licenses
-#        run: |
-#          ls -la $ANDROID_HOME
-#          ls -la ~/Android/Sdk/tools/bin
-#          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses
+      - name: Accept licenses
+        run:  yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Enable KVM group perms
         run: |
