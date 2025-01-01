@@ -8,20 +8,39 @@
 
 package app
 
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 fun AndroidComposeTestRule<*, *>.waitUntilRuns(
-    timeout: Duration = 1.seconds,
+    attempts: Int = 3,
     assertion: () -> Unit
 ) {
-    waitUntil(timeout.inWholeMilliseconds) {
-        try {
-            assertion()
-            true
-        } catch (_: Throwable) {
-            false
+    try {
+        assertion()
+    } catch (e: Throwable) {
+        if (attempts > 0) {
+            Thread.sleep(1000)
+            waitUntilRuns(attempts - 1, assertion)
+        } else {
+            throw e
         }
     }
+}
+
+fun SemanticsNodeInteraction.assertIsDisplayedWithLease(
+    attempts: Int = 3,
+): SemanticsNodeInteraction {
+    try {
+        assertIsDisplayed()
+    } catch (e: Throwable) {
+        if (attempts > 0) {
+            Thread.sleep(1000)
+            assertIsDisplayedWithLease(attempts - 1)
+        } else {
+            throw e
+        }
+    }
+
+    return this
 }

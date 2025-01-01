@@ -9,7 +9,6 @@
 package app.musikus.activesession.presentation
 
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -18,11 +17,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
 import androidx.navigation.NavHostController
-import androidx.test.espresso.action.ViewActions.swipeLeft
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
+import app.assertIsDisplayedWithLease
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -30,7 +28,6 @@ import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.domain.plus
 import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainViewModel
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
@@ -43,7 +40,6 @@ import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -120,7 +116,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
 
         composeRule.onNodeWithText("TestItem1").performClick()
-        composeRule.onNodeWithContentDescription("Next item").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Next item").assertIsDisplayedWithLease()
     }
 
     @Test
@@ -133,13 +129,13 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Pause").performClick()
 
         // Pause timer is displayed
-        composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
+        composeRule.onNodeWithText("Paused 00:00").assertIsDisplayedWithLease()
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
 
         // Pause timer shows correct time
         composeRule.onNodeWithText("Paused 01:30")
-            .assertIsDisplayed()
+            .assertIsDisplayedWithLease()
             .performClick() // Resume session
 
         // Pause timer is hidden
@@ -158,7 +154,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem3").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem3").assertIsDisplayedWithLease()
     }
 
     @Test
@@ -170,7 +166,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem1").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem1").assertIsDisplayedWithLease()
 
         // Open item selector again
         composeRule.onNodeWithContentDescription("Next item").performClick()
@@ -179,7 +175,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem2").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem2").assertIsDisplayedWithLease()
     }
 
     @Test
