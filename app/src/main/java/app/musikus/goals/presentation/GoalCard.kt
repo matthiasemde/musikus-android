@@ -42,18 +42,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.TimeProviderImpl
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.asAnnotatedString
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
+import app.musikus.menu.domain.ColorSchemeSelections
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -257,5 +270,51 @@ fun GoalCard(
                 )
             }
         }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewGoalCard(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    val timeprovider = TimeProviderImpl()
+    val startTime = timeprovider.now()
+
+    val goal = GoalInstanceWithProgressAndDescriptionWithLibraryItems(
+        description = GoalDescriptionWithLibraryItems(
+            description = GoalDescription(
+                id = UUIDConverter.fromInt(2),
+                createdAt = startTime,
+                modifiedAt = startTime,
+                type = GoalType.NON_SPECIFIC,
+                repeat = true,
+                periodInPeriodUnits = 1,
+                periodUnit = GoalPeriodUnit.DAY,
+                progressType = GoalProgressType.TIME,
+                paused = false,
+                archived = false,
+                customOrder = null
+            ),
+            libraryItems = emptyList()
+        ),
+        instance = GoalInstance(
+            id = UUIDConverter.fromInt(3),
+            createdAt = startTime,
+            modifiedAt = startTime,
+            descriptionId = UUIDConverter.fromInt(2),
+            previousInstanceId = null,
+            startTimestamp = startTime,
+            targetSeconds = 3600,
+            endTimestamp = null
+        ),
+        progress = 1.hours
+    )
+
+    MusikusThemedPreview(theme = theme) {
+        GoalCard(
+            goal = goal,
+            timeProvider = TimeProviderImpl()
+        )
     }
 }
