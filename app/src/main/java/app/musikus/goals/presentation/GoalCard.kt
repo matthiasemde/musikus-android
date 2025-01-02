@@ -28,10 +28,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.Card
@@ -47,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -516,57 +519,48 @@ fun GoalProgressCard2(
                     tint = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isAllLibrary) "All Library Items" else goalName,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "Time Remaining",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                Column() {
                     Text(
-                        text = "1 Week",
+                        text = "Practice Antantino",
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = "for 4h 30m",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
+                Spacer(modifier = Modifier.weight(1f))
+
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Timer,
-                        contentDescription = "Time Remaining",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = timeRemaining,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+//                Row(verticalAlignment = Alignment.CenterVertically) {
+//                    Icon(
+//                        imageVector = Icons.Default.Timer,
+//                        contentDescription = "Time Remaining",
+//                        modifier = Modifier.size(20.dp),
+//                        tint = MaterialTheme.colorScheme.primary
+//                    )
+//                    Spacer(modifier = Modifier.width(4.dp))
+//                    Text(
+//                        text = timeRemaining,
+//                        style = MaterialTheme.typography.bodySmall,
+//                        color = MaterialTheme.colorScheme.onSurface
+//                    )
+//                }
+                Spacer(modifier = Modifier.weight(1f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.KeyboardDoubleArrowRight,
@@ -597,7 +591,7 @@ fun GoalProgressCard2(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${(progress * 100).toInt()}% completed",
+                    text = "${(progress * 100).toInt()}% complete",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -605,18 +599,40 @@ fun GoalProgressCard2(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Time Metrics (Worked and Remaining)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = "1 week",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "2 days left",
+                        modifier = Modifier.alpha(0.7f),
+                        text = "1 Week",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        modifier = Modifier.alpha(0.7f).size(20.dp),
+                        imageVector = Icons.Default.HourglassBottom,
+                        contentDescription = "Time Remaining",
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        modifier = Modifier.alpha(0.7f),
+                        text = "2 days left",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -630,7 +646,7 @@ fun GoalProgressCard2(
 fun PreviewGoalProgressCard2() {
     MaterialTheme {
         GoalProgressCard2(
-            icon = Icons.Default.Refresh,
+            icon = Icons.Default.Repeat,
             goalName = "Practice Andantino",
             isAllLibrary = false,
             totalDuration = "1 Week",
