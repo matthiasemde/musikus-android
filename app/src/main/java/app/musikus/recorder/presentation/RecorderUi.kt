@@ -49,7 +49,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,6 +75,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import app.musikus.R
+import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.Waveform
@@ -100,7 +100,7 @@ import kotlin.time.Duration.Companion.seconds
 fun RecorderUi(
     modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel(),
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -167,7 +167,7 @@ fun RecorderUi(
         onSetCurrentPosition = {
             currentPlaybackPosition = it
         },
-        snackbarHostState = snackbarHostState,
+        showSnackbar = showSnackbar,
     )
 }
 
@@ -180,7 +180,7 @@ fun RecorderLayout(
     currentPlaybackPosition: Long,
     onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
-    snackbarHostState: SnackbarHostState
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -207,7 +207,7 @@ fun RecorderLayout(
             onSetCurrentPosition = onSetCurrentPosition,
             currentPosition = currentPlaybackPosition,
             currentRawRecording = uiState.currentPlaybackRawMedia,
-            snackbarHostState = snackbarHostState
+            showSnackbar = showSnackbar
         )
     }
 
@@ -351,7 +351,7 @@ private fun RecordingsList(
     onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
     onNewMediaSelected: (Uri?) -> Unit,
-    snackbarHostState: SnackbarHostState
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit
 ) {
     if (recordingsList.isEmpty()) {
         Column(modifier = modifier) {
@@ -396,7 +396,7 @@ private fun RecordingsList(
                 onSetCurrentPosition = onSetCurrentPosition,
                 onClearPlayback = { onNewMediaSelected(null) },
                 currentRawRecording = currentRawRecording,
-                snackbarHostState = snackbarHostState
+                showSnackbar = showSnackbar
             )
         }
     }
@@ -411,7 +411,7 @@ private fun RecordingListItem(
     isPlaying: Boolean,
     playerState: PlayerState?, // TODO remove?
     mediaController: MediaController?, // TODO remove?
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     currentPlaybackPosition: Long,
     onSetCurrentPosition: (Long) -> Unit,
     onStartPlayingPressed: () -> Unit,
@@ -755,7 +755,7 @@ private fun PreviewRecorderUi(
             playerState = null,
             currentPlaybackPosition = 0,
             onSetCurrentPosition = {},
-            snackbarHostState = remember { SnackbarHostState() }
+            showSnackbar = {}
         )
     }
 }
