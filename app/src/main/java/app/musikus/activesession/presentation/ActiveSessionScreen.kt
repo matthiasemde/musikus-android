@@ -1161,12 +1161,13 @@ private fun SectionListElement(
         deleted = deleted,
         onDeleted = {
             onSectionDeleted(item)
-            showSnackbar(
-                MainUiEvent.ShowSnackbar(
-                    message = context.getString(R.string.active_session_sections_list_element_deleted),
-                    onUndo = { }
-                )
-            )
+            // as long as we don't have undo, we don't need to show a snackbar
+//            showSnackbar(
+//                MainUiEvent.ShowSnackbar(
+//                    message = context.getString(R.string.active_session_sections_list_element_deleted),
+//                    onUndo = { }
+//                )
+//            )
         }
     ) {
         Surface(

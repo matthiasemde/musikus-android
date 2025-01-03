@@ -199,45 +199,45 @@ class ActiveSessionScreenTest {
         assertThat(sessions).isEmpty()
     }
 
-    @Test
-    fun deleteAndRedoSection() = runTest {
-        // Start session
-        composeRule.onNodeWithContentDescription("Start practicing").performClick()
-        composeRule.onNodeWithText("TestItem1").performClick()
-
-        // Advance time
-        fakeTimeProvider.advanceTimeBy(3.minutes)
-
-        // Start next section
-        composeRule.onNodeWithContentDescription("Next item").performClick()
-        composeRule.onNodeWithText("TestItem2").performClick()
-
-        // Delete previous section
-        composeRule.onNodeWithText("TestItem1").performTouchInput { swipeLeft() }
-
-        composeRule.awaitIdle()
-
-        // Assert showSnackbar is called
-        val uiEventSlot = slot<MainUiEvent>()
-
-        verify(exactly = 1) {
-            mainViewModel.onUiEvent(capture(uiEventSlot))
-        }
-
-        val uiEvent = uiEventSlot.captured
-        check(uiEvent is MainUiEvent.ShowSnackbar)
-        assertThat(uiEvent.message).isEqualTo("Section deleted")
-        check(uiEvent.onUndo != null)
-
-        // Assert section is deleted
-        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
-
-        // Undo delete
-        uiEvent.onUndo.invoke()
-
-        // Assert section is restored (TODO: this is not implemented yet)
-        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
-    }
+//    @Test
+//    fun deleteAndRedoSection() = runTest {
+//        // Start session
+//        composeRule.onNodeWithContentDescription("Start practicing").performClick()
+//        composeRule.onNodeWithText("TestItem1").performClick()
+//
+//        // Advance time
+//        fakeTimeProvider.advanceTimeBy(3.minutes)
+//
+//        // Start next section
+//        composeRule.onNodeWithContentDescription("Next item").performClick()
+//        composeRule.onNodeWithText("TestItem2").performClick()
+//
+//        // Delete previous section
+//        composeRule.onNodeWithText("TestItem1").performTouchInput { swipeLeft() }
+//
+//        composeRule.awaitIdle()
+//
+//        // Assert showSnackbar is called
+//        val uiEventSlot = slot<MainUiEvent>()
+//
+//        verify(exactly = 1) {
+//            mainViewModel.onUiEvent(capture(uiEventSlot))
+//        }
+//
+//        val uiEvent = uiEventSlot.captured
+//        check(uiEvent is MainUiEvent.ShowSnackbar)
+//        assertThat(uiEvent.message).isEqualTo("Section deleted")
+//        check(uiEvent.onUndo != null)
+//
+//        // Assert section is deleted
+//        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
+//
+//        // Undo delete
+//        uiEvent.onUndo.invoke()
+//
+//        // Assert section is restored (TODO: this is not implemented yet)
+//        composeRule.onNodeWithContentDescription("TestItem1").assertIsNotDisplayed()
+//    }
 
     @Test
     fun finishButtonDisabledForEmptySession() {
