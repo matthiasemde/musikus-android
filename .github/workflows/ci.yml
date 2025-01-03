@@ -1,103 +1,105 @@
 name: CI
 
 on:
+  push:
+    branches: ['main']
   pull_request:
     # Triggers when a PR is opened, updated or labeled
     types: [opened, synchronize, reopened, unlabeled]
 
 env:
-    JAVA_VERSION: 17
+  JAVA_VERSION: 17
+  JAVA_DISTRO: 'zulu'
 
 jobs:
+  # This job runs only when a commit is pushed to main.
+  # It builds the project and updates the build cache which is used by other jobs.
+  build:
+    name: Build
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
+
+      # See https://community.gradle.org/github-actions/docs/setup-gradle/ for more information
+      - uses: gradle/actions/setup-gradle@v4 # creates build cache when on main branch
+        with:
+          build-scan-publish: true
+          build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
+          build-scan-terms-of-use-agree: "yes"
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          dependency-graph: generate-and-submit # submit Github Dependency Graph info
+
+      - name: Build
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:assembleDebug
+
   checks:
     name: Checks
-    # Only run checks if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
+    # Only run CI if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
     if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: gradle
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
 
-    - name: Check Gradle wrapper
-      uses: gradle/wrapper-validation-action@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
-    - name: Check lint
-      run: ./gradlew lint
+      - name: Check Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
 
-    - name: Upload lint results
-      uses: actions/upload-artifact@v4
-      with:
-        name: lint-results
-        path: app/build/reports/lint-results-debug.html
+      - name: Check lint
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:lint
 
-  build:
-    name: Build
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results-debug.html
+
+  unit-tests:
+    name: Unit tests
     needs: checks
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: gradle
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRO }}
 
-    - name: Build
-      run: ./gradlew assembleDebug
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
-    - name: Tar build files
-      run: tar -cvf build.tar app/build .gradle
+      - name: Run unit tests
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:testDebugUnitTest
 
-    - name: Upload build tar
-      uses: actions/upload-artifact@v4
-      with:
-          name: build
-          path: build.tar
-
-  unit-tests:
-    name: Unit tests
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps: 
-    - uses: actions/checkout@v4
-    - uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: gradle
-
-    - name: Download build artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: build
-        path: .
-
-    - name: Extract build files
-      run: |
-        tar -xvf build.tar
-
-    - name: Unit tests
-      run: ./gradlew testDebugUnitTest
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      with:
-        name: unit-test-results
-        path: app/build/reports/tests/testDebugUnitTest
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/testDebugUnitTest
 
   instrumentation-tests:
     name: Instrumentation tests
-    needs: build
+    needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 60
-
     strategy:
       matrix:
         api-level: [34]
@@ -107,18 +109,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
+          distribution: ${{ env.JAVA_DISTRO }}
 
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
-          name: build
-          path: .
-
-      - name: Extract build files
-        run: |
-          tar -xvf build.tar
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
       # API 30+ emulators only have x86_64 system images.
       - name: Get AVD info
@@ -139,9 +135,10 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: ${{ steps.avd-info.outputs.arch }}
           target: ${{ steps.avd-info.outputs.target }}
-          script: ./gradlew connectedDebugAndroidTest
+          script: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:connectedDebugAndroidTest
 
       - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
@@ -149,7 +146,7 @@ jobs:
 
   final-check:
     name: CI checks passed
-    needs: [ checks, build, unit-tests, instrumentation-tests ]
+    needs: [ checks, unit-tests, instrumentation-tests ]
     runs-on: ubuntu-latest
 
     steps:
