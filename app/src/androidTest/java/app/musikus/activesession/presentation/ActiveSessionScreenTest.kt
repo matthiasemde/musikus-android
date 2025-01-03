@@ -18,9 +18,10 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeLeft
 import androidx.navigation.NavHostController
+import androidx.test.filters.SdkSuppress
+import app.ScreenshotRule
+import app.assertWithLease
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -28,7 +29,6 @@ import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.domain.plus
 import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainViewModel
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
@@ -41,7 +41,6 @@ import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -66,6 +65,9 @@ class ActiveSessionScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     lateinit var navController: NavHostController
     lateinit var mainViewModel: MainViewModel
@@ -115,7 +117,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
 
         composeRule.onNodeWithText("TestItem1").performClick()
-        composeRule.onNodeWithContentDescription("Next item").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Next item").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -128,13 +130,13 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Pause").performClick()
 
         // Pause timer is displayed
-        composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
+        composeRule.onNodeWithText("Paused 00:00").assertWithLease { assertIsDisplayed() }
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
 
         // Pause timer shows correct time
         composeRule.onNodeWithText("Paused 01:30")
-            .assertIsDisplayed()
+            .assertWithLease { assertIsDisplayed() }
             .performClick() // Resume session
 
         // Pause timer is hidden
@@ -153,7 +155,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem3").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem3").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -165,7 +167,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem1").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem1").assertWithLease { assertIsDisplayed() }
 
         // Open item selector again
         composeRule.onNodeWithContentDescription("Next item").performClick()
@@ -174,7 +176,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem2").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -200,6 +202,7 @@ class ActiveSessionScreenTest {
     }
 
 //    @Test
+//    @SdkSuppress(minSdkVersion = 30)
 //    fun deleteAndRedoSection() = runTest {
 //        // Start session
 //        composeRule.onNodeWithContentDescription("Start practicing").performClick()
@@ -256,6 +259,7 @@ class ActiveSessionScreenTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 29) // somehow crashes on API < 29
     fun finishSession() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()

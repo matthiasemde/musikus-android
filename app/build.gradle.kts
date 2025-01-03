@@ -79,10 +79,51 @@ android {
         targetCompatibility = javaVersion
     }
 
-    // needed for mockk
     testOptions {
         animationsDisabled = true
 
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+        managedDevices {
+            localDevices {
+                create("api29") {
+                    device = "Pixel 6a"
+                    apiLevel = 29
+                    systemImageSource = "aosp"
+                }
+                create("api30") {
+                    device = "Pixel 6a"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                create("api31") {
+                    device = "Pixel 6a"
+                    apiLevel = 31
+                    systemImageSource = "aosp-atd"
+                }
+                create("api33") {
+                    device = "Pixel 6a"
+                    apiLevel = 33
+                    systemImageSource = "aosp-atd"
+                }
+                create("api35") {
+                    device = "Pixel 6a"
+                    apiLevel = 35
+                    systemImageSource = "aosp-atd"
+                }
+            }
+            groups {
+                create("all") {
+                    targetDevices.add(devices["api29"])
+                    targetDevices.add(devices["api30"])
+                    targetDevices.add(devices["api31"])
+                    targetDevices.add(devices["api33"])
+                    targetDevices.add(devices["api35"])
+                }
+            }
+        }
+
+        // needed for mockk
         packaging {
             jniLibs { useLegacyPackaging = true }
         }
@@ -258,6 +299,72 @@ tasks.register("fixLicense") {
     }
 }
 
+val embedScreenshotsTask = tasks.register("embedScreenshots") {
+    doFirst {
+        println("Embedding screenshots into JUnit reports...")
+
+        val additionalTestOutputDir = file(
+            "$projectDir/build/intermediates/managed_device_android_test_additional_output/debugAndroidTest"
+        )
+
+        val deviceDirectory = additionalTestOutputDir.listFiles()?.firstOrNull()
+
+        if (deviceDirectory == null) {
+            println("No device directory found in '$additionalTestOutputDir'")
+            return@doFirst
+        }
+        val deviceName = deviceDirectory.name.replace("DebugAndroidTest", "")
+
+        println("Processing screenshots for device '$deviceName'...")
+
+        val managedDeviceReportDirectory = File("$reportsPath/androidTests/managedDevice/debug")
+        val screenshotDirectory = File("$managedDeviceReportDirectory/$deviceName", "screenshots")
+
+        println("Copying screenshots to '$screenshotDirectory'...")
+
+        copy {
+            from(deviceDirectory)
+            into(screenshotDirectory)
+        }
+
+        screenshotDirectory.listFiles()?.forEach { failedTestClassDirectory ->
+            println("Processing screenshots for test class '${failedTestClassDirectory.name}'...")
+
+            val failedTestClassName = failedTestClassDirectory.name
+
+            failedTestClassDirectory.listFiles()?.forEach filesLoop@{ failedTestFile ->
+                println("Embedding screenshot for test '$failedTestFile'...")
+                val failedTestName = failedTestFile.name
+                val failedTestNameWithoutExtension = failedTestName.substringBeforeLast('.')
+                val failedTestClassJunitReportFile = File(
+                    "$managedDeviceReportDirectory/$deviceName",
+                    "$failedTestClassName.html"
+                )
+
+                if (!failedTestClassJunitReportFile.exists()) {
+                    println("Could not find JUnit report file for test class '$failedTestClassJunitReportFile'")
+                    return@filesLoop
+                }
+
+                var failedTestJunitReportContent = failedTestClassJunitReportFile.readText()
+
+                val patternToFind = "<h3 class=\"failures\">$failedTestNameWithoutExtension</h3>"
+                val patternToReplace = "$patternToFind <img src=\"screenshots/$failedTestClassName/$failedTestName\" width=\"360\" /></br>"
+
+                failedTestJunitReportContent = failedTestJunitReportContent.replace(patternToFind, patternToReplace)
+
+                failedTestClassJunitReportFile.writeText(failedTestJunitReportContent)
+            }
+        }
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name.matches(regex = Regex("api[0-9]{2}DebugAndroidTest"))) {
+        finalizedBy(embedScreenshotsTask)
+    }
+}
+
 dependencies {
     detektPlugins(libs.detekt.formatting)
 
@@ -356,6 +463,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumentation tests
+    androidTestUtil(libs.androidx.test.orchestrator)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.junit)

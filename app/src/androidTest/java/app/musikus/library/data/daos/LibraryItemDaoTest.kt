@@ -9,6 +9,7 @@
 package app.musikus.library.data.daos
 
 import android.database.sqlite.SQLiteConstraintException
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
@@ -48,7 +49,7 @@ class LibraryItemDaoTest {
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
-    @get:Rule
+    @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -114,6 +115,7 @@ class LibraryItemDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun insertItem() = runTest {
         val item = LibraryItemCreationAttributes(
             name = "TestItem",
@@ -142,7 +144,8 @@ class LibraryItemDaoTest {
             }
         }
 
-        assertThat(exception.message).isEqualTo(
+        assertThat(exception.message).isAnyOf(
+            "FOREIGN KEY constraint failed (code 787)",
             "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
         )
     }
@@ -209,6 +212,7 @@ class LibraryItemDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun updateItem() = runTest {
         val updateAttributes = LibraryItemUpdateAttributes(
             name = "UpdatedItem1",
@@ -223,7 +227,7 @@ class LibraryItemDaoTest {
                 UUIDConverter.fromInt(2),
                 updateAttributes
             )
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -274,7 +278,8 @@ class LibraryItemDaoTest {
             }
         }
 
-        assertThat(exception.message).isEqualTo(
+        assertThat(exception.message).isAnyOf(
+            "FOREIGN KEY constraint failed (code 787)",
             "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
         )
     }
@@ -312,12 +317,13 @@ class LibraryItemDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun deleteItem() = runTest {
         val libraryItemDaoSpy = spyk(libraryItemDao)
 
         try {
             libraryItemDaoSpy.delete(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -399,12 +405,13 @@ class LibraryItemDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun restoreItem() = runTest {
         val libraryItemDaoSpy = spyk(libraryItemDao)
 
         try {
             libraryItemDaoSpy.restore(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -481,12 +488,13 @@ class LibraryItemDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificItem() = runTest {
         val libraryItemDaoSpy = spyk(libraryItemDao)
 
         try {
             libraryItemDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 

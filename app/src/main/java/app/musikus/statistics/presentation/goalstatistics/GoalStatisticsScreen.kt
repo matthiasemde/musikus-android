@@ -228,7 +228,7 @@ fun GoalStatisticsGoalSelector(
                             color = color,
                             strokeCap = StrokeCap.Round,
                             drawStopIndicator = {},
-                            gapSize = 0.dp,
+                            gapSize = 0.dp
                         )
                     }
                     AnimatedVisibility(

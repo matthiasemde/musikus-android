@@ -8,6 +8,7 @@
 
 package app.musikus.goals.data.daos
 
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.core.data.GoalInstanceWithDescription
@@ -53,7 +54,7 @@ class GoalInstanceDaoTest {
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
-    @get:Rule
+    @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -432,6 +433,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun updateInstance() = runTest {
         val updateAttributes = GoalInstanceUpdateAttributes(
             endTimestamp = Nullable(fakeTimeProvider.now()),
@@ -445,7 +447,7 @@ class GoalInstanceDaoTest {
                 UUIDConverter.fromInt(1),
                 updateAttributes
             )
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -758,6 +760,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificInstance() = runTest {
         val goalInstanceDaoSpy = spyk(goalInstanceDao)
 

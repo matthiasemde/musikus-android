@@ -29,6 +29,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.navigation.toRoute
+import app.ScreenshotRule
+import app.assertWithLease
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.HomeTab
 import app.musikus.core.presentation.HomeTabNavType
@@ -55,6 +57,9 @@ class LibraryIntegrationTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     lateinit var navController: TestNavHostController
 
@@ -122,7 +127,7 @@ class LibraryIntegrationTest {
         composeRule.onNodeWithText("TestFolder").performClick()
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem1").assertWithLease { assertIsDisplayed() }
 
         // Add an item from inside the folder (folder should be pre-selected)
         composeRule.onNodeWithContentDescription("Add item").performClick()
@@ -130,6 +135,6 @@ class LibraryIntegrationTest {
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
     }
 }
