@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<h1 align="center">Musikus</h1>
+<h1 align="center">Musikus - Test</h1>
 
 <p align="center">
 Your personal practice companion
