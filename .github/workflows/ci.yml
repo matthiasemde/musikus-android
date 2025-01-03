@@ -102,7 +102,8 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [34]
+        api-level: [29, 30, 31, 33, 35]
+      fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
       - uses: actions/checkout@v4
