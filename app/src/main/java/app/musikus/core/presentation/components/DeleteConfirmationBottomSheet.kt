@@ -88,11 +88,13 @@ fun DeleteConfirmationBottomSheet(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(confirmationIcon.asIcon(), contentDescription = confirmationText.asString())
+            Icon(confirmationIcon.asIcon(),
+                contentDescription = confirmationText.asString(),
+                tint = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Text(
                 text = confirmationText.asString(),
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.error),
             )
         }
 

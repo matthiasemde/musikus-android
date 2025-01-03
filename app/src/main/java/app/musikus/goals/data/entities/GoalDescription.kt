@@ -54,10 +54,10 @@ enum class GoalPeriodUnit {
         val DEFAULT = DAY
     }
 
-    fun toUiText() = when (this) {
-        DAY -> UiText.StringResource(R.string.goals_goal_period_unit_day)
-        WEEK -> UiText.StringResource(R.string.goals_goal_period_unit_week)
-        MONTH -> UiText.StringResource(R.string.goals_goal_period_unit_month)
+    fun toUiText(quantity: Int = 1) = when (this) {
+        DAY -> UiText.PluralResource(R.plurals.goals_goal_period_unit_day, quantity)
+        WEEK -> UiText.PluralResource(R.plurals.goals_goal_period_unit_week, quantity)
+        MONTH -> UiText.PluralResource(R.plurals.goals_goal_period_unit_month, quantity)
     }
 }
 

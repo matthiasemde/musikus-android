@@ -13,11 +13,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
@@ -27,10 +32,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -46,7 +47,9 @@ import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
@@ -61,8 +64,7 @@ sealed class LibraryFolderDialogUiEvent {
 
 @Composable
 fun LibraryFolderDialog(
-    uiState: LibraryFolderDialogUiState,
-    eventHandler: LibraryFolderDialogUiEventHandler
+    uiState: LibraryFolderDialogUiState, eventHandler: LibraryFolderDialogUiEventHandler
 ) {
     Dialog(onDismissRequest = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) }) {
         Column(
@@ -77,6 +79,10 @@ fun LibraryFolderDialog(
                         DialogMode.EDIT -> R.string.library_folder_dialog_title_edit
                     }
                 ),
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.CreateNewFolder)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
+                }
             )
             Column {
                 OutlinedTextField(
@@ -88,13 +94,12 @@ fun LibraryFolderDialog(
                     label = { Text(text = stringResource(id = R.string.library_folder_dialog_name_label)) },
                     singleLine = true,
                 )
-                DialogActions(
-                    confirmButtonText = stringResource(
-                        id = when (uiState.mode) {
-                            DialogMode.ADD -> R.string.library_folder_dialog_confirm
-                            DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
-                        }
-                    ),
+                DialogActions(confirmButtonText = stringResource(
+                    id = when (uiState.mode) {
+                        DialogMode.ADD -> R.string.library_folder_dialog_confirm
+                        DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
+                    }
+                ),
                     onDismissHandler = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) },
                     onConfirmHandler = { eventHandler(LibraryFolderDialogUiEvent.Confirmed) },
                     confirmButtonEnabled = uiState.folderData.name.isNotEmpty()
@@ -123,10 +128,8 @@ sealed class LibraryItemDialogUiEvent {
 
 @Composable
 fun LibraryItemDialog(
-    uiState: LibraryItemDialogUiState,
-    eventHandler: LibraryItemDialogUiEventHandler
+    uiState: LibraryItemDialogUiState, eventHandler: LibraryItemDialogUiEventHandler
 ) {
-    var folderSelectorExpanded by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = { eventHandler(LibraryItemDialogUiEvent.Dismissed) }) {
         Column(
@@ -138,6 +141,10 @@ fun LibraryItemDialog(
                 title = when (uiState.mode) {
                     DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_title)
                     DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_title_edit)
+                },
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.AddToPhotos)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
                 }
             )
             Column {
@@ -158,53 +165,45 @@ fun LibraryItemDialog(
                     singleLine = true,
                 )
                 if (uiState.folders.isNotEmpty()) {
+                    Spacer(Modifier.height(MaterialTheme.spacing.medium))
+
+                    // Folder selection spinner
                     SelectionSpinner(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .padding(horizontal = 24.dp),
-                        expanded = folderSelectorExpanded,
-                        label = {
-                            Text(
-                                text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
-                            )
-                        },
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        label = { Text(text = stringResource(id = R.string.library_item_dialog_folder_selector_label)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Folder,
-                                contentDescription = stringResource(
-                                    id = R.string.library_item_dialog_folder_selector_label
-                                ),
+                                contentDescription = stringResource(id = R.string.library_item_dialog_folder_selector_label),
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
                         options = uiState.folders.map { folder ->
                             UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
                         },
-                        selected = UUIDSelectionSpinnerOption(
-                            id = uiState.itemData.folderId,
-                            name = uiState.folders.firstOrNull {
-                                it.id == uiState.itemData.folderId
-                            }?.name?.let {
-                                UiText.DynamicString(it)
-                            } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
-                        ),
+                        // pre-select the folder of the item or show "no folder"
+                        selectedOption = UUIDSelectionSpinnerOption(id = uiState.itemData.folderId, name = uiState.folders.firstOrNull {
+                            it.id == uiState.itemData.folderId
+                        }?.name?.let {
+                            UiText.DynamicString(it)
+                        } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)),
+                        // show "no folder" as a special option inside the spinner separated from the other folders
                         specialOption = UUIDSelectionSpinnerOption(
-                            null,
-                            UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+                            null, UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
                         ),
                         semanticDescription = stringResource(
                             id = R.string.library_item_dialog_folder_selector_description
                         ),
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
-                        onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
                             eventHandler(
                                 LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id)
                             )
-                            folderSelectorExpanded = false
                         },
                     )
                 }
+
+                // Color picker
                 Row(
                     modifier = Modifier
                         .padding(top = 24.dp)
@@ -218,57 +217,44 @@ fun LibraryItemDialog(
                         ) {
                             for (j in 0..1) {
                                 val index = 2 * i + j
-                                ColorSelectRadioButton(
-                                    color = libraryItemColors[index],
+                                ColorSelectRadioButton(color = libraryItemColors[index],
                                     selected = uiState.itemData.colorIndex == index,
                                     colorDescription = stringResource(
-                                        id = R.string.library_item_dialog_color_selector_description,
-                                        (index + 1)
+                                        id = R.string.library_item_dialog_color_selector_description, (index + 1)
                                     ),
-                                    onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) }
-                                )
+                                    onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) })
                             }
                         }
                     }
                 }
             }
-            DialogActions(
-                confirmButtonText = when (uiState.mode) {
-                    DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_confirm)
-                    DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_confirm_edit)
-                },
+            DialogActions(confirmButtonText = when (uiState.mode) {
+                DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_confirm)
+                DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_confirm_edit)
+            },
                 confirmButtonEnabled = uiState.isConfirmButtonEnabled,
                 onDismissHandler = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },
-                onConfirmHandler = { eventHandler(LibraryItemDialogUiEvent.Confirmed) }
-            )
+                onConfirmHandler = { eventHandler(LibraryItemDialogUiEvent.Confirmed) })
         }
     }
 }
 
 @Composable
 fun ColorSelectRadioButton(
-    modifier: Modifier = Modifier,
-    color: Color,
-    colorDescription: String,
-    selected: Boolean,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier, color: Color, colorDescription: String, selected: Boolean, onClick: () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .size(35.dp)
-            .clip(RoundedCornerShape(100))
-            .background(color)
-            .semantics {
-                contentDescription = colorDescription
-            }
-    ) {
+    Box(modifier = modifier
+        .size(35.dp)
+        .clip(RoundedCornerShape(100))
+        .background(color)
+        .semantics {
+            contentDescription = colorDescription
+        }) {
         RadioButton(
             colors = RadioButtonDefaults.colors(
                 selectedColor = Color.White,
                 unselectedColor = Color.White,
-            ),
-            selected = selected,
-            onClick = onClick
+            ), selected = selected, onClick = onClick
         )
     }
 }
