@@ -261,6 +261,26 @@ tasks.register<FixLicenseTask>("fixLicense") {
     description = "Fixes the license header in all staged files."
 }
 
+val embedScreenshotsTask = tasks.register<EmbedScreenshotsTask>("embedScreenshots") {
+    dependsOn("createDebugApkListingFileRedirect")
+    dependsOn("createDebugAndroidTestApkListingFileRedirect")
+
+    buildIntermediatesDir.set(
+        project.layout.projectDirectory.dir("build/intermediates")
+    )
+    managedDeviceReportDirectory.set(
+        project.layout.projectDirectory.dir("build/reports/androidTests/managedDevice/debug")
+    )
+}
+
+tasks.whenTaskAdded {
+    // Do not attempt to embed screenshots for API level < 29 since
+    // additional_test_output is not supported.
+    if (name.matches(regex = Regex("api[3-9][0-9]DebugAndroidTest"))) {
+        finalizedBy(embedScreenshotsTask)
+    }
+}
+
 dependencies {
     detektPlugins(libs.detekt.formatting)
 
@@ -445,5 +465,83 @@ abstract class SetupMusikusTask @Inject constructor(
         val propertiesFile = File(rootDir.asFile, "musikus.properties")
         propertiesFile.writeText("copyrightName=$name")
         println("Name stored for copyright header: $name\n")
+    }
+}
+
+abstract class EmbedScreenshotsTask : DefaultTask() {
+
+    @InputDirectory
+    val buildIntermediatesDir = project.objects.directoryProperty()
+
+    @OutputDirectory
+    val managedDeviceReportDirectory = project.objects.directoryProperty()
+
+    @get:Inject abstract val fs: FileSystemOperations
+
+    init {
+        group = "verification"
+        description = "Embeds screenshots into JUnit test reports."
+    }
+
+    @TaskAction
+    fun embedScreenshots() {
+        println("Embedding screenshots into JUnit reports...")
+
+        val buildIntermediatesDirFile = buildIntermediatesDir.asFile.get()
+        val managedDeviceReportDirectoryFile = managedDeviceReportDirectory.asFile.get()
+
+        val additionalTestOutputDirFile = File(
+            "$buildIntermediatesDirFile/managed_device_android_test_additional_output/debugAndroidTest"
+        )
+
+        val deviceDirectory = additionalTestOutputDirFile.listFiles()?.firstOrNull()
+
+        if (deviceDirectory == null) {
+            println("No device directory found in '$additionalTestOutputDirFile'")
+            return
+        }
+        val deviceName = deviceDirectory.name.replace("DebugAndroidTest", "")
+
+        println("Processing screenshots for device '$deviceName'...")
+
+        val screenshotDirectory = File(managedDeviceReportDirectoryFile, "$deviceName/screenshots")
+
+        println("Copying screenshots to '$screenshotDirectory'...")
+
+        fs.copy {
+            from(deviceDirectory)
+            into(screenshotDirectory)
+        }
+
+        screenshotDirectory.listFiles()?.forEach { failedTestClassDirectory ->
+            println("Processing screenshots for test class '${failedTestClassDirectory.name}'...")
+
+            val failedTestClassName = failedTestClassDirectory.name
+
+            failedTestClassDirectory.listFiles()?.forEach listFiles@{ failedTestFile ->
+                println("Embedding screenshot for test '$failedTestFile'...")
+                val failedTestName = failedTestFile.name
+                val failedTestNameWithoutExtension = failedTestName.substringBeforeLast('.')
+                val failedTestClassJunitReportFile = File(
+                    managedDeviceReportDirectoryFile,
+                    "$deviceName/$failedTestClassName.html"
+                )
+
+                if (!failedTestClassJunitReportFile.exists()) {
+                    println("Could not find JUnit report file for test class '$failedTestClassJunitReportFile'")
+                    return@listFiles
+                }
+
+                var failedTestJunitReportContent = failedTestClassJunitReportFile.readText()
+
+                val patternToFind = "<h3 class=\"failures\">$failedTestNameWithoutExtension</h3>"
+                val patternToReplace =
+                    "$patternToFind <img src=\"screenshots/$failedTestClassName/$failedTestName\" width=\"360\" /></br>"
+
+                failedTestJunitReportContent = failedTestJunitReportContent.replace(patternToFind, patternToReplace)
+
+                failedTestClassJunitReportFile.writeText(failedTestJunitReportContent)
+            }
+        }
     }
 }
