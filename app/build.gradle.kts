@@ -87,10 +87,51 @@ android {
         targetCompatibility = javaVersion
     }
 
-    // needed for mockk
     testOptions {
         animationsDisabled = true
 
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+        managedDevices {
+            localDevices {
+                create("api29") {
+                    device = "Pixel 6a"
+                    apiLevel = 29
+                    systemImageSource = "aosp"
+                }
+                create("api30") {
+                    device = "Pixel 6a"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+                create("api31") {
+                    device = "Pixel 6a"
+                    apiLevel = 31
+                    systemImageSource = "aosp-atd"
+                }
+                create("api33") {
+                    device = "Pixel 6a"
+                    apiLevel = 33
+                    systemImageSource = "aosp-atd"
+                }
+                create("api35") {
+                    device = "Pixel 6a"
+                    apiLevel = 35
+                    systemImageSource = "aosp-atd"
+                }
+            }
+            groups {
+                create("all") {
+                    targetDevices.add(devices["api29"])
+                    targetDevices.add(devices["api30"])
+                    targetDevices.add(devices["api31"])
+                    targetDevices.add(devices["api33"])
+                    targetDevices.add(devices["api35"])
+                }
+            }
+        }
+
+        // needed for mockk
         packaging {
             jniLibs { useLegacyPackaging = true }
         }
@@ -318,6 +359,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumentation tests
+    androidTestUtil(libs.androidx.test.orchestrator)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
     androidTestImplementation(libs.junit)

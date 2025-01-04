@@ -102,7 +102,8 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [34]
+        api-level: [29, 30, 31, 33, 35]
+      fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
       - uses: actions/checkout@v4
@@ -116,33 +117,30 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
 
-      # API 30+ emulators only have x86_64 system images.
-      - name: Get AVD info
-        uses: ./.github/actions/get-avd-info
-        id: avd-info
-        with:
-          api-level: ${{ matrix.api-level }}
-          
+      - name: Accept licenses
+        run:  yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses
+
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-    
-      - name: Instrumentation tests
-        uses: reactivecircus/android-emulator-runner@v2.33.0
+
+      - name: Cache AVD
+        uses: actions/cache@v4
         with:
-          api-level: ${{ matrix.api-level }}
-          arch: ${{ steps.avd-info.outputs.arch }}
-          target: ${{ steps.avd-info.outputs.target }}
-          script: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:connectedDebugAndroidTest
+          path: ~/.config/.android/avd
+          key: avd-${{ hashFiles('app/build.gradle.kts') }}   # gradle-managed devices are defined there
+
+      - name: Run device tests
+        run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:api${{ matrix.api-level }}DebugAndroidTest --stacktrace
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
-          path: app/build/reports/androidTests/connected/debug
+          path: app/build/reports/androidTests/managedDevice/debug/api${{ matrix.api-level }}
 
   final-check:
     name: CI checks passed
