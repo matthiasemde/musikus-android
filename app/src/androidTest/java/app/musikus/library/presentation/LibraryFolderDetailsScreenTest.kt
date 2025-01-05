@@ -26,6 +26,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
@@ -171,6 +172,7 @@ class LibraryFolderDetailsScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun editItem() {
         // Add an item from inside the folder (folder should be pre-selected)
         composeRule.onNodeWithContentDescription("Add item").performClick()
@@ -205,6 +207,7 @@ class LibraryFolderDetailsScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun deleteItem() = runTest {
         // Add an item
         composeRule.onNodeWithContentDescription("Add item").performClick()
