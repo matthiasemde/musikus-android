@@ -12,6 +12,7 @@ import app.musikus.core.domain.UserPreferencesRepository
 import app.musikus.core.domain.usecase.ConfirmAnnouncementMessageUseCase
 import app.musikus.core.domain.usecase.CoreUseCases
 import app.musikus.core.domain.usecase.GetIdOfLastSeenAnnouncementSeenUseCase
+import app.musikus.core.domain.usecase.ResetAnnouncementMessageUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +35,9 @@ object CoreUseCasesModule {
             confirmAnnouncementMessage = ConfirmAnnouncementMessageUseCase(
                 userPreferencesRepository
             ),
+            resetAnnouncementMessage = ResetAnnouncementMessageUseCase(
+                userPreferencesRepository
+            )
         )
     }
 }

@@ -11,4 +11,5 @@ package app.musikus.core.domain.usecase
 data class CoreUseCases(
     val getIdOfLastSeenAnnouncementSeen: GetIdOfLastSeenAnnouncementSeenUseCase,
     val confirmAnnouncementMessage: ConfirmAnnouncementMessageUseCase,
+    val resetAnnouncementMessage: ResetAnnouncementMessageUseCase
 )

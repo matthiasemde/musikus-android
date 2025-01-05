@@ -9,7 +9,9 @@
 package app.musikus.menu.presentation.help
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,19 +29,50 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import app.musikus.R
+import app.musikus.core.domain.usecase.CoreUseCases
 import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+sealed class HelpUiEvent {
+    object ShowAnnouncementDialog : HelpUiEvent()
+}
+
+typealias HelpUiEventHandler = (HelpUiEvent) -> Boolean
+
+@HiltViewModel
+class HelpViewModel @Inject constructor(
+    private val coreUseCases: CoreUseCases
+) : ViewModel() {
+    fun onUiEvent(event: HelpUiEvent) : Boolean {
+        when (event) {
+            HelpUiEvent.ShowAnnouncementDialog -> viewModelScope.launch {
+                coreUseCases.resetAnnouncementMessage()
+            }
+        }
+
+        return true
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpScreen(
+    viewModel: HelpViewModel = hiltViewModel(),
     navigateUp: () -> Unit
 ) {
     val context = LocalContext.current
 
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
+    val eventHandler = viewModel::onUiEvent
 
     Scaffold(
         topBar = {
@@ -54,6 +87,17 @@ fun HelpScreen(
         Column(
             modifier = Modifier.padding(paddingValues)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(MaterialTheme.spacing.medium),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(onClick = { eventHandler(HelpUiEvent.ShowAnnouncementDialog) }) {
+                    Text("Show Announcement Dialog")
+                }
+            }
+            HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
             Column(
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large)
             ) {
