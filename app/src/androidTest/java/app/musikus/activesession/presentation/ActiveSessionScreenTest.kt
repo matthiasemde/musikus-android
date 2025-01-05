@@ -13,14 +13,19 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasAnySibling
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onParent
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.swipeLeft
 import androidx.navigation.NavHostController
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -163,7 +168,11 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem3").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+        composeRule.onNode(
+            matcher = hasText("TestItem3")
+                and
+                hasAnySibling(hasText("00:00"))
+        ).assertIsDisplayed()
     }
 
     @Test
