@@ -38,6 +38,7 @@ import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -114,11 +115,14 @@ class LibraryFolderDetailsScreenTest {
             "TestItem2" to 5,
         )
 
-        namesAndColors.forEach { (name, color) ->
+        namesAndColors.forEachIndexed { index, (name, color) ->
             composeRule.onNodeWithContentDescription("Add item").performClick()
             composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Color $color").performClick()
             composeRule.onNodeWithContentDescription("Create").performClick()
+
+            // Suspend execution until the item is added to avoid race conditions
+            libraryUseCases.getAllItems().first { it.size == index + 1 }
 
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }
