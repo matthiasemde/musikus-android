@@ -9,9 +9,7 @@
 package app.musikus.library.presentation
 
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasContentDescription
@@ -28,6 +26,8 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
+import app.assertNodesInVerticalOrder
+import app.assertWithLease
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -90,7 +90,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Check if item is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
     }
 
     private fun clickSortMode(
@@ -168,7 +168,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if folder name is displayed
-        composeRule.onNodeWithText("TestFolder2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestFolder2").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -188,7 +188,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if edited item name is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
 
         // Edit item using action mode
         composeRule.onNodeWithText("TestItem2").performTouchInput { longClick() }
@@ -203,7 +203,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("Edit").performClick()
 
         // Check if edited item name is displayed
-        composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+        composeRule.onNodeWithText("TestItem3").assertWithLease { assertIsDisplayed() }
     }
 
     @Test

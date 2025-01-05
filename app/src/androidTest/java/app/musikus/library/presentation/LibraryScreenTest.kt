@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
 import app.ScreenshotRule
+import app.assertWithLease
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -80,8 +81,8 @@ class LibraryScreenTest {
 
         composeRule.onNodeWithContentDescription("Add folder or item").performClick()
 
-        composeRule.onNodeWithContentDescription("Add folder").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Add item").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add folder").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithContentDescription("Add item").assertWithLease { assertIsDisplayed() }
     }
 
     @Test
@@ -89,7 +90,9 @@ class LibraryScreenTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         // Check if hint is displayed initially
-        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(R.string.library_screen_hint)
+        ).assertWithLease { assertIsDisplayed() }
 
         // Add a folder
         composeRule.onNodeWithContentDescription("Add folder or item").performClick()
@@ -106,7 +109,9 @@ class LibraryScreenTest {
         composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
-        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(R.string.library_screen_hint)
+        ).assertWithLease { assertIsDisplayed() }
 
         // Add an item
         composeRule.onNodeWithContentDescription("Add folder or item").performClick()
@@ -123,7 +128,9 @@ class LibraryScreenTest {
         composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
-        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
+        composeRule.onNodeWithText(
+            context.getString(R.string.library_screen_hint)
+        ).assertWithLease { assertIsDisplayed() }
     }
 
     private fun clickSortMode(
