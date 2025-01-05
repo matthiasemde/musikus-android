@@ -70,6 +70,16 @@ class ActiveSessionScreenTest {
     lateinit var navController: NavHostController
     lateinit var mainViewModel: MainViewModel
 
+    /**
+     * Set up the test environment.
+     *
+     * This creates a folder ('TestFolder1') and three Items ('TestItem1', 'TestItem2', 'TestItem3').
+     * 'TestItem3' is in the 'TestFolder1'. The IDs of the folder and items are as follows:
+     * 'TestFolder1': 00000000-0000-0000-0000-000000000001
+     * 'TestItem1': 00000000-0000-0000-0000-000000000002
+     * 'TestItem2': 00000000-0000-0000-0000-000000000003
+     * 'TestItem3': 00000000-0000-0000-0000-000000000004
+     */
     @Before
     fun setUp() {
         hiltRule.inject()
@@ -255,6 +265,13 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("Finish").assertIsEnabled()
     }
 
+    /**
+     * This test simulates a full session, from start to finish.
+     * While doing so, the following elements (and IDs) are created:
+     * Intermediate section (during GetFinalizedSessionUseCase): 00000000-0000-0000-0000-000000000005
+     * Session: 00000000-0000-0000-0000-000000000006
+     * Section: 00000000-0000-0000-0000-000000000007
+     */
     @Test
     fun finishSession() = runTest {
         // Start session
