@@ -124,36 +124,36 @@ class LibraryFolderDetailsScreenTest {
         }
 
         // Check if items are displayed in correct order
-        var itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(3)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains(namesAndColors[namesAndColors.lastIndex - i].first)
+        composeRule.assertWithLease {
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem1"),
+                composeRule.onNodeWithText("TestItem3")
+            )
         }
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
+        composeRule.assertWithLease {
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem3"),
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem1")
+            )
         }
 
         // Change sorting mode to name ascending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${i + 1}")
+        composeRule.assertWithLease {
+            assertNodesInVerticalOrder(
+                composeRule.onNodeWithText("TestItem1"),
+                composeRule.onNodeWithText("TestItem2"),
+                composeRule.onNodeWithText("TestItem3")
+            )
         }
     }
 
