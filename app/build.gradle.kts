@@ -204,66 +204,20 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
-tasks.register("setupMusikus") {
+tasks.register<SetupMusikusTask>("setupMusikus") {
     group = "setup"
-    description = "Sets up the Musikus project with pre-commit hooks, copyright header, and IDE settings."
-
-    doFirst {
-        gradle.startParameter.consoleOutput = ConsoleOutput.Plain
-    }
-
-    doLast {
-        println("Setting up Musikus project...")
-
-        // Step 1: Execute the existing bash script to install the pre-commit hook
-        if (System.getProperty("os.name").lowercase().contains("win")) {
-            providers.exec {
-                workingDir = file("$rootDir/tools/hooks")
-                commandLine("cmd", "/c", "setup_hooks.bat")
-            }
-        } else {
-            providers.exec {
-                commandLine("bash", "$rootDir/tools/hooks/setup_hooks.sh")
-            }
-        }
-        println("Pre-commit hook installed.\n")
-
-        // Step 2: Query and store a name for the copyright header
-        val scanner = Scanner(System.`in`)
-        print("Enter your name for the copyright header: ")
-        System.out.flush() // Needed to ensure the prompt is displayed
-        val name = scanner.nextLine()
-        require(!name.isNullOrBlank()) { "Name must not be empty." }
-        val propertiesFile = file("$rootDir/musikus.properties")
-        propertiesFile.writeText("copyrightName=$name")
-        println("Name stored for copyright header: $name\n")
-    }
+    description =
+        "Sets up the Musikus project with pre-commit hooks, copyright header, and IDE settings."
 }
 
-tasks.register("checkLicense") {
+tasks.register<CheckLicenseTask>("checkLicense") {
     group = "verification"
     description = "Checks if all files most in the HEAD commit have the correct license header."
-
-    doLast {
-        // Execute python script to check license headers
-        providers.exec {
-            workingDir = file("$rootDir/tools")
-            commandLine("python", "check_license_headers.py")
-        }
-    }
 }
 
-tasks.register("fixLicense") {
+tasks.register<FixLicenseTask>("fixLicense") {
     group = "verification"
     description = "Fixes the license header in all staged files."
-
-    doLast {
-        // Execute python script to update license headers
-        providers.exec {
-            workingDir = file("$rootDir/tools")
-            commandLine("python", "fix_license_headers.py")
-        }
-    }
 }
 
 dependencies {
@@ -377,4 +331,76 @@ dependencies {
     androidTestImplementation(libs.google.truth)
     androidTestImplementation(libs.android.arch.persistence.room.testing)
     androidTestImplementation(libs.androidx.test.navigation)
+}
+
+abstract class CheckLicenseTask @Inject constructor(
+    private val execOperations: ExecOperations
+) : DefaultTask() {
+
+    @InputDirectory
+    val toolsDir = project.layout.projectDirectory.dir("../tools")
+
+    @TaskAction
+    fun checkLicense() {
+        execOperations.exec {
+            workingDir = toolsDir.asFile
+            commandLine("python", "check_license_headers.py")
+        }
+    }
+}
+
+abstract class FixLicenseTask @Inject constructor(
+    private val execOperations: ExecOperations
+) : DefaultTask() {
+
+    @InputDirectory
+    val toolsDir = project.layout.projectDirectory.dir("../tools")
+
+    @TaskAction
+    fun fixLicense() {
+        execOperations.exec {
+            workingDir = toolsDir.asFile
+            commandLine("python", "fix_license_headers.py")
+        }
+    }
+}
+
+abstract class SetupMusikusTask @Inject constructor(
+    private val execOperations: ExecOperations
+) : DefaultTask() {
+
+    @InputDirectory
+    val rootDir = project.layout.projectDirectory.dir("..")
+
+    @InputDirectory
+    val hooksDir = project.layout.projectDirectory.dir("../tools/hooks")
+
+    @TaskAction
+    fun setupMusikus() {
+        println("Setting up Musikus project...")
+
+        // Step 1: Execute the existing bash script to install the pre-commit hook
+        if (System.getProperty("os.name").lowercase().contains("win")) {
+            execOperations.exec {
+                workingDir = hooksDir.asFile
+                commandLine("cmd", "/c", "setup_hooks.bat")
+            }
+        } else {
+            execOperations.exec {
+                workingDir = hooksDir.asFile
+                commandLine("bash", "setup_hooks.sh")
+            }
+        }
+        println("Pre-commit hook installed.\n")
+
+        // Step 2: Query and store a name for the copyright header
+        val scanner = Scanner(System.`in`)
+        print("Enter your name for the copyright header: ")
+        System.out.flush() // Needed to ensure the prompt is displayed
+        val name = scanner.nextLine()
+        require(!name.isNullOrBlank()) { "Name must not be empty." }
+        val propertiesFile = File(rootDir.asFile, "musikus.properties")
+        propertiesFile.writeText("copyrightName=$name")
+        println("Name stored for copyright header: $name\n")
+    }
 }
