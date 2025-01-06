@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.recorder.data
@@ -161,9 +161,8 @@ class RecordingsRepositoryImpl(
 
                         if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             coroutine.resume(
-                                value = Result.success(recordingBuffer.toShortArray()),
-                                onCancellation = null
-                            )
+                                value = Result.success(recordingBuffer.toShortArray())
+                            ) { _, _, _ -> }
                             return
                         }
 
@@ -176,7 +175,7 @@ class RecordingsRepositoryImpl(
 
                     override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
                         Log.e("RecordingsRepository", "Error in mediacodec callback: $e")
-                        coroutine.resume(Result.failure(e), onCancellation = null)
+                        coroutine.resume(Result.failure(e)) { _, _, _ -> }
                     }
 
                     override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {

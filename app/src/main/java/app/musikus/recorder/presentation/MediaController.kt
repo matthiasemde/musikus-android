@@ -26,11 +26,17 @@ package app.musikus.recorder.presentation
 
 import android.content.ComponentName
 import android.content.Context
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.RememberObserver
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -117,7 +123,7 @@ internal class MediaControllerManager private constructor(context: Context) : Re
     // Lifecycle methods for the RememberObserver interface.
     override fun onAbandoned() { release() }
     override fun onForgotten() { release() }
-    override fun onRemembered() {}
+    override fun onRemembered() { }
 
     companion object {
         @Volatile

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.library.presentation
@@ -271,10 +271,7 @@ fun LibraryContent(
                         key = { it.folder.id }
                     ) { folderWithItems ->
                         val folder = folderWithItems.folder
-                        Row(
-                            modifier = Modifier
-                                .animateItemPlacement()
-                        ) {
+                        Row(modifier = Modifier.animateItem()) {
                             LibraryFolderComponent(
                                 folder = folder,
                                 numItems = folderWithItems.items.size,

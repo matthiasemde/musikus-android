@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
+ * Copyright (c) 2024-2025 Michael Prommersberger, Matthias Emde
  */
 
 @file:OptIn(ExperimentalFoundationApi::class)
@@ -12,6 +12,7 @@ package app.musikus.activesession.presentation
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -130,7 +131,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -145,6 +145,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
@@ -202,6 +203,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Actions that can be triggered by the Notification
  */
+@Keep
 @Serializable
 enum class ActiveSessionActions {
     PAUSE, FINISH, METRONOME, RECORDER
@@ -1115,7 +1117,7 @@ private fun SectionList(
                 key = { item -> item.id },
             ) { item ->
                 SectionListElement(
-                    modifier = Modifier.animateItemPlacement(),
+                    modifier = Modifier.animateItem(),
                     scope = scope,
                     item = item,
                     snackbarHostState = snackbarHostState,

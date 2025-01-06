@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -86,7 +85,7 @@ fun MainMenu(
             onClick = {
                 val openUrlIntent = Intent(Intent.ACTION_VIEW)
                 openUrlIntent.data = Uri.parse(context.getString(R.string.menu_connect_discord_url))
-                startActivity(context, openUrlIntent, null)
+                context.startActivity(openUrlIntent, null)
             }
         )
 
@@ -105,7 +104,7 @@ fun MainMenu(
             onClick = {
                 val openUrlIntent = Intent(Intent.ACTION_VIEW)
                 openUrlIntent.data = Uri.parse(context.getString(R.string.menu_contribute_github_url))
-                startActivity(context, openUrlIntent, null)
+                context.startActivity(openUrlIntent, null)
             }
         )
 
