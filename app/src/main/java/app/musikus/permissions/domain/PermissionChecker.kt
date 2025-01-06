@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 /**
@@ -82,9 +82,8 @@ class PermissionChecker(
                 val result: PermissionResult = suspendCancellableCoroutine { coroutine ->
                     resultCallback = { permissionResult ->
                         coroutine.resume(
-                            value = permissionResult,
-                            onCancellation = null
-                        )
+                            value = permissionResult
+                        ) { _, _, _ -> }
                     }
                     coroutine.invokeOnCancellation { resultCallback = null }
                     activity.resultLauncher.launch(arrayOf(*permissions))

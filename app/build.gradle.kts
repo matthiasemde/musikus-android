@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2025 Matthias Emde, Michael Prommersberger
+ */
+
 @file:Suppress("UnstableApiUsage")
 
 import io.gitlab.arturbosch.detekt.Detekt
@@ -209,12 +217,12 @@ tasks.register("setupMusikus") {
 
         // Step 1: Execute the existing bash script to install the pre-commit hook
         if (System.getProperty("os.name").lowercase().contains("win")) {
-            exec {
+            providers.exec {
                 workingDir = file("$rootDir/tools/hooks")
                 commandLine("cmd", "/c", "setup_hooks.bat")
             }
         } else {
-            exec {
+            providers.exec {
                 commandLine("bash", "$rootDir/tools/hooks/setup_hooks.sh")
             }
         }
@@ -238,7 +246,7 @@ tasks.register("checkLicense") {
 
     doLast {
         // Execute python script to check license headers
-        exec {
+        providers.exec {
             workingDir = file("$rootDir/tools")
             commandLine("python", "check_license_headers.py")
         }
@@ -251,7 +259,7 @@ tasks.register("fixLicense") {
 
     doLast {
         // Execute python script to update license headers
-        exec {
+        providers.exec {
             workingDir = file("$rootDir/tools")
             commandLine("python", "fix_license_headers.py")
         }

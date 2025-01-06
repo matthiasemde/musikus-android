@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.menu.presentation.donate
@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
-import androidx.core.content.ContextCompat.startActivity
 import app.musikus.R
 import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.theme.spacing
@@ -75,7 +74,7 @@ fun DonateScreen(
                 onClick = {
                     val openUrlIntent = Intent(Intent.ACTION_VIEW)
                     openUrlIntent.data = Uri.parse(context.getString(R.string.menu_donate_url))
-                    startActivity(context, openUrlIntent, null)
+                    context.startActivity(openUrlIntent, null)
                 }
             ) {
                 Text(

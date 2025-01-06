@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023-2024 Matthias Emde
+ * Copyright (c) 2023-2025 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.sessionstatistics
@@ -181,7 +181,7 @@ fun SessionStatisticsLibraryItemSelector(
         ) { (item, checked, duration) ->
             Row(
                 modifier = Modifier
-                    .animateItemPlacement()
+                    .animateItem()
                     .fillMaxWidth()
                     .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.menu.presentation.about
@@ -24,7 +24,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.core.presentation.MusikusTopBar
@@ -72,7 +71,7 @@ fun AboutScreen(
                     onClick = {
                         val openUrlIntent = Intent(Intent.ACTION_VIEW)
                         openUrlIntent.data = Uri.parse(context.getString(R.string.menu_about_privacy_policy_url))
-                        ContextCompat.startActivity(context, openUrlIntent, null)
+                        context.startActivity(openUrlIntent, null)
                     },
                     trailingIcon = UiIcon.DynamicIcon(Icons.AutoMirrored.Filled.OpenInNew)
                 )

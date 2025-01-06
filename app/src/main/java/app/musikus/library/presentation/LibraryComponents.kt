@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.library.presentation
@@ -210,7 +210,7 @@ fun LazyListScope.libraryItemsComponent(
         key = { (item, _) -> item.id }
     ) { (item, lastPracticedDate) ->
         Box(
-            modifier = Modifier.animateItemPlacement()
+            modifier = Modifier.animateItem()
         ) {
             LibraryItemComponent(
                 item = item,
