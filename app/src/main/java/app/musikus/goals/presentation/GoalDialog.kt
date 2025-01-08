@@ -36,9 +36,9 @@ import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
+import app.musikus.core.presentation.components.MusikusSegmentedButton
 import app.musikus.core.presentation.components.SelectionSpinner
-import app.musikus.core.presentation.components.ToggleButton
-import app.musikus.core.presentation.components.ToggleButtonOption
+import app.musikus.core.presentation.components.SegmentedButtonOption
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.components.rememberNumberInputState
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
@@ -201,8 +201,8 @@ fun GoalDialog(
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.large))
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                val toggleButtonOptions = GoalType.entries.map {
-                    ToggleButtonOption(it.ordinal, it.toUiText())
+                val segmentedButtonOptions = GoalType.entries.map {
+                    SegmentedButtonOption(it.ordinal, it.toUiText())
                 }
 
                 Text(
@@ -219,10 +219,10 @@ fun GoalDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    ToggleButton(
+                    MusikusSegmentedButton(
                         modifier = Modifier.fillMaxWidth(),
-                        options = toggleButtonOptions,
-                        selected = toggleButtonOptions[selectedGoalType.value.ordinal],
+                        options = segmentedButtonOptions,
+                        selected = segmentedButtonOptions[selectedGoalType.value.ordinal],
                         onSelectedChanged = { option ->
                             selectedGoalType.value = GoalType.entries[option.id]
                         }
