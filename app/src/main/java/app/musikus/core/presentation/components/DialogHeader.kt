@@ -9,11 +9,9 @@
 package app.musikus.core.presentation.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,31 +30,28 @@ fun DialogHeader(
     title: String,
     icon: UiIcon? = null
 ) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .padding(horizontal = 24.dp, vertical = 16.dp)
-        ) {
-            if (icon != null) {
-                Icon(
-                    modifier = Modifier.size(24.dp).align(Alignment.CenterVertically),
-                    imageVector = icon.asIcon(),
-                    contentDescription = "jksdshf",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-
-                Spacer(Modifier.width(MaterialTheme.spacing.small))
-            }
-
-            Text(
-                modifier = Modifier.alignByBaseline(),
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+    Row(
+        modifier = Modifier
+            .padding(bottom = MaterialTheme.spacing.medium)     // margin
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.medium)     // padding
+    ) {
+        if (icon != null) {
+            Icon(
+                modifier = Modifier.size(24.dp).align(Alignment.CenterVertically),
+                imageVector = icon.asIcon(),
+                contentDescription = "jksdshf",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
+
+            Spacer(Modifier.width(MaterialTheme.spacing.small))
         }
-        Spacer(Modifier.height(MaterialTheme.spacing.medium))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+        )
     }
 }
