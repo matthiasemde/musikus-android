@@ -6,6 +6,8 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
+@file:Suppress("MagicNumber")
+
 package app.musikus.core.presentation.theme
 
 import androidx.compose.material3.darkColorScheme
