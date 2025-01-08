@@ -25,11 +25,11 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.menu.domain.ColorSchemeSelections
 
 @Composable
-fun ToggleButton(
+fun MusikusSegmentedButton(
     modifier: Modifier = Modifier,
-    options: List<ToggleButtonOption>,
-    selected: ToggleButtonOption,
-    onSelectedChanged: (ToggleButtonOption) -> Unit
+    options: List<SegmentedButtonOption>,
+    selected: SegmentedButtonOption,
+    onSelectedChanged: (SegmentedButtonOption) -> Unit
 ) {
 
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
@@ -53,7 +53,7 @@ fun ToggleButton(
     }
 }
 
-data class ToggleButtonOption(
+data class SegmentedButtonOption(
     val id: Int,
     val name: UiText
 )
@@ -62,17 +62,17 @@ data class ToggleButtonOption(
 
 @MusikusPreviewElement1
 @Composable
-private fun PreviewGoalDialog(
+private fun PreviewMusikusSegmentedButton(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme = theme) {
-        ToggleButton(
+        MusikusSegmentedButton(
             options = listOf(
-                ToggleButtonOption(0, UiText.DynamicString("Option 1")),
-                ToggleButtonOption(1, UiText.DynamicString("Option 2")),
-                ToggleButtonOption(2, UiText.DynamicString("Option 3")),
+                SegmentedButtonOption(0, UiText.DynamicString("Option 1")),
+                SegmentedButtonOption(1, UiText.DynamicString("Option 2")),
+                SegmentedButtonOption(2, UiText.DynamicString("Option 3")),
             ),
-            selected = ToggleButtonOption(1, UiText.DynamicString("Option 2")),
+            selected = SegmentedButtonOption(1, UiText.DynamicString("Option 2")),
             onSelectedChanged = {}
         )
     }
