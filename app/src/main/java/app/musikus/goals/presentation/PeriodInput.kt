@@ -37,7 +37,6 @@ import app.musikus.core.presentation.utils.TestTags
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.menu.domain.ColorSchemeSelections
 
-
 /**
  * Input field for selecting the period (DAY, WEEKS, MONTHS, ...) and its amount.
  *
@@ -69,10 +68,17 @@ fun PeriodInput(
             modifier = Modifier.width(130.dp),
             // map the SelectionSpinnerOption based on its id to the GoalPeriodUnit ordinal
             options = periodUnitSelectionState.allowedPeriodUnits.map {
-                IntSelectionSpinnerOption(it.ordinal, it.toUiText(quantity = periodAmountInputState.currentValue.value ?: 0))
-          },
-            selectedOption = IntSelectionSpinnerOption(selectedUnit.ordinal,
-                                                       selectedUnit.toUiText(quantity = periodAmountInputState.currentValue.value ?: 0)),
+                IntSelectionSpinnerOption(
+                    it.ordinal,
+                    it.toUiText(quantity = periodAmountInputState.currentValue.value ?: 0)
+                )
+            },
+            selectedOption = IntSelectionSpinnerOption(
+                selectedUnit.ordinal,
+                selectedUnit.toUiText(
+                    quantity = periodAmountInputState.currentValue.value ?: 0
+                )
+            ),
             semanticDescription = stringResource(id = R.string.goals_goal_dialog_period_input_description),
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onSelectedChange = { selection ->
@@ -83,7 +89,6 @@ fun PeriodInput(
         )
     }
 }
-
 
 /**
  * State for the period selection spinner element.
@@ -98,6 +103,7 @@ class PeriodUnitSelectionState(
             "The initial period unit must be one of the allowed period units."
         }
     }
+
     // the current selected period unit
     val currentSelection = mutableStateOf(initialPeriodUnit)
 
@@ -105,7 +111,7 @@ class PeriodUnitSelectionState(
      * Saver to support rememberSaveable / Bundle saving and restoring.
      */
     companion object {
-        fun Saver() : Saver<PeriodUnitSelectionState, *> = Saver(
+        fun Saver(): Saver<PeriodUnitSelectionState, *> = Saver(
             save = {
                 listOf(
                     it.currentSelection.value,

@@ -41,7 +41,6 @@ class DurationInputTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun checkSeamlessEntering() {
-
         val hoursState = NumberInputState(
             initialValue = 0,
             minValue = 0,

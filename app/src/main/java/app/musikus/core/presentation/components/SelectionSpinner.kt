@@ -50,7 +50,7 @@ fun SelectionSpinner(
     dropdownTestTag: String,
     onSelectedChange: (SelectionSpinnerOption) -> Unit = {},
 ) {
-    require (selectedOption != null || label != null || placeholder != null) {
+    require(selectedOption != null || label != null || placeholder != null) {
         throw IllegalArgumentException(
             "SelectionSpinner needs either a label or a placeholder if no option is selected"
         )
@@ -66,9 +66,10 @@ fun SelectionSpinner(
         onExpandedChange = { expanded = it }
     ) {
 
-        OutlinedTextField(
-            readOnly = true,
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+
+            OutlinedTextField(
+                readOnly = true,
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
             value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
             onValueChange = {},
             label = label,
@@ -127,7 +128,7 @@ fun SelectionSpinner(
                         onClick = {
                                 expanded = false
                                 onSelectedChange(option)
-                          },
+                            },
                         text = { Text(text = option.name.asString()) }
                     )
                 }

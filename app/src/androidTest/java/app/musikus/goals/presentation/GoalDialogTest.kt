@@ -66,10 +66,9 @@ class GoalDialogTest {
         composeRule.onNodeWithContentDescription("Select period unit").performClick()
         composeRule.onNode(
             matcher = hasAnyAncestor(hasTestTag(TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN))
-                    and
-                    hasText("Week")
+                and
+                hasText("Week")
         ).performClick()
-
 
         // change period to 2
         composeRule.onNodeWithContentDescription("Period amount input").performTextReplacement("2")
@@ -77,13 +76,10 @@ class GoalDialogTest {
         composeRule.onNodeWithContentDescription("Select period unit").performClick()
         composeRule.onNode(
             matcher = hasAnyAncestor(hasTestTag(TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN))
-                    and
-                    hasText("Months")
+                and
+                hasText("Months")
         ).performClick()
 
         composeRule.onNodeWithContentDescription("Create").performClick()
     }
-
-
-
 }

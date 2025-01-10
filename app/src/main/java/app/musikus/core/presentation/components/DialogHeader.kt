@@ -32,10 +32,10 @@ fun DialogHeader(
 ) {
     Row(
         modifier = Modifier
-            .padding(bottom = MaterialTheme.spacing.medium)     // margin
+            .padding(bottom = MaterialTheme.spacing.medium) // margin
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.medium)     // padding
+            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.medium) // padding
     ) {
         if (icon != null) {
             Icon(

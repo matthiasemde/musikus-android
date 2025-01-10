@@ -64,7 +64,8 @@ sealed class LibraryFolderDialogUiEvent {
 
 @Composable
 fun LibraryFolderDialog(
-    uiState: LibraryFolderDialogUiState, eventHandler: LibraryFolderDialogUiEventHandler
+    uiState: LibraryFolderDialogUiState,
+    eventHandler: LibraryFolderDialogUiEventHandler
 ) {
     Dialog(onDismissRequest = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) }) {
         Column(
@@ -94,12 +95,13 @@ fun LibraryFolderDialog(
                     label = { Text(text = stringResource(id = R.string.library_folder_dialog_name_label)) },
                     singleLine = true,
                 )
-                DialogActions(confirmButtonText = stringResource(
-                    id = when (uiState.mode) {
-                        DialogMode.ADD -> R.string.library_folder_dialog_confirm
-                        DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
-                    }
-                ),
+                DialogActions(
+                    confirmButtonText = stringResource(
+                        id = when (uiState.mode) {
+                            DialogMode.ADD -> R.string.library_folder_dialog_confirm
+                            DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
+                        }
+                    ),
                     onDismissHandler = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) },
                     onConfirmHandler = { eventHandler(LibraryFolderDialogUiEvent.Confirmed) },
                     confirmButtonEnabled = uiState.folderData.name.isNotEmpty()
@@ -128,9 +130,9 @@ sealed class LibraryItemDialogUiEvent {
 
 @Composable
 fun LibraryItemDialog(
-    uiState: LibraryItemDialogUiState, eventHandler: LibraryItemDialogUiEventHandler
+    uiState: LibraryItemDialogUiState,
+    eventHandler: LibraryItemDialogUiEventHandler
 ) {
-
     Dialog(onDismissRequest = { eventHandler(LibraryItemDialogUiEvent.Dismissed) }) {
         Column(
             modifier = Modifier
@@ -170,11 +172,15 @@ fun LibraryItemDialog(
                     // Folder selection spinner
                     SelectionSpinner(
                         modifier = Modifier.padding(horizontal = 24.dp),
-                        label = { Text(text = stringResource(id = R.string.library_item_dialog_folder_selector_label)) },
+                        label = { Text(
+                            text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
+                        ) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Folder,
-                                contentDescription = stringResource(id = R.string.library_item_dialog_folder_selector_label),
+                                contentDescription = stringResource(
+                                    id = R.string.library_item_dialog_folder_selector_label
+                                ),
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
@@ -182,14 +188,18 @@ fun LibraryItemDialog(
                             UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
                         },
                         // pre-select the folder of the item or show "no folder"
-                        selectedOption = UUIDSelectionSpinnerOption(id = uiState.itemData.folderId, name = uiState.folders.firstOrNull {
-                            it.id == uiState.itemData.folderId
-                        }?.name?.let {
-                            UiText.DynamicString(it)
-                        } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)),
+                        selectedOption = UUIDSelectionSpinnerOption(
+                            id = uiState.itemData.folderId,
+                            name = uiState.folders.firstOrNull {
+                                it.id == uiState.itemData.folderId
+                            }?.name?.let {
+                                UiText.DynamicString(it)
+                            } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+                        ),
                         // show "no folder" as a special option inside the spinner separated from the other folders
                         specialOption = UUIDSelectionSpinnerOption(
-                            null, UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+                            null,
+                            UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
                         ),
                         semanticDescription = stringResource(
                             id = R.string.library_item_dialog_folder_selector_description
@@ -217,44 +227,57 @@ fun LibraryItemDialog(
                         ) {
                             for (j in 0..1) {
                                 val index = 2 * i + j
-                                ColorSelectRadioButton(color = libraryItemColors[index],
+                                ColorSelectRadioButton(
+                                    color = libraryItemColors[index],
                                     selected = uiState.itemData.colorIndex == index,
                                     colorDescription = stringResource(
-                                        id = R.string.library_item_dialog_color_selector_description, (index + 1)
+                                        id = R.string.library_item_dialog_color_selector_description,
+                                        (index + 1)
                                     ),
-                                    onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) })
+                                    onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) }
+                                )
                             }
                         }
                     }
                 }
             }
-            DialogActions(confirmButtonText = when (uiState.mode) {
-                DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_confirm)
-                DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_confirm_edit)
-            },
+            DialogActions(
+                confirmButtonText = when (uiState.mode) {
+                    DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_confirm)
+                    DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_confirm_edit)
+                },
                 confirmButtonEnabled = uiState.isConfirmButtonEnabled,
                 onDismissHandler = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },
-                onConfirmHandler = { eventHandler(LibraryItemDialogUiEvent.Confirmed) })
+                onConfirmHandler = { eventHandler(LibraryItemDialogUiEvent.Confirmed) }
+            )
         }
     }
 }
 
 @Composable
 fun ColorSelectRadioButton(
-    modifier: Modifier = Modifier, color: Color, colorDescription: String, selected: Boolean, onClick: () -> Unit
+    modifier: Modifier = Modifier,
+    color: Color,
+    colorDescription: String,
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
-    Box(modifier = modifier
-        .size(35.dp)
-        .clip(RoundedCornerShape(100))
-        .background(color)
-        .semantics {
-            contentDescription = colorDescription
-        }) {
+    Box(
+        modifier = modifier
+            .size(35.dp)
+            .clip(RoundedCornerShape(100))
+            .background(color)
+            .semantics {
+                contentDescription = colorDescription
+            }
+    ) {
         RadioButton(
             colors = RadioButtonDefaults.colors(
                 selectedColor = Color.White,
                 unselectedColor = Color.White,
-            ), selected = selected, onClick = onClick
+            ),
+            selected = selected,
+            onClick = onClick
         )
     }
 }
