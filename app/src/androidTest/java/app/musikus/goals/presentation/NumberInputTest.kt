@@ -35,10 +35,9 @@ class NumberInputTest {
 
     @Test
     fun checkMinValueAsDefault() {
-
         val minValue = 2
 
-        val numberInputState = NumberInputState (
+        val numberInputState = NumberInputState(
             initialValue = 50,
             minValue = minValue,
             maxValue = 100,
@@ -73,7 +72,7 @@ class NumberInputTest {
 
     @Test
     fun boundaryCheckTest() {
-        val numberInputState = NumberInputState (
+        val numberInputState = NumberInputState(
             initialValue = 50,
             minValue = 30,
             maxValue = 100,
@@ -109,8 +108,5 @@ class NumberInputTest {
         assert(numberInputState.currentValue.value == 30)
         // assert that minValue is displayed
         composeRule.onNodeWithText("30").assertExists()
-
-
     }
-
 }

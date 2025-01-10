@@ -31,7 +31,6 @@ fun MusikusSegmentedButton(
     selected: SegmentedButtonOption,
     onSelectedChanged: (SegmentedButtonOption) -> Unit
 ) {
-
     SingleChoiceSegmentedButtonRow(modifier = modifier) {
         options.forEachIndexed { index, toggleButton ->
             SegmentedButton(
@@ -44,11 +43,13 @@ fun MusikusSegmentedButton(
                     onSelectedChanged(toggleButton)
                 },
                 label = {
-                    Text(text = toggleButton.name.asString(),
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.extraSmall), softWrap = false)
+                    Text(
+                        text = toggleButton.name.asString(),
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.extraSmall),
+                        softWrap = false
+                    )
                 }
             )
-
         }
     }
 }
@@ -57,8 +58,6 @@ data class SegmentedButtonOption(
     val id: Int,
     val name: UiText
 )
-
-
 
 @MusikusPreviewElement1
 @Composable

@@ -142,8 +142,7 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session WHERE deleted=0")
-    abstract fun getAllWithSectionsWithLibraryItems()
-            : Flow<List<SessionWithSectionsWithLibraryItems>>
+    abstract fun getAllWithSectionsWithLibraryItems(): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns

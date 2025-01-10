@@ -36,7 +36,6 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-
 /**
  * ViewModel state for the dialog which is displayed when adding or changing a goal.
  */

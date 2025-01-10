@@ -37,8 +37,8 @@ import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
 import app.musikus.core.presentation.components.MusikusSegmentedButton
-import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.SegmentedButtonOption
+import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.components.rememberNumberInputState
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
@@ -127,7 +127,6 @@ fun GoalDialog(
                 .background(MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.Start,
         ) {
-
             DialogHeader(
                 title = stringResource(
                     id =
@@ -161,9 +160,8 @@ fun GoalDialog(
                     minutesState = minutesState,
                     requestFocusOnInit = true
                 )
-                confirmButtonEnabled = confirmButtonEnabled &&      // https://stackoverflow.com/a/55404768
-                        (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
-
+                confirmButtonEnabled = confirmButtonEnabled && // https://stackoverflow.com/a/55404768
+                    (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
             }
             if (!isEditMode) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
@@ -190,7 +188,9 @@ fun GoalDialog(
                             text = when (periodUnitSelectionState.currentSelection.value) {
                                 GoalPeriodUnit.DAY -> stringResource(R.string.goals_goal_dialog_start_annotation_day)
                                 GoalPeriodUnit.WEEK -> stringResource(R.string.goals_goal_dialog_start_annotation_week)
-                                GoalPeriodUnit.MONTH -> stringResource(R.string.goals_goal_dialog_start_annotation_month)
+                                GoalPeriodUnit.MONTH -> stringResource(
+                                    R.string.goals_goal_dialog_start_annotation_month
+                                )
                             },
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -218,7 +218,6 @@ fun GoalDialog(
                         .padding(horizontal = MaterialTheme.spacing.large),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     MusikusSegmentedButton(
                         modifier = Modifier.fillMaxWidth(),
                         options = segmentedButtonOptions,
@@ -249,7 +248,9 @@ fun GoalDialog(
                                 selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
                                     UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
                                 },
-                                semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
+                                semanticDescription = stringResource(
+                                    id = R.string.goals_goal_dialog_item_selector_description
+                                ),
                                 dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
                                 onSelectedChange = { selection ->
                                     selectedLibraryItems.value =
@@ -290,7 +291,6 @@ fun GoalDialog(
         }
     }
 }
-
 
 @MusikusPreviewElement1
 @Composable

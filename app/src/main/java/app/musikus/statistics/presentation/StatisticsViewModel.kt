@@ -242,8 +242,8 @@ class StatisticsViewModel @Inject constructor(
             GoalCardGoalDisplayData(
                 label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
                 progress = (
-                        it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
-                        ).coerceAtMost(1f),
+                    it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
+                    ).coerceAtMost(1f),
                 color = it.description.libraryItems.firstOrNull()?.let { item ->
                     libraryItemColors[item.colorIndex]
                 }
@@ -257,10 +257,12 @@ class StatisticsViewModel @Inject constructor(
             // the actual data. This triggers the card animation.
             if (_noGoalsCard) {
                 // Emit the empty placeholder
-                emit(StatisticsGoalsCardUiState(
-                    successRate = null,
-                    lastGoalsDisplayData = lastFiveGoals.map { GoalCardGoalDisplayData() }
-                ))
+                emit(
+                    StatisticsGoalsCardUiState(
+                        successRate = null,
+                        lastGoalsDisplayData = lastFiveGoals.map { GoalCardGoalDisplayData() }
+                    )
+                )
                 delay(350)
                 _noGoalsCard = false
             }
@@ -270,7 +272,8 @@ class StatisticsViewModel @Inject constructor(
                 StatisticsGoalsCardUiState(
                     successRate = successRate,
                     lastGoalsDisplayData = lastGoalsDisplayData
-            ))
+                )
+            )
         }
     }.stateIn(
         scope = viewModelScope,

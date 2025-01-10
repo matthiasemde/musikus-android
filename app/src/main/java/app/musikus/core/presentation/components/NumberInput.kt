@@ -54,7 +54,6 @@ import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
 
-
 /**
  * NumberInput TextField, inspired by Material TimePicker
  * https://m3.material.io/components/time-pickers/specs
@@ -118,8 +117,11 @@ fun NumberInput(
                     focused = it.isFocused
 
                     // add / remove padding on focus change
-                    val newText = if (!focused && padStart) displayValue.value.text.padStart(maxLength, '0')
-                                  else displayValue.value.text.trimStart('0')
+                    val newText = if (!focused && padStart) {
+                        displayValue.value.text.padStart(maxLength, '0')
+                    } else {
+                        displayValue.value.text.trimStart('0')
+                    }
                     displayValue.value = displayValue.value.copy(text = newText)
 
                     // if focus is lost and no value was entered, set to minValue
@@ -186,7 +188,7 @@ fun NumberInput(
                     border = if (focused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
                 ) {
                     Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                        Row(horizontalArrangement = Arrangement.Center){
+                        Row(horizontalArrangement = Arrangement.Center) {
                             innerTextField()
                         }
                         // invisible placeholder preserves width
@@ -205,9 +207,8 @@ fun NumberInput(
     }
 }
 
-
 @Stable
-class NumberInputState (
+class NumberInputState(
     initialValue: Int?,
     val minValue: Int,
     val maxValue: Int,
@@ -264,12 +265,10 @@ fun rememberNumberInputState(
     )
 }
 
-
-
 @MusikusPreviewElement1
 @Composable
 private fun NumberInputPreview() {
-    MusikusThemedPreview() {
+    MusikusThemedPreview {
         NumberInput(
             state = rememberNumberInputState(
                 initialValue = 42,

@@ -143,10 +143,14 @@ fun GoalCard(
                         Text(
                             modifier = Modifier.padding(8.dp),
                             maxLines = 1,
-                            text = if (remainingTime.isPositive()) stringResource(
-                                R.string.core_time_left,
-                                getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
-                            ) else stringResource(R.string.goals_goal_card_expired),
+                            text = if (remainingTime.isPositive()) {
+                                stringResource(
+                                    R.string.core_time_left,
+                                    getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
+                                )
+                            } else {
+                                stringResource(R.string.goals_goal_card_expired)
+                            },
                         )
                     }
                 }

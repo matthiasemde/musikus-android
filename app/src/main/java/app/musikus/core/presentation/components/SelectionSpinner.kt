@@ -42,7 +42,7 @@ fun SelectionSpinner(
     dropdownTestTag: String,
     onSelectedChange: (SelectionSpinnerOption) -> Unit = {},
 ) {
-    require (selectedOption != null || label != null || placeholder != null) {
+    require(selectedOption != null || label != null || placeholder != null) {
         throw IllegalArgumentException(
             "SelectionSpinner needs either a label or a placeholder if no option is selected"
         )
@@ -58,7 +58,6 @@ fun SelectionSpinner(
         onExpandedChange = { expanded = it }
     ) {
         CompositionLocalProvider(LocalTextInputService provides null) {
-
             OutlinedTextField(
                 readOnly = true,
                 modifier = Modifier.menuAnchor(),
@@ -120,7 +119,7 @@ fun SelectionSpinner(
                             onClick = {
                                 expanded = false
                                 onSelectedChange(option)
-                          },
+                            },
                             text = { Text(text = option.name.asString()) }
                         )
                     }
