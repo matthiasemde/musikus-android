@@ -31,6 +31,7 @@ import app.musikus.menu.domain.ThemeSelections
 
 /** Library item colors */
 
+@Suppress("MagicNumber")
 val libraryItemColors = listOf(
     Color(0xFFf7a397),
     Color(0xFFE03F54),

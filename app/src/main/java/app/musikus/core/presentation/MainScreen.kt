@@ -112,7 +112,8 @@ fun MainScreen(
                 ) {
                     MainMenu(
                         navigateTo = { navController.navigate(it) },
-                        onDismiss = { scope.launch { drawerState.close() } }
+                        onDismiss = { scope.launch { drawerState.close() } },
+                        theme = theme
                     )
                 }
             },

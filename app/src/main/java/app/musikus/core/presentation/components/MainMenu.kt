@@ -10,8 +10,11 @@ package app.musikus.core.presentation.components
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,9 +26,11 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -36,6 +41,7 @@ import app.musikus.R
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.getDisplayData
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.menu.domain.ThemeSelections
 import app.musikus.menu.presentation.about.AboutScreen
 import app.musikus.menu.presentation.about.LicensesScreen
 import app.musikus.menu.presentation.donate.DonateScreen
@@ -48,7 +54,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 fun MainMenu(
     navigateTo: (Screen) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    theme: ThemeSelections,
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -63,11 +70,41 @@ fun MainMenu(
     )
 
     Column {
-        Text(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium),
-            text = stringResource(R.string.core_app_name),
-            style = MaterialTheme.typography.titleLarge
+        NavigationDrawerItem(
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+            label = {
+                Image(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .fillMaxWidth(),
+                    alignment = Alignment.TopStart,
+                    painter = painterResource(
+                        id = when (theme) {
+                            ThemeSelections.SYSTEM -> {
+                                if (isSystemInDarkTheme()) {
+                                    R.drawable.musikus_logo_dark
+                                } else {
+                                    R.drawable.musikus_logo_light
+                                }
+                            }
+                            ThemeSelections.DAY -> R.drawable.musikus_logo_light
+                            ThemeSelections.NIGHT -> R.drawable.musikus_logo_dark
+                        }
+                    ),
+                    contentDescription = null
+                )
+            },
+            selected = false,
+            onClick = {}
         )
+
+        HorizontalDivider(
+            modifier = Modifier.padding(
+                horizontal = MaterialTheme.spacing.medium,
+                vertical = MaterialTheme.spacing.small
+            )
+        )
+
         Spacer(modifier = Modifier.weight(1f))
 
         // Link to Discord
