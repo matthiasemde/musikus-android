@@ -13,6 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalTextInputService
@@ -32,55 +34,51 @@ class IntSelectionSpinnerOption(val id: Int?, name: UiText) : SelectionSpinnerOp
 @Composable
 fun SelectionSpinner(
     modifier: Modifier = Modifier,
+    spinnerState: SelectionSpinnerState,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
-    options: List<SelectionSpinnerOption>,
-    selectedOption: SelectionSpinnerOption?,
-    specialOption: SelectionSpinnerOption? = null,
     semanticDescription: String,
     dropdownTestTag: String,
     onSelectedChange: (SelectionSpinnerOption) -> Unit = {},
 ) {
-    require(selectedOption != null || label != null || placeholder != null) {
+    require(label != null || placeholder != null) {
         throw IllegalArgumentException(
             "SelectionSpinner needs either a label or a placeholder if no option is selected"
         )
     }
 
-    var expanded by remember { mutableStateOf(false) }
-
     ExposedDropdownMenuBox(
         modifier = modifier.semantics {
             contentDescription = semanticDescription
         },
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
+        expanded = spinnerState.expanded,
+        onExpandedChange = { spinnerState.expand() }
     ) {
         CompositionLocalProvider(LocalTextInputService provides null) {
             OutlinedTextField(
                 readOnly = true,
                 modifier = Modifier.menuAnchor(),
-                value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
+                value = spinnerState.currentSelection?.name?.asString() ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
                 placeholder = placeholder,
                 leadingIcon = leadingIcon,
                 trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = spinnerState.expanded)
                 },
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             )
 
             ExposedDropdownMenu(
                 modifier = Modifier.testTag(dropdownTestTag),
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
+                expanded = spinnerState.expanded,
+                onDismissRequest = { spinnerState.collapse() },
             ) {
                 val scrollState = rememberScrollState()
                 val singleDropdownItemHeight = 48.dp
                 val totalDropDownMenuHeight = (
-                    singleDropdownItemHeight * (options.size + if (specialOption != null) 1 else 0)
+                    singleDropdownItemHeight * (spinnerState.options.size + if (spinnerState.specialOption != null) 1 else 0)
                     ).coerceAtMost(220.dp)
                 val totalDropDownMenuHeightInPx = with(LocalDensity.current) { totalDropDownMenuHeight.toPx() }
 
@@ -94,14 +92,14 @@ fun SelectionSpinner(
                             simpleVerticalScrollbar(scrollState, totalDropDownMenuHeightInPx)
                         }
                 ) {
-                    specialOption?.let {
+                    spinnerState.specialOption?.let {
                         DropdownMenuItem(
                             modifier = Modifier
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight - 2.dp),
                             text = { Text(text = it.name.asString()) },
                             onClick = {
-                                expanded = false
+                                spinnerState.collapse()
                                 onSelectedChange(it)
                             }
                         )
@@ -111,13 +109,13 @@ fun SelectionSpinner(
                             thickness = Dp.Hairline
                         )
                     }
-                    options.forEach { option ->
+                    spinnerState.options.forEach { option ->
                         DropdownMenuItem(
                             modifier = Modifier
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight),
                             onClick = {
-                                expanded = false
+                                spinnerState.collapse()
                                 onSelectedChange(option)
                             },
                             text = { Text(text = option.name.asString()) }
@@ -127,4 +125,84 @@ fun SelectionSpinner(
             }
         }
     }
+}
+
+
+/**
+ * State for the period selection spinner element.
+ */
+@Stable
+class SelectionSpinnerState(
+    initialSelection: SelectionSpinnerOption? = null,
+    val options: List<SelectionSpinnerOption>,
+    val specialOption: SelectionSpinnerOption? = null,
+    initialExpand: Boolean = false,
+) {
+    init {
+        require(options.contains(initialSelection)) {
+            "The initial selection must be one of the options."
+        }
+    }
+
+    var currentSelection by mutableStateOf(initialSelection)
+        private set
+
+    var expanded by mutableStateOf(initialExpand)
+        private set
+
+    /**
+     * Saver to support rememberSaveable / Bundle saving and restoring.
+     */
+    companion object {
+        fun Saver(): Saver<SelectionSpinnerState, *> = Saver(
+            save = {
+                listOf(
+                    it.currentSelection,
+                    it.options,
+                    it.specialOption
+                )
+            },
+            restore = {
+                SelectionSpinnerState(
+                    initialSelection = it[0] as SelectionSpinnerOption,
+                    options = (it[1] as List<*>).filterIsInstance<SelectionSpinnerOption>(),
+                    specialOption = it[2] as SelectionSpinnerOption?
+                )
+            }
+        )
+    }
+
+    fun collapse() {
+        expanded = false
+    }
+
+    fun expand() {
+        expanded = true
+    }
+
+    fun select(option: SelectionSpinnerOption) {
+        require(options.contains(option)) {
+            "The selected option must be one of the options."
+        }
+        currentSelection = option
+    }
+}
+
+/**
+ * RememberSaveable wrapper for SelectionSpinnerState.
+ * Use to generate a SelectionSpinnerState instance which survives configuration changes.
+ */
+@Composable
+fun rememberSelectionSpinnerState(
+    initialSelection: SelectionSpinnerOption? = null,
+    options: List<SelectionSpinnerOption>,
+    specialOption: SelectionSpinnerOption? = null,
+    initialExpand: Boolean = false,
+) = rememberSaveable(saver = SelectionSpinnerState.Saver()) {
+    SelectionSpinnerState(
+        initialSelection = initialSelection,
+        options = options,
+        specialOption = specialOption,
+        initialExpand = initialExpand
+    )
 }

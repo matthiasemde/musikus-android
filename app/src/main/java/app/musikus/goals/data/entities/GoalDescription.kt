@@ -52,6 +52,13 @@ enum class GoalPeriodUnit {
 
     companion object {
         val DEFAULT = DAY
+
+        fun fromOrdinal(ordinal: Int) = when (ordinal) {
+            DAY.ordinal -> DAY
+            WEEK.ordinal -> WEEK
+            MONTH.ordinal -> MONTH
+            else -> throw IllegalArgumentException("Invalid ordinal for GoalPeriodUnit: $ordinal")
+        }
     }
 
     fun toUiText(quantity: Int = 1) = when (this) {

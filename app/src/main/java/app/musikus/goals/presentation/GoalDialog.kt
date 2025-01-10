@@ -36,18 +36,16 @@ import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
+import app.musikus.core.presentation.components.IntSelectionSpinnerOption
 import app.musikus.core.presentation.components.MusikusSegmentedButton
 import app.musikus.core.presentation.components.SegmentedButtonOption
-import app.musikus.core.presentation.components.SelectionSpinner
-import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.components.rememberNumberInputState
+import app.musikus.core.presentation.components.rememberSelectionSpinnerState
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.presentation.utils.TestTags
 import app.musikus.core.presentation.utils.UiIcon
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.data.daos.LibraryItem
@@ -107,9 +105,11 @@ fun GoalDialog(
     )
 
     // state for the period unit selection
-    val periodUnitSelectionState = rememberPeriodUnitSelectionState(
-        initialPeriodUnit = GoalPeriodUnit.DEFAULT,
-        allowedPeriodUnits = GoalPeriodUnit.entries.toList()
+    val options = GoalPeriodUnit.entries.map{ IntSelectionSpinnerOption(it.ordinal, it.toUiText()) }
+    val periodUnitSelectionState = rememberSelectionSpinnerState(
+        initialSelection = IntSelectionSpinnerOption(GoalPeriodUnit.DEFAULT.ordinal, GoalPeriodUnit.DEFAULT.toUiText()),
+        options = options,
+
     )
 
     val selectedGoalType = remember { mutableStateOf(GoalType.DEFAULT) }
@@ -185,12 +185,10 @@ fun GoalDialog(
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
                         Text(
                             modifier = Modifier.align(Alignment.End),
-                            text = when (periodUnitSelectionState.currentSelection.value) {
+                            text = when (GoalPeriodUnit.fromOrdinal((periodUnitSelectionState.currentSelection as IntSelectionSpinnerOption?)?.id ?: 0)) {
                                 GoalPeriodUnit.DAY -> stringResource(R.string.goals_goal_dialog_start_annotation_day)
                                 GoalPeriodUnit.WEEK -> stringResource(R.string.goals_goal_dialog_start_annotation_week)
-                                GoalPeriodUnit.MONTH -> stringResource(
-                                    R.string.goals_goal_dialog_start_annotation_month
-                                )
+                                GoalPeriodUnit.MONTH -> stringResource(R.string.goals_goal_dialog_start_annotation_month)
                             },
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -233,30 +231,30 @@ fun GoalDialog(
                         val libraryItems = uiState.libraryItems
 
                         if (libraryItems.isNotEmpty()) {
-                            SelectionSpinner(
-                                placeholder = {
-                                    Text(
-                                        text = stringResource(
-                                            id = R.string.goals_goal_dialog_item_selector_placeholder
-                                        )
-                                    )
-                                },
-                                options = libraryItems.map {
-                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-                                },
-                                // select the first item if it is not null
-                                selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
-                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
-                                },
-                                semanticDescription = stringResource(
-                                    id = R.string.goals_goal_dialog_item_selector_description
-                                ),
-                                dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
-                                onSelectedChange = { selection ->
-                                    selectedLibraryItems.value =
-                                        libraryItems.filter { it.id == (selection as UUIDSelectionSpinnerOption).id }
-                                }
-                            )
+//                            SelectionSpinner(
+//                                placeholder = {
+//                                    Text(
+//                                        text = stringResource(
+//                                            id = R.string.goals_goal_dialog_item_selector_placeholder
+//                                        )
+//                                    )
+//                                },
+//                                options = libraryItems.map {
+//                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+//                                },
+//                                // select the first item if it is not null
+//                                selectedOption = selectedLibraryItems.value.firstOrNull()?.let {
+//                                    UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
+//                                },
+//                                semanticDescription = stringResource(
+//                                    id = R.string.goals_goal_dialog_item_selector_description
+//                                ),
+//                                dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
+//                                onSelectedChange = { selection ->
+//                                    selectedLibraryItems.value =
+//                                        libraryItems.filter { it.id == (selection as UUIDSelectionSpinnerOption).id }
+//                                }
+//                            )
                         } else {
                             Text(text = stringResource(id = R.string.goals_goal_dialog_item_selector_no_items))
                         }
@@ -272,7 +270,7 @@ fun GoalDialog(
                         GoalDialogUiEvent.Confirm(
                             target = (hoursState.currentValue.value!!).hours + (minutesState.currentValue.value!!).minutes,
                             period = periodAmountInputState.currentValue.value!!,
-                            periodUnit = periodUnitSelectionState.currentSelection.value,
+                            periodUnit = GoalPeriodUnit.fromOrdinal((periodUnitSelectionState.currentSelection as IntSelectionSpinnerOption).id!!),
                             goalType = selectedGoalType.value,
                             selectedLibraryItems = selectedLibraryItems.value
                         )
