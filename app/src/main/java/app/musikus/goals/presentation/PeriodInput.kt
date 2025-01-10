@@ -59,7 +59,7 @@ fun PeriodInput(
             imeAction = ImeAction.Next,
             padStart = false,
             textStyle = MaterialTheme.typography.titleLarge,
-            inputTestTag = TestTags.GOAL_DIALOG_PERIOD_INPUT,
+            contentDescr = stringResource(id = R.string.goals_goal_dialog_period_amount_content_description),
         )
 
         Spacer(modifier = Modifier.width(8.dp))

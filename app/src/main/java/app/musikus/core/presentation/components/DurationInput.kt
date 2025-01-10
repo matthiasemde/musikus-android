@@ -27,7 +27,6 @@ import app.musikus.R
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
-import app.musikus.core.presentation.utils.TestTags
 import app.musikus.menu.domain.ColorSchemeSelections
 
 /**
@@ -62,7 +61,6 @@ fun DurationInput(
             },
             focusRequester = focusRequesterHours,
             onEntryComplete = { focusRequesterMinutes.requestFocus() },
-            inputTestTag = TestTags.GOAL_DIALOG_HOURS_INPUT,
             contentDescr = stringResource(R.string.components_duration_input_hours_content_description)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -74,7 +72,6 @@ fun DurationInput(
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
             },
             onBackspaceWhenEmpty = { focusRequesterHours.requestFocus() },
-            inputTestTag = TestTags.GOAL_DIALOG_MINUTES_INPUT,
             contentDescr = stringResource(R.string.components_duration_input_minutes_content_description)
         )
     }

@@ -14,7 +14,6 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,8 +58,8 @@ class GoalDialogTest {
 
     @Test
     fun createNewGoalTest() {
-        composeRule.onNodeWithTag(TestTags.GOAL_DIALOG_HOURS_INPUT).performTextReplacement("1")
-        composeRule.onNodeWithTag(TestTags.GOAL_DIALOG_MINUTES_INPUT).performTextReplacement("30")
+        composeRule.onNodeWithContentDescription("Target hours input").performTextReplacement("1")
+        composeRule.onNodeWithContentDescription("Target minutes input").performTextReplacement("30")
 
         // assert unit is singular
         // select week
@@ -73,7 +72,7 @@ class GoalDialogTest {
 
 
         // change period to 2
-        composeRule.onNodeWithTag(TestTags.GOAL_DIALOG_PERIOD_INPUT).performTextReplacement("2")
+        composeRule.onNodeWithContentDescription("Period amount input").performTextReplacement("2")
         // select months (plural)
         composeRule.onNodeWithContentDescription("Select period unit").performClick()
         composeRule.onNode(

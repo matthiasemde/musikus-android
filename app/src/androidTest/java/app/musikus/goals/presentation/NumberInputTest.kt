@@ -49,7 +49,6 @@ class NumberInputTest {
         composeRule.setContent {
             NumberInput(
                 state = numberInputState,
-                inputTestTag = "NumberInputTest",
                 padStart = false,
                 imeAction = ImeAction.Next,
             )
