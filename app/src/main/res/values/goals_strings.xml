@@ -88,5 +88,7 @@
     <!-- PeriodInput -->
     <string name="goals_goal_dialog_period_input_prefix">Period</string>
     <string name="goals_goal_dialog_period_input_description">Select period unit</string>
+    <string name="goals_goal_dialog_period_input_content_description">Period unit input</string>
+    <string name="goals_goal_dialog_period_amount_content_description">Period amount input</string>
 
 </resources>

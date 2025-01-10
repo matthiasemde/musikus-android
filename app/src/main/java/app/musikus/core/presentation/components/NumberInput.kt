@@ -42,7 +42,6 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -71,7 +70,6 @@ fun NumberInput(
     onEntryComplete: (() -> Unit)? = null,
     onBackspaceWhenEmpty: (() -> Unit)? = null,
     focusRequester: FocusRequester = remember { FocusRequester() },
-    inputTestTag: String = "",
     contentDescr: String = "",
 ) {
     val localFocusManager = LocalFocusManager.current
@@ -101,7 +99,6 @@ fun NumberInput(
     Row {
         BasicTextField(
             modifier = modifier
-                .testTag(inputTestTag)
                 .semantics {
                     contentDescription = contentDescr
                 }
@@ -284,7 +281,6 @@ private fun NumberInputPreview() {
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
             },
-            inputTestTag = "NumberInputTestTag"
         )
     }
 }
