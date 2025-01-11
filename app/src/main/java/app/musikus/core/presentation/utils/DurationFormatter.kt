@@ -182,9 +182,10 @@ fun getDurationString(
                         hours > 0 -> "${hours + 1} hours"
                         // if the duration is less than one hour but still positive, show the number of begun minutes
                         duration.isPositive() -> "${minutes + 1} minutes"
-                    // if duration is zero or negative, throw an error
-                    else -> throw (IllegalArgumentException("Duration must be positive"))
-                })
+                        // if duration is zero or negative, throw an error
+                        else -> throw (IllegalArgumentException("Duration must be positive"))
+                    }
+                )
             }
 
             DurationFormat.PRETTY_APPROX_SHORT -> {
@@ -196,9 +197,10 @@ fun getDurationString(
                         hours > 0 -> "${hours + 1}h"
                         // if the duration is less than one hour but still positive, show the number of begun minutes
                         duration.isPositive() -> "${minutes + 1}m"
-                    // if the duration is zero or negative, throw an error
-                    else -> throw (IllegalArgumentException("Duration must be positive"))
-                })
+                        // if the duration is zero or negative, throw an error
+                        else -> throw (IllegalArgumentException("Duration must be positive"))
+                    }
+                )
             }
         }
     }

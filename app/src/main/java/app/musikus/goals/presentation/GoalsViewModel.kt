@@ -36,13 +36,16 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * ViewModel state for the dialog which is displayed when adding or changing a goal.
+ */
+
+/**
+ * ViewModel state container for the dialog
+ */
 data class GoalDialogData(
-    val target: Duration = 0.seconds,
-    val periodInPeriodUnits: Int = 1,
-    val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
-    val goalType: GoalType = GoalType.DEFAULT,
+    val initialTarget: Duration = 0.seconds,
     val oneShot: Boolean = false,
-    val selectedLibraryItems: List<LibraryItem> = emptyList(),
 )
 
 @HiltViewModel
@@ -177,9 +180,11 @@ class GoalsViewModel @Inject constructor(
 
         GoalsAddOrEditDialogUiState(
             mode = if (goalToEditId == null) DialogMode.ADD else DialogMode.EDIT,
-            dialogData = dialogData,
             goalToEditId = goalToEditId,
             libraryItems = items,
+            initialTargetHours = dialogData.initialTarget.inWholeHours.toInt(),
+            initialTargetMinutes = dialogData.initialTarget.inWholeMinutes.toInt() % 60,
+            oneShotGoal = dialogData.oneShot,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -290,16 +295,18 @@ class GoalsViewModel @Inject constructor(
 
             is GoalsUiEvent.ClearActionMode -> clearActionMode()
 
+            /**
+             * Event handler for changes within the dialogs
+             */
             is GoalsUiEvent.DialogUiEvent -> {
                 when (event.dialogEvent) {
-                    is GoalDialogUiEvent.TargetChanged -> onTargetChanged(event.dialogEvent.target)
-                    is GoalDialogUiEvent.PeriodChanged -> onPeriodChanged(event.dialogEvent.period)
-                    is GoalDialogUiEvent.PeriodUnitChanged -> onPeriodUnitChanged(event.dialogEvent.periodUnit)
-                    is GoalDialogUiEvent.GoalTypeChanged -> onGoalTypeChanged(event.dialogEvent.goalType)
-                    is GoalDialogUiEvent.LibraryItemsSelected -> onLibraryItemsChanged(
-                        event.dialogEvent.selectedLibraryItems
+                    is GoalDialogUiEvent.Confirm -> onDialogConfirm(
+                        target = event.dialogEvent.target,
+                        period = event.dialogEvent.period,
+                        periodUnit = event.dialogEvent.periodUnit,
+                        goalType = event.dialogEvent.goalType,
+                        selectedLibraryItems = event.dialogEvent.selectedLibraryItems
                     )
-                    is GoalDialogUiEvent.Confirm -> onDialogConfirm()
                     is GoalDialogUiEvent.Dismiss -> clearDialog()
                 }
             }
@@ -338,7 +345,7 @@ class GoalsViewModel @Inject constructor(
         _goalToEditId.update { goalToEdit.description.description.id }
         _dialogData.update {
             GoalDialogData(
-                target = goalToEdit.instance.target,
+                initialTarget = goalToEdit.instance.target,
             )
         }
         clearActionMode()
@@ -393,7 +400,7 @@ class GoalsViewModel @Inject constructor(
                 _goalToEditId.update { descriptionId }
                 _dialogData.update {
                     GoalDialogData(
-                        target = goal.instance.target,
+                        initialTarget = goal.instance.target,
                     )
                 }
             }
@@ -406,53 +413,39 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    private fun onTargetChanged(target: Duration) {
-        _dialogData.update { it?.copy(target = target) }
-    }
-
-    private fun onPeriodChanged(period: Int) {
-        _dialogData.update { it?.copy(periodInPeriodUnits = period) }
-    }
-
-    private fun onPeriodUnitChanged(unit: GoalPeriodUnit) {
-        _dialogData.update { it?.copy(periodUnit = unit) }
-    }
-
-    private fun onGoalTypeChanged(type: GoalType) {
-        _dialogData.update { it?.copy(goalType = type) }
-    }
-
-    private fun onLibraryItemsChanged(items: List<LibraryItem>) {
-        _dialogData.update { it?.copy(selectedLibraryItems = items) }
-    }
-
     private fun clearDialog() {
         _dialogData.update { null }
         _goalToEditId.update { null }
     }
 
-    private fun onDialogConfirm() {
+    private fun onDialogConfirm(
+        target: Duration,
+        period: Int,
+        periodUnit: GoalPeriodUnit,
+        goalType: GoalType,
+        selectedLibraryItems: List<LibraryItem>
+    ) {
         val dialogData = _dialogData.value ?: return
         viewModelScope.launch {
             _goalToEditId.value?.let { goalToEditId ->
                 goalsUseCases.edit(
                     descriptionId = goalToEditId,
                     instanceUpdateAttributes = GoalInstanceUpdateAttributes(
-                        target = dialogData.target,
+                        target = target,
                     ),
                 )
             } ?: goalsUseCases.add(
                 GoalDescriptionCreationAttributes(
-                    type = dialogData.goalType,
+                    type = goalType,
                     repeat = !dialogData.oneShot,
-                    periodInPeriodUnits = dialogData.periodInPeriodUnits,
-                    periodUnit = dialogData.periodUnit,
+                    periodInPeriodUnits = period,
+                    periodUnit = periodUnit,
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = dialogData.target,
+                    target = target,
                 ),
-                libraryItemIds = if (dialogData.goalType == GoalType.ITEM_SPECIFIC) {
-                    dialogData.selectedLibraryItems.map { it.id }
+                libraryItemIds = if (goalType == GoalType.ITEM_SPECIFIC) {
+                    selectedLibraryItems.map { it.id }
                 } else {
                     emptyList()
                 }

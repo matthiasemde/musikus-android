@@ -18,9 +18,18 @@
     <string name="goals_goal_progress_type_time">Time</string>
     <string name="goals_goal_progress_type_session_count">Sessions</string>
 
-    <string name="goals_goal_period_unit_day">Day</string>
-    <string name="goals_goal_period_unit_week">Week</string>
-    <string name="goals_goal_period_unit_month">Month</string>
+    <plurals name="goals_goal_period_unit_day">
+        <item quantity="one">Day</item>
+        <item quantity="other">Days</item>
+    </plurals>
+    <plurals name="goals_goal_period_unit_week">
+        <item quantity="one">Week</item>
+        <item quantity="other">Weeks</item>
+    </plurals>
+    <plurals name="goals_goal_period_unit_month">
+        <item quantity="one">Month</item>
+        <item quantity="other">Months</item>
+    </plurals>
 
     <plurals name="goals_goal_subtitle_day">
         <item quantity="one">in one day</item>
@@ -64,14 +73,22 @@
     <!-- GoalDialog -->
     <string name="goals_goal_dialog_title">Create a new goal</string>
     <string name="goals_goal_dialog_title_edit">Edit goal target</string>
+    <string name="goals_goal_dialog_target_description">Target:</string>
+    <string name="goals_goal_dialog_period_description">Period:</string>
     <string name="goals_goal_dialog_item_selector_placeholder">Select a library item</string>
     <string name="goals_goal_dialog_item_selector_description">Select library item</string>
     <string name="goals_goal_dialog_item_selector_no_items">No items in your library.</string>
     <string name="goals_goal_dialog_confirm">Create</string>
     <string name="goals_goal_dialog_confirm_edit">Edit</string>
+    <string name="goals_goal_dialog_start_annotation_day">starting today</string>
+    <string name="goals_goal_dialog_start_annotation_week">starting this week</string>
+    <string name="goals_goal_dialog_start_annotation_month">starting this month</string>
+    <string name="goals_goal_dialog_goal_type_description">Items counting towards this goal:</string>
 
     <!-- PeriodInput -->
-    <string name="goals_goal_dialog_period_input_prefix">in</string>
+    <string name="goals_goal_dialog_period_input_prefix">Period</string>
     <string name="goals_goal_dialog_period_input_description">Select period unit</string>
+    <string name="goals_goal_dialog_period_input_content_description">Period unit input</string>
+    <string name="goals_goal_dialog_period_amount_content_description">Period amount input</string>
 
 </resources>

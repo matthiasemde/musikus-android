@@ -13,11 +13,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddToPhotos
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
@@ -27,10 +32,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -46,7 +47,9 @@ import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
@@ -77,6 +80,10 @@ fun LibraryFolderDialog(
                         DialogMode.EDIT -> R.string.library_folder_dialog_title_edit
                     }
                 ),
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.CreateNewFolder)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
+                }
             )
             Column {
                 OutlinedTextField(
@@ -126,8 +133,6 @@ fun LibraryItemDialog(
     uiState: LibraryItemDialogUiState,
     eventHandler: LibraryItemDialogUiEventHandler
 ) {
-    var folderSelectorExpanded by remember { mutableStateOf(false) }
-
     Dialog(onDismissRequest = { eventHandler(LibraryItemDialogUiEvent.Dismissed) }) {
         Column(
             modifier = Modifier
@@ -138,6 +143,10 @@ fun LibraryItemDialog(
                 title = when (uiState.mode) {
                     DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_title)
                     DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_title_edit)
+                },
+                icon = when (uiState.mode) {
+                    DialogMode.ADD -> UiIcon.DynamicIcon(Icons.Default.AddToPhotos)
+                    DialogMode.EDIT -> UiIcon.DynamicIcon(Icons.Default.Edit)
                 }
             )
             Column {
@@ -158,16 +167,14 @@ fun LibraryItemDialog(
                     singleLine = true,
                 )
                 if (uiState.folders.isNotEmpty()) {
+                    Spacer(Modifier.height(MaterialTheme.spacing.medium))
+
+                    // Folder selection spinner
                     SelectionSpinner(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .padding(horizontal = 24.dp),
-                        expanded = folderSelectorExpanded,
-                        label = {
-                            Text(
-                                text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
-                            )
-                        },
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        label = { Text(
+                            text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
+                        ) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Folder,
@@ -180,7 +187,8 @@ fun LibraryItemDialog(
                         options = uiState.folders.map { folder ->
                             UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
                         },
-                        selected = UUIDSelectionSpinnerOption(
+                        // pre-select the folder of the item or show "no folder"
+                        selectedOption = UUIDSelectionSpinnerOption(
                             id = uiState.itemData.folderId,
                             name = uiState.folders.firstOrNull {
                                 it.id == uiState.itemData.folderId
@@ -188,6 +196,7 @@ fun LibraryItemDialog(
                                 UiText.DynamicString(it)
                             } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
                         ),
+                        // show "no folder" as a special option inside the spinner separated from the other folders
                         specialOption = UUIDSelectionSpinnerOption(
                             null,
                             UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
@@ -196,15 +205,15 @@ fun LibraryItemDialog(
                             id = R.string.library_item_dialog_folder_selector_description
                         ),
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
-                        onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
                             eventHandler(
                                 LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id)
                             )
-                            folderSelectorExpanded = false
                         },
                     )
                 }
+
+                // Color picker
                 Row(
                     modifier = Modifier
                         .padding(top = 24.dp)
