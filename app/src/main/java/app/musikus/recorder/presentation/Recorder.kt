@@ -191,8 +191,8 @@ class Recorder(
         return ContentValues().apply {
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
             put(MediaStore.Audio.Media.ALBUM, context.getString(R.string.recorder_content_values_album))
-            put(MediaStore.Audio.Media.DATE_ADDED, time.toString())
-            put(MediaStore.Audio.Media.DATE_MODIFIED, time.toString())
+            put(MediaStore.Audio.Media.DATE_ADDED, time.toEpochSecond())
+            put(MediaStore.Audio.Media.DATE_MODIFIED, time.toEpochSecond())
             put(MediaStore.Audio.Media.IS_MUSIC, 1)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
