@@ -94,7 +94,7 @@ fun HelpScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(onClick = { eventHandler(HelpUiEvent.ShowAnnouncementDialog) }) {
-                    Text("Show Announcement Dialog")
+                    Text(stringResource(R.string.menu_help_show_announcement))
                 }
             }
             HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
