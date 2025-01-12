@@ -13,10 +13,10 @@ import android.os.Bundle
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Settings
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.toRoute
@@ -247,11 +247,11 @@ fun Screen.MainMenuEntry.getDisplayData(): DisplayData {
     return when (this) {
         is Screen.MainMenuEntry.Settings -> DisplayData(
             title = UiText.StringResource(R.string.components_main_menu_item_settings),
-            icon = UiIcon.DynamicIcon(Icons.Outlined.Settings),
+            icon = UiIcon.DynamicIcon(Icons.Filled.Settings),
         )
         is Screen.MainMenuEntry.About -> DisplayData(
             title = UiText.StringResource(R.string.components_main_menu_item_about),
-            icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
+            icon = UiIcon.DynamicIcon(Icons.Filled.Info),
         )
         is Screen.MainMenuEntry.Help -> DisplayData(
             title = UiText.StringResource(R.string.components_main_menu_item_help),

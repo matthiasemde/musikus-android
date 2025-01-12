@@ -60,6 +60,7 @@
 
     <!-- Help -->
     <string name="menu_help_title">Help</string>
+    <string name="menu_help_show_announcement">Show last Announcement</string>
     <string name="menu_help_tips_title">Tips and tricks</string>
     <string name="menu_help_tips_text">Have you tried…</string>
     <string-array name="menu_help_tips_bulletlist">

@@ -8,13 +8,22 @@
 
 package app.musikus.core.presentation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,6 +32,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -31,9 +45,17 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import app.musikus.R
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.MainMenu
+import app.musikus.core.presentation.components.fadingEdge
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusTheme
+import app.musikus.core.presentation.theme.MusikusThemedPreview
+import app.musikus.core.presentation.theme.spacing
+import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,8 +69,9 @@ fun MainScreen(
 
     // This line ensures, that the app is only drawn when the proper theme is loaded
     // TODO: make sure this is the right way to do it
-    val theme = uiState.activeTheme ?: return
-    val colorScheme = uiState.activeColorScheme ?: return
+    val themeUiState = uiState.themeUiState
+    val theme = themeUiState.activeTheme ?: return
+    val colorScheme = themeUiState.activeColorScheme ?: return
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute by remember {
@@ -131,5 +154,102 @@ fun MainScreen(
                 )
             }
         }
+
+        // Announcement dialog
+        if (uiState.showAnnouncement) {
+            AnnouncementDialog(
+                onDismissRequest = { eventHandler(MainUiEvent.DismissAnnouncement) }
+            )
+        }
+    }
+}
+
+@Composable
+fun AnnouncementDialog(
+    onDismissRequest: () -> Unit,
+) {
+    Dialog(
+        properties = DialogProperties(dismissOnClickOutside = false),
+        onDismissRequest = onDismissRequest
+    ) {
+        Surface(
+            modifier = Modifier.padding(vertical = 64.dp),
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Column {
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.large)
+                        .fadingEdge(scrollState)
+                        .verticalScroll(scrollState)
+                        .weight(1f, fill = false)
+                ) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+
+                    // Heading 1
+                    Text(
+                        style = MaterialTheme.typography.headlineMedium,
+                        text = stringResource(id = R.string.core_announcement_heading_1)
+                    )
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    // Paragraph 1
+                    Text(text = stringResource(id = R.string.core_announcement_paragraph_1))
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    // Heading 2
+                    Text(
+                        style = MaterialTheme.typography.titleLarge,
+                        text = stringResource(id = R.string.core_announcement_heading_2)
+                    )
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                    // Paragraph 2
+                    Text(text = stringResource(id = R.string.core_announcement_paragraph_2))
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    // Heading 3
+                    Text(
+                        style = MaterialTheme.typography.titleLarge,
+                        text = stringResource(id = R.string.core_announcement_heading_3)
+                    )
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                    // Paragraph 3
+                    Text(text = stringResource(id = R.string.core_announcement_paragraph_3))
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                    // Paragraph 4
+                    Text(text = stringResource(id = R.string.core_announcement_paragraph_4))
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                    // Paragraph 5
+                    Text(text = stringResource(id = R.string.core_announcement_paragraph_5))
+                }
+
+                DialogActions(
+                    confirmButtonText = stringResource(id = R.string.core_announcement_confirm),
+                    onConfirmHandler = onDismissRequest,
+                )
+            }
+        }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewAnnouncementDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme) {
+        AnnouncementDialog(onDismissRequest = {})
     }
 }
