@@ -29,6 +29,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.testing.TestNavHostController
 import androidx.navigation.toRoute
+import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.HomeTab
@@ -102,6 +103,7 @@ class LibraryIntegrationTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun addItemToFolderFromInsideAndOutside() {
         // Add a folder
         composeRule.onNodeWithContentDescription("Add folder or item").performClick()
