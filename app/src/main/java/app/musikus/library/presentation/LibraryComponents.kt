@@ -27,9 +27,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -78,11 +78,7 @@ fun LibraryFolderComponent(
         onLongClick = onLongClick,
         shape = MaterialTheme.shapes.large,
     ) {
-        Surface(
-            modifier = Modifier
-                .size(150.dp),
-            color = colorScheme.surfaceContainer,
-        ) {
+        ElevatedCard(Modifier.size(150.dp)) {
             Column(
                 modifier = Modifier
                     .padding(8.dp)
