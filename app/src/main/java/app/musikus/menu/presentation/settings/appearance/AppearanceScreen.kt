@@ -85,7 +85,13 @@ fun AppearanceScreen(
 
         Column(Modifier.padding(paddingValues)) {
             for (item in appearanceMenuItems) {
-                TwoLiner(data = item)
+                TwoLiner(
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.spacing.large,
+                        vertical = MaterialTheme.spacing.medium
+                    ),
+                    data = item
+                )
             }
         }
     }
@@ -216,15 +222,18 @@ fun AppearanceScreen(
                             )
                             Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                             TwoLiner(
-                                data = TwoLinerData(
-                                    firstLine = UiText.DynamicString(selection.label.asString()),
-                                    secondLine = UiText.DynamicString(selection.description.asString())
-                                )
+                                modifier = Modifier.padding(
+                                horizontal = MaterialTheme.spacing.large,
+                                vertical = MaterialTheme.spacing.medium
+                            ),
+                            data = TwoLinerData(
+                                firstLine = UiText.DynamicString(selection.label.asString()),
+                                secondLine = UiText.DynamicString(selection.description.asString())
                             )
-                        }
+                        )
                     }
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))}
             }
         }
     }

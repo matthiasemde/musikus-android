@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.menu.presentation.settings
@@ -102,7 +102,13 @@ fun SettingsScreen(
             ) {
                 for (group in settingsItems) {
                     for (settingsItem in group) {
-                        TwoLiner(data = settingsItem)
+                        TwoLiner(
+                            modifier = Modifier.padding(
+                                horizontal = MaterialTheme.spacing.large,
+                                vertical = MaterialTheme.spacing.medium
+                            ),
+                            data = settingsItem
+                        )
                     }
                     if (group != settingsItems.last()) {
                         HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
