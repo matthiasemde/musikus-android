@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -50,8 +51,12 @@ import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.fadingEdge
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusTheme
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.coroutines.launch
 
 @Composable
@@ -177,12 +182,12 @@ fun AnnouncementDialog(
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = MaterialTheme.spacing.medium)
+                        .padding(horizontal = MaterialTheme.spacing.large)
                         .fadingEdge(scrollState)
                         .verticalScroll(scrollState)
                         .weight(1f, fill = false)
                 ) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
 
                     // Heading 1
                     Text(
@@ -190,7 +195,7 @@ fun AnnouncementDialog(
                         text = stringResource(id = R.string.core_announcement_heading_1)
                     )
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                     // Paragraph 1
                     Text(text = stringResource(id = R.string.core_announcement_paragraph_1))
@@ -238,5 +243,15 @@ fun AnnouncementDialog(
                 )
             }
         }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewAnnouncementDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme) {
+        AnnouncementDialog(onDismissRequest = {})
     }
 }
