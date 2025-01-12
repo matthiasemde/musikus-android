@@ -42,11 +42,11 @@ val LightColorScheme = lightColorScheme(
     onErrorContainer = Color(0xFF410002),
 
     // Background
-    background = Color(0xFFfff8f4),
+    background = Color(0xFFFFF8F4),
     onBackground = Color(0xFF1F1B16),
 
     // Surface Colors
-    surface = Color(0xFFfff8f4),
+    surface = Color(0xFFFFF8F4),
     onSurface = Color(0xFF1F1B16),
 
     surfaceDim = Color(0xFFEBE7EB),
