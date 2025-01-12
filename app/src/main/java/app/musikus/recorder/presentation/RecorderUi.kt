@@ -671,8 +671,8 @@ private fun DialogSaveRecording(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
             Column {
                 Text(
@@ -708,8 +708,8 @@ private fun DialogDeleteRecording(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
                 Text(

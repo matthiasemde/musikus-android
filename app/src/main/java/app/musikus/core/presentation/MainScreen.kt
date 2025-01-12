@@ -175,7 +175,8 @@ fun AnnouncementDialog(
     ) {
         Surface(
             modifier = Modifier.padding(vertical = 64.dp),
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
                 val scrollState = rememberScrollState()

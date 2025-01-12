@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.menu.presentation.settings.appearance
@@ -18,11 +18,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -94,41 +94,44 @@ fun AppearanceScreen(
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
         ) {
-            Card(
+            Surface(
                 shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = MaterialTheme.spacing.medium)
-                        .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
-                ) {
-                    Text(
-                        text = stringResource(R.string.menu_settings_appearance_language_dialog_title),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-                Text(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                    text = htmlResource(R.string.menu_settings_appearance_language_dialog_text),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.spacing.large,
-                            vertical = MaterialTheme.spacing.medium
-                        ),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(
-                        onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = MaterialTheme.spacing.medium)
+                            .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                     ) {
-                        Text(text = stringResource(R.string.menu_settings_appearance_language_dialog_confirm))
+                        Text(
+                            text = stringResource(R.string.menu_settings_appearance_language_dialog_title),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    Text(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
+                        text = htmlResource(R.string.menu_settings_appearance_language_dialog_text),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = MaterialTheme.spacing.large,
+                                vertical = MaterialTheme.spacing.medium
+                            ),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
+                        ) {
+                            Text(text = stringResource(R.string.menu_settings_appearance_language_dialog_confirm))
+                        }
                     }
                 }
             }
@@ -139,38 +142,41 @@ fun AppearanceScreen(
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideThemeDialog) }
         ) {
-            Card(
+            Surface(
                 shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = MaterialTheme.spacing.medium)
-                        .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
-                ) {
-                    Text(
-                        text = stringResource(R.string.menu_settings_appearance_theme_dialog_title),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-                for (selection in ThemeSelections.entries) {
+                Column {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
-                            .padding(horizontal = MaterialTheme.spacing.medium),
-                        verticalAlignment = Alignment.CenterVertically,
+                            .padding(top = MaterialTheme.spacing.medium)
+                            .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                     ) {
-                        RadioButton(
-                            selected = uiState.themeUiState.currentTheme == selection,
-                            onClick = { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
+                        Text(
+                            text = stringResource(R.string.menu_settings_appearance_theme_dialog_title),
+                            style = MaterialTheme.typography.headlineSmall
                         )
-                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                        Text(text = selection.label.asString())
                     }
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    for (selection in ThemeSelections.entries) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
+                                .padding(horizontal = MaterialTheme.spacing.medium),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = uiState.themeUiState.currentTheme == selection,
+                                onClick = { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
+                            )
+                            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                            Text(text = selection.label.asString())
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             }
         }
     }
@@ -179,43 +185,46 @@ fun AppearanceScreen(
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideColorSchemeDialog) }
         ) {
-            Card(
+            Surface(
                 shape = MaterialTheme.shapes.extraLarge,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = MaterialTheme.spacing.medium)
-                        .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
-                ) {
-                    Text(
-                        text = stringResource(R.string.menu_settings_appearance_color_scheme_dialog_title),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-                for (selection in ColorSchemeSelections.entries) {
+                Column {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
-                            .padding(horizontal = MaterialTheme.spacing.medium),
-                        verticalAlignment = Alignment.CenterVertically,
+                            .padding(top = MaterialTheme.spacing.medium)
+                            .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                     ) {
-                        RadioButton(
-                            selected = uiState.colorSchemeUiState.currentColorScheme == selection,
-                            onClick = { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
-                        )
-                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                        TwoLiner(
-                            data = TwoLinerData(
-                                firstLine = UiText.DynamicString(selection.label.asString()),
-                                secondLine = UiText.DynamicString(selection.description.asString())
-                            )
+                        Text(
+                            text = stringResource(R.string.menu_settings_appearance_color_scheme_dialog_title),
+                            style = MaterialTheme.typography.headlineSmall
                         )
                     }
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    for (selection in ColorSchemeSelections.entries) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
+                                .padding(horizontal = MaterialTheme.spacing.medium),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = uiState.colorSchemeUiState.currentColorScheme == selection,
+                                onClick = { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
+                            )
+                            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                            TwoLiner(
+                                data = TwoLinerData(
+                                    firstLine = UiText.DynamicString(selection.label.asString()),
+                                    secondLine = UiText.DynamicString(selection.description.asString())
+                                )
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             }
         }
     }
