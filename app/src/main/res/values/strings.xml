@@ -23,7 +23,7 @@
 
     <string name="core_announcement_confirm">Awesome!</string>
     <string name="core_announcement_heading_1">Welcome to Musikus!</string>
-    <string name="core_announcement_paragraph_1">Thank you for joining the open beta of Musikus! We\'re thrilled to have you on this journey as we shape the future of music practice.</string>
+    <string name="core_announcement_paragraph_1">Thank you for joining the open beta of Musikus! We\'re thrilled to have you on this journey with us.</string>
     <string name="core_announcement_heading_2">A Work in Progress</string>
     <string name="core_announcement_paragraph_2">As an open beta, Musikus is still in development, and you may encounter some bugs or incomplete features. Your feedback is invaluable in helping us refine the experience, so please don\'t hesitate to share your thoughts with us!</string>
     <string name="core_announcement_heading_3">A Legacy Continued</string>
