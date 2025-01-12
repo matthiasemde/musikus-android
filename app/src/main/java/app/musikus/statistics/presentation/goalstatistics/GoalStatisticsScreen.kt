@@ -40,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.text.style.TextOverflow
@@ -226,9 +225,7 @@ fun GoalStatisticsGoalSelector(
                             progress = { animatedProgress },
                             modifier = Modifier.matchParentSize(),
                             color = color,
-                            strokeCap = StrokeCap.Round,
                             drawStopIndicator = {},
-                            gapSize = 0.dp,
                         )
                     }
                     AnimatedVisibility(
