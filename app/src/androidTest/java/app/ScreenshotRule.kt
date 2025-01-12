@@ -9,7 +9,6 @@
 package app
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -55,7 +54,6 @@ class ScreenshotRule(
 
         val screenshotName = "${description.methodName}.png"
         val screenshotFile = File(testClassDir, screenshotName)
-        Log.d("ComposeScreenshotRule", "Saving screenshot to ${screenshotFile.absolutePath}")
 
         // Capture the screenshot and save it
         composeTestRule.onRoot().captureToImage().asAndroidBitmap().apply {
@@ -63,7 +61,5 @@ class ScreenshotRule(
                 compress(Bitmap.CompressFormat.PNG, 100, outputStream)
             }
         }
-
-//        runBlocking { delay(100000) }
     }
 }
