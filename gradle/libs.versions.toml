@@ -12,6 +12,7 @@ androidx-test-runner = "1.6.1"
 androidx-test-rules = "1.6.1"
 androidx-test-espresso = "3.6.1"
 androidx-test-ext-junit = "1.2.1"
+androidx-test-orchestrator = "1.5.1"
 androidx-hilt-navigation-compose = "1.2.0"
 # @keep
 compileSdk = "35"
@@ -83,6 +84,7 @@ androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "a
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 androidx-test-rules = { module = "androidx.test:rules", version.ref = "androidx-test-rules" }
 androidx-test-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "androidx-navigation" }
+androidx-test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "androidx-test-orchestrator" }
 core-jdk-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "jdk-desugar" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt-formatting" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "dagger-hilt" }

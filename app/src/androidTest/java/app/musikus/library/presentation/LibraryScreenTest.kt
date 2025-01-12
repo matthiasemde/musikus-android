@@ -29,13 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
+import app.ScreenshotRule
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.MainViewModel
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.library.domain.usecase.LibraryUseCases
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -46,11 +50,16 @@ import kotlin.time.Duration.Companion.seconds
 class LibraryScreenTest {
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
+    @Inject lateinit var libraryUseCases: LibraryUseCases
+
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     @Before
     fun setUp() {
@@ -136,19 +145,22 @@ class LibraryScreenTest {
     }
 
     @Test
-    fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() {
+    fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() = runTest {
         val namesAndColors = listOf(
             "TestItem3" to 3,
             "TestItem1" to 9,
             "TestItem2" to 5,
         )
 
-        namesAndColors.forEach { (name, color) ->
+        namesAndColors.forEachIndexed { index, (name, color) ->
             composeRule.onNodeWithContentDescription("Add folder or item").performClick()
             composeRule.onNodeWithContentDescription("Add item").performClick()
             composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Color $color").performClick()
             composeRule.onNodeWithContentDescription("Create").performClick()
+
+            // Suspend execution until the item is added to avoid race conditions
+            libraryUseCases.getAllItems().first { it.size == index + 1 }
 
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }

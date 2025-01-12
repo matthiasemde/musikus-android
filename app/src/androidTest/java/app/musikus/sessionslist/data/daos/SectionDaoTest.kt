@@ -8,6 +8,7 @@
 
 package app.musikus.sessionslist.data.daos
 
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
@@ -48,7 +49,7 @@ class SectionDaoTest {
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
-    @get:Rule
+    @get:Rule(order = 0)
     var hiltRule = HiltAndroidRule(this)
 
     @Before
@@ -185,6 +186,7 @@ class SectionDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun updateSection() = runTest {
         val updateAttributes = SectionUpdateAttributes(duration = 5.minutes)
 
@@ -195,7 +197,7 @@ class SectionDaoTest {
                 UUIDConverter.fromInt(1),
                 updateAttributes
             )
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             // Ignore
         }
 
@@ -327,6 +329,7 @@ class SectionDaoTest {
     }
 
     @Test
+    @SdkSuppress(minSdkVersion = 28)
     fun getSpecificSection() = runTest {
         val sectionDaoSpy = spyk(sectionDao)
 

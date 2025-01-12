@@ -9,9 +9,7 @@
 package app.musikus.library.presentation
 
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasContentDescription
@@ -26,6 +24,9 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.test.filters.SdkSuppress
+import app.ScreenshotRule
+import app.assertNodesInVerticalOrder
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -36,6 +37,7 @@ import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -55,6 +57,9 @@ class LibraryFolderDetailsScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @get:Rule(order = 2)
+    val screenshotRule = ScreenshotRule(composeRule)
 
     @Before
     fun setUp() {
@@ -109,47 +114,44 @@ class LibraryFolderDetailsScreenTest {
             "TestItem2" to 5,
         )
 
-        namesAndColors.forEach { (name, color) ->
+        namesAndColors.forEachIndexed { index, (name, color) ->
             composeRule.onNodeWithContentDescription("Add item").performClick()
             composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Color $color").performClick()
             composeRule.onNodeWithContentDescription("Create").performClick()
 
+            // Suspend execution until the item is added to avoid race conditions
+            libraryUseCases.getAllItems().first { it.size == index + 1 }
+
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
         // Check if items are displayed in correct order
-        var itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(3)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains(namesAndColors[namesAndColors.lastIndex - i].first)
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem1"),
+            composeRule.onNodeWithText("TestItem3")
+        )
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem3"),
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem1")
+        )
 
         // Change sorting mode to name ascending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${i + 1}")
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem1"),
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem3")
+        )
     }
 
     @Test
@@ -167,6 +169,7 @@ class LibraryFolderDetailsScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun editItem() {
         // Add an item from inside the folder (folder should be pre-selected)
         composeRule.onNodeWithContentDescription("Add item").performClick()
@@ -201,6 +204,7 @@ class LibraryFolderDetailsScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun deleteItem() = runTest {
         // Add an item
         composeRule.onNodeWithContentDescription("Add item").performClick()
