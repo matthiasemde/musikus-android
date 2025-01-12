@@ -11,9 +11,7 @@ package app.musikus.library.presentation
 import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
@@ -31,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
+import app.assertNodesInHorizontalOrder
+import app.assertNodesInVerticalOrder
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.MainActivity
@@ -147,6 +147,7 @@ class LibraryScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() = runTest {
         val namesAndColors = listOf(
             "TestItem3" to 3,
@@ -168,87 +169,79 @@ class LibraryScreenTest {
         }
 
         // Check if items are displayed in correct order
-        var itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains(namesAndColors[namesAndColors.lastIndex - i].first)
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem1"),
+            composeRule.onNodeWithText("TestItem3"),
+        )
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${namesAndColors.size - i}")
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem3"),
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem1"),
+        )
 
         // Change sorting mode to name ascending
         clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
-
-        itemNodes.assertCountEquals(namesAndColors.size)
-
-        for (i in namesAndColors.indices) {
-            itemNodes[i].assertTextContains("TestItem${i + 1}")
-        }
+        assertNodesInVerticalOrder(
+            composeRule.onNodeWithText("TestItem1"),
+            composeRule.onNodeWithText("TestItem2"),
+            composeRule.onNodeWithText("TestItem3"),
+        )
     }
 
     @Test
-    fun saveNewFolders_checkDefaultSortingThenNameSortingDescAndAsc() {
+    @SdkSuppress(excludedSdks = [29])
+    fun saveNewFolders_checkDefaultSortingThenNameSortingDescAndAsc() = runTest {
         val names = listOf(
             "TestFolder2",
             "TestFolder3",
             "TestFolder1",
         )
 
-        names.forEach { name ->
+        names.forEachIndexed { index, name ->
             composeRule.onNodeWithContentDescription("Add folder or item").performClick()
             composeRule.onNodeWithContentDescription("Add folder").performClick()
             composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Create").performClick()
 
+            // Suspend execution until the folder is added to avoid race conditions
+            libraryUseCases.getSortedFolders().first { it.size == index + 1 }
+
             fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
-        // Check if items are displayed in correct order
-        var itemNodes = composeRule.onAllNodes(hasText("TestFolder", substring = true))
-
-        itemNodes.assertCountEquals(names.size)
-
-        for (i in names.indices) {
-            itemNodes[i].assertTextContains(names[names.lastIndex - i])
-        }
+        // Check if folders are displayed in correct order
+        assertNodesInHorizontalOrder(
+            composeRule.onNodeWithText("TestFolder1"),
+            composeRule.onNodeWithText("TestFolder3"),
+            composeRule.onNodeWithText("TestFolder2"),
+        )
 
         // Change sorting mode to name descending
         clickSortMode("folders", "Name")
 
-        // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestFolder", substring = true))
-
-        itemNodes.assertCountEquals(names.size)
-
-        for (i in names.indices) {
-            itemNodes[i].assertTextContains("TestFolder${names.size - i}")
-        }
+        // Check if folders are displayed in correct order
+        assertNodesInHorizontalOrder(
+            composeRule.onNodeWithText("TestFolder3"),
+            composeRule.onNodeWithText("TestFolder2"),
+            composeRule.onNodeWithText("TestFolder1"),
+        )
 
         // Change sorting mode to name ascending
         clickSortMode("folders", "Name")
 
-        // Check if items are displayed in correct order
-        itemNodes = composeRule.onAllNodes(hasText("TestFolder", substring = true))
-
-        itemNodes.assertCountEquals(names.size)
-
-        for (i in names.indices) {
-            itemNodes[i].assertTextContains("TestFolder${i + 1}")
-        }
+        // Check if folders are displayed in correct order
+        assertNodesInHorizontalOrder(
+            composeRule.onNodeWithText("TestFolder1"),
+            composeRule.onNodeWithText("TestFolder2"),
+            composeRule.onNodeWithText("TestFolder3"),
+        )
     }
 }
