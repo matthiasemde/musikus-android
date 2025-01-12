@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
@@ -90,6 +91,7 @@ class LibraryScreenTest {
     }
 
     @Test
+    @SdkSuppress(excludedSdks = [29])
     fun addFolderOrItem_hintDisappears() {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
