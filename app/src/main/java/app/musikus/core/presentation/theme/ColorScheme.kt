@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde, Michael Prommersberger
  */
 
 @file:Suppress("MagicNumber")
@@ -53,16 +53,19 @@ private val md_theme_light_scrim = Color(0xFF000000)
 
 private val md_theme_dark_primary = Color(0xFFFFB955)
 private val md_theme_dark_onPrimary = Color(0xFF452B00)
+
 private val md_theme_dark_primaryContainer = Color(0xFF633F00)
 private val md_theme_dark_onPrimaryContainer = Color(0xFFD7CCC8)
 
 private val md_theme_dark_secondary = Color(0xFFDEC2A2)
 private val md_theme_dark_onSecondary = Color(0xFF3E2D16)
+
 private val md_theme_dark_secondaryContainer = Color(0xFF56432B)
 private val md_theme_dark_onSecondaryContainer = Color(0xFFFBDEBC)
 
 private val md_theme_dark_tertiary = Color(0xFF8C6038)
 private val md_theme_dark_onTertiary = Color(0xFF402D00)
+
 private val md_theme_dark_tertiaryContainer = Color(0xFF5C3D21)
 private val md_theme_dark_onTertiaryContainer = Color(0xFFD7BBA9)
 
@@ -71,21 +74,35 @@ private val md_theme_dark_errorContainer = Color(0xFF93000A)
 private val md_theme_dark_onError = Color(0xFF690005)
 private val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
 
-private val md_theme_dark_background = Color(0xFF1F1B16)
+private val md_theme_dark_background = Color(0xFF0C0A08)
 private val md_theme_dark_onBackground = Color(0xFFEAE1D9)
-private val md_theme_dark_surface = Color(0xFF1F1B16)
+
+private val md_theme_dark_surface = Color(0xFF0C0A08)
+private val md_theme_dark_onSurface = Color(0xFFEAE1D9)
+
 private val md_theme_dark_surfaceDim = Color(0xFF15110C)
 private val md_theme_dark_surfaceBright = Color(0xFF292520)
-private val md_theme_dark_onSurface = Color(0xFFEAE1D9)
+
 private val md_theme_dark_surfaceVariant = Color(0xFF4F4539)
 private val md_theme_dark_onSurfaceVariant = Color(0xFFD3C4B4)
+
+private val md_theme_dark_surfaceContainerLowest = Color(0xFF12100D)
+private val md_theme_dark_surfaceContainerLow = Color(0xFF15120F)
+private val md_theme_dark_surfaceContainerNormal = Color(0xFF181511)
+private val md_theme_dark_surfaceContainerHigh = Color(0xFF1F1B16)
+private val md_theme_dark_surfaceContainerHighest = Color(0xFF241F19)
+
 private val md_theme_dark_outline = Color(0xFF9C8F80)
+private val md_theme_dark_outlineVariant = Color(0xFF4F4539)
+
 private val md_theme_dark_inverseOnSurface = Color(0xFF1F1B16)
 private val md_theme_dark_inverseSurface = Color(0xFFEAE1D9)
 private val md_theme_dark_inversePrimary = Color(0xFF795548)
+
 private val md_theme_dark_shadow = Color(0xFF000000)
+
 private val md_theme_dark_surfaceTint = Color(0xFFFFB955)
-private val md_theme_dark_outlineVariant = Color(0xFF4F4539)
+
 private val md_theme_dark_scrim = Color(0xFF000000)
 
 val LightColorScheme = lightColorScheme(
@@ -144,6 +161,11 @@ val DarkColorScheme = darkColorScheme(
     surface = md_theme_dark_surface,
     surfaceDim = md_theme_dark_surfaceDim,
     surfaceBright = md_theme_dark_surfaceBright,
+    surfaceContainerLowest = md_theme_dark_surfaceContainerLowest,
+    surfaceContainerLow = md_theme_dark_surfaceContainerLow,
+    surfaceContainer = md_theme_dark_surfaceContainerNormal,
+    surfaceContainerHigh = md_theme_dark_surfaceContainerHigh,
+    surfaceContainerHighest = md_theme_dark_surfaceContainerHighest,
     onSurface = md_theme_dark_onSurface,
     surfaceVariant = md_theme_dark_surfaceVariant,
     onSurfaceVariant = md_theme_dark_onSurfaceVariant,
