@@ -39,6 +39,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,7 +65,17 @@ fun RatingBar(
     size: Dp = 16.dp,
     onRatingChanged: (Int) -> Unit = {}
 ) {
-    Row(modifier) {
+    val ratingBarContentDescription = stringResource(
+        id = R.string.components_rating_bar_rating_description,
+        rating,
+        total
+    )
+
+    Row(
+        modifier = modifier.semantics {
+            contentDescription = ratingBarContentDescription
+        }
+    ) {
         for (i in 1..total) {
             Icon(
                 modifier = Modifier
@@ -78,7 +90,11 @@ fun RatingBar(
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 },
-                contentDescription = null
+                contentDescription = stringResource(
+                    id = R.string.components_rating_bar_individual_rating_description,
+                    i,
+                    total
+                )
             )
         }
     }

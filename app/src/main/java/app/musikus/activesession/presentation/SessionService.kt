@@ -71,6 +71,9 @@ class SessionService : Service() {
     lateinit var useCases: ActiveSessionUseCases
     private var _timer: Timer? = null
 
+    @Inject
+    lateinit var notificationManager: NotificationManager
+
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -173,9 +176,9 @@ class SessionService : Service() {
     private fun togglePause() {
         applicationScope.launch {
             if (useCases.isSessionPaused()) {
-                useCases.resume()
+                useCases.resume(timeProvider.now())
             } else {
-                useCases.pause()
+                useCases.pause(timeProvider.now())
             }
         }
         updateNotification()
@@ -186,8 +189,7 @@ class SessionService : Service() {
     private fun updateNotification() {
         Log.d(LOG_TAG, "updateNotification")
         applicationScope.launch {
-            val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+            notificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
         }
     }
 
@@ -200,8 +202,13 @@ class SessionService : Service() {
 
         // TODO: move this logic to use case
         try {
-            val totalPracticeDurationStr =
-                getDurationString(useCases.getPracticeDuration(), DurationFormat.HMS_DIGITAL)
+            val state = useCases.getState().first()
+            check(state != null) { "State is null. Cannot create notification." }
+
+            val totalPracticeDurationStr = getDurationString(
+                useCases.computeTotalPracticeDuration(state, timeProvider.now()),
+                DurationFormat.HMS_DIGITAL
+            )
 
             val currentSectionName = useCases.getRunningItem().first()!!.name
 

@@ -8,32 +8,37 @@
 
 package app.musikus.core.domain
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
 class FakeTimeProvider : TimeProvider {
-    private var _currentDateTime = START_TIME
+    private val _clock = MutableStateFlow(START_TIME)
+    override val clock: Flow<ZonedDateTime> get() = _clock.asStateFlow()
 
     override fun now(): ZonedDateTime {
-        return _currentDateTime
+        return _clock.value
     }
 
     fun setCurrentDateTime(dateTime: ZonedDateTime) {
-        _currentDateTime = dateTime
+        _clock.update { dateTime }
     }
 
     fun moveToTimezone(newZoneId: ZoneId) {
-        _currentDateTime = _currentDateTime.withZoneSameInstant(newZoneId)
+        _clock.update { it.withZoneSameInstant(newZoneId) }
     }
 
     fun advanceTimeBy(duration: Duration) {
-        _currentDateTime = _currentDateTime.plus(duration.toJavaDuration())
+        _clock.update { it.plus(duration.toJavaDuration()) }
     }
 
     fun revertTimeBy(duration: Duration) {
-        _currentDateTime = _currentDateTime.minus(duration.toJavaDuration())
+        _clock.update { it.minus(duration.toJavaDuration()) }
     }
 
     companion object {

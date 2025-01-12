@@ -10,15 +10,16 @@ package app.musikus.activesession.di
 
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.activesession.domain.usecase.ComputeOngoingPauseDurationUseCase
+import app.musikus.activesession.domain.usecase.ComputeRunningItemDurationUseCase
+import app.musikus.activesession.domain.usecase.ComputeTotalPracticeDurationUseCase
 import app.musikus.activesession.domain.usecase.DeleteSectionUseCase
+import app.musikus.activesession.domain.usecase.GetActiveSessionStateUseCase
 import app.musikus.activesession.domain.usecase.GetCompletedSectionsUseCase
 import app.musikus.activesession.domain.usecase.GetFinalizedSessionUseCase
-import app.musikus.activesession.domain.usecase.GetOngoingPauseDurationUseCase
-import app.musikus.activesession.domain.usecase.GetRunningItemDurationUseCase
 import app.musikus.activesession.domain.usecase.GetRunningItemUseCase
 import app.musikus.activesession.domain.usecase.GetSessionStatusUseCase
 import app.musikus.activesession.domain.usecase.GetStartTimeUseCase
-import app.musikus.activesession.domain.usecase.GetTotalPracticeDurationUseCase
 import app.musikus.activesession.domain.usecase.IsSessionPausedUseCase
 import app.musikus.activesession.domain.usecase.IsSessionRunningUseCase
 import app.musikus.activesession.domain.usecase.PauseActiveSessionUseCase
@@ -26,7 +27,6 @@ import app.musikus.activesession.domain.usecase.ResetSessionUseCase
 import app.musikus.activesession.domain.usecase.ResumeActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.SelectItemUseCase
 import app.musikus.core.domain.IdProvider
-import app.musikus.core.domain.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,51 +41,41 @@ object ActiveSessionUseCasesModule {
     @Singleton
     fun provideActiveSessionUseCases(
         activeSessionRepository: ActiveSessionRepository,
-        timeProvider: TimeProvider,
         idProvider: IdProvider
     ): ActiveSessionUseCases {
-        val getOngoingPauseDurationUseCase = GetOngoingPauseDurationUseCase(
-            activeSessionRepository,
-            timeProvider
-        )
+        val computeOngoingPauseDurationUseCase = ComputeOngoingPauseDurationUseCase()
 
         val resumeUseCase = ResumeActiveSessionUseCase(
             activeSessionRepository,
-            getOngoingPauseDurationUseCase
+            computeOngoingPauseDurationUseCase
         )
 
-        val getRunningItemDurationUseCase = GetRunningItemDurationUseCase(
-            activeSessionRepository,
-            timeProvider
-        )
+        val computeRunningItemDurationUseCase = ComputeRunningItemDurationUseCase()
 
         return ActiveSessionUseCases(
+            getState = GetActiveSessionStateUseCase(activeSessionRepository),
             selectItem = SelectItemUseCase(
                 activeSessionRepository = activeSessionRepository,
-                getRunningItemDurationUseCase = getRunningItemDurationUseCase,
-                timeProvider = timeProvider,
+                computeRunningItemDuration = computeRunningItemDurationUseCase,
                 idProvider = idProvider
             ),
-            getPracticeDuration = GetTotalPracticeDurationUseCase(
-                activeSessionRepository = activeSessionRepository,
-                runningItemDurationUseCase = getRunningItemDurationUseCase
+            computeTotalPracticeDuration = ComputeTotalPracticeDurationUseCase(
+                computeRunningItemDuration = computeRunningItemDurationUseCase
             ),
             deleteSection = DeleteSectionUseCase(activeSessionRepository),
             pause = PauseActiveSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
-                getRunningItemDurationUseCase = getRunningItemDurationUseCase,
-                timeProvider = timeProvider
             ),
             resume = resumeUseCase,
-            getRunningItemDuration = getRunningItemDurationUseCase,
+            computeRunningItemDuration = computeRunningItemDurationUseCase,
             getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
-            getOngoingPauseDuration = GetOngoingPauseDurationUseCase(activeSessionRepository, timeProvider),
+            computeOngoingPauseDuration = computeOngoingPauseDurationUseCase,
             isSessionPaused = IsSessionPausedUseCase(activeSessionRepository),
             getFinalizedSession = GetFinalizedSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
-                getRunningItemDurationUseCase = getRunningItemDurationUseCase,
+                computeRunningItemDuration = computeRunningItemDurationUseCase,
                 idProvider = idProvider,
-                getOngoingPauseDurationUseCase = getOngoingPauseDurationUseCase
+                computeOngoingPauseDuration = computeOngoingPauseDurationUseCase
             ),
             getStartTime = GetStartTimeUseCase(activeSessionRepository),
             reset = ResetSessionUseCase(activeSessionRepository),
