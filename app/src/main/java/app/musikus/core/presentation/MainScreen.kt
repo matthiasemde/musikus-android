@@ -8,13 +8,10 @@
 
 package app.musikus.core.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +22,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -34,10 +32,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -169,16 +168,15 @@ fun MainScreen(
 fun AnnouncementDialog(
     onDismissRequest: () -> Unit,
 ) {
-    BoxWithConstraints {
-        Dialog(
-            onDismissRequest = onDismissRequest
+    Dialog(
+        properties = DialogProperties(dismissOnClickOutside = false),
+        onDismissRequest = onDismissRequest
+    ) {
+        Surface(
+            modifier = Modifier.padding(vertical = 64.dp),
+            shape = MaterialTheme.shapes.extraLarge
         ) {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = this.maxHeight * 0.68f)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
+            Column {
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
