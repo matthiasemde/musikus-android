@@ -137,8 +137,7 @@ fun GoalCard(
                     Surface(
                         modifier = Modifier.padding(start = 8.dp),
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 5.dp
+                        color = MaterialTheme.colorScheme.secondaryContainer,
                     ) {
                         Text(
                             modifier = Modifier.padding(8.dp),

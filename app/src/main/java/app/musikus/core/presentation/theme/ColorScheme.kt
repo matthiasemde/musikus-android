@@ -101,11 +101,11 @@ val DarkColorScheme = darkColorScheme(
     onErrorContainer = Color(0xFFFFDAD6),
 
     // Background
-    background = Color(0xFF0C0A08),
+    background = Color(0xFF12100D),
     onBackground = Color(0xFFEAE1D9),
 
     // Surface Colors
-    surface = Color(0xFF0C0A08),
+    surface = Color(0xFF12100D),
     onSurface = Color(0xFFEAE1D9),
 
     surfaceDim = Color(0xFF15110C),
@@ -119,10 +119,10 @@ val DarkColorScheme = darkColorScheme(
     inverseOnSurface = Color(0xFF1F1B16),
 
     surfaceContainerLowest = Color(0xFF12100D),
-    surfaceContainerLow = Color(0xFF15120F),
-    surfaceContainer = Color(0xFF181511),
-    surfaceContainerHigh = Color(0xFF1F1B16),
-    surfaceContainerHighest = Color(0xFF241F19),
+    surfaceContainerLow = Color(0xFF1E1A15),
+    surfaceContainer = Color(0xFF241F19),
+    surfaceContainerHigh = Color(0xFF2A241E),
+    surfaceContainerHighest = Color(0xFF362F26),
 
     // Outline
     outline = Color(0xFF9C8F80),
