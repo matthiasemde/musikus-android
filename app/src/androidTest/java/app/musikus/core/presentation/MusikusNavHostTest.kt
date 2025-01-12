@@ -19,7 +19,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
-import app.assertWithLease
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.theme.MusikusTheme
@@ -86,7 +85,7 @@ class MusikusNavHostTest {
         require(screen is Screen.Home)
 
         assertThat(screen.tab).isEqualTo(HomeTab.Sessions)
-        composeRule.onNodeWithText("Sessions").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Sessions").assertIsDisplayed()
     }
 
     @Test
@@ -103,7 +102,7 @@ class MusikusNavHostTest {
         require(screen is Screen.Home)
 
         assertThat(screen.tab).isEqualTo(HomeTab.Goals)
-        composeRule.onNodeWithText("Goals").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Goals").assertIsDisplayed()
     }
 
     @Test
@@ -119,7 +118,7 @@ class MusikusNavHostTest {
         assertThat(screen).isInstanceOf(Screen.Home::class.java)
         require(screen is Screen.Home)
         assertThat(screen.tab).isEqualTo(HomeTab.Statistics)
-        composeRule.onNodeWithText("Statistics").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Statistics").assertIsDisplayed()
     }
 
     @Test
@@ -136,7 +135,7 @@ class MusikusNavHostTest {
         require(screen is Screen.Home)
 
         assertThat(screen.tab).isEqualTo(HomeTab.Library)
-        composeRule.onNodeWithText("Library").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Library").assertIsDisplayed()
     }
 
     @Test
@@ -150,7 +149,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.LibraryFolderDetails::class.java)
-        composeRule.onNodeWithText("Folder not found").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Folder not found").assertIsDisplayed()
     }
 
     @Test
@@ -164,7 +163,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.ActiveSession::class.java)
-        composeRule.onNodeWithText("Practice Time").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Practice Time").assertIsDisplayed()
     }
 
     @Test
@@ -178,7 +177,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SessionStatistics::class.java)
-        composeRule.onNodeWithText("Session History").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Session History").assertIsDisplayed()
     }
 
     @Test
@@ -192,7 +191,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.GoalStatistics::class.java)
-        composeRule.onNodeWithText("Goal History").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Goal History").assertIsDisplayed()
     }
 
     @Test
@@ -206,7 +205,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Settings::class.java)
-        composeRule.onNodeWithText("Settings").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Settings").assertIsDisplayed()
     }
 
     @Test
@@ -220,7 +219,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Donate::class.java)
-        composeRule.onNodeWithText("Support us!").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Support us!").assertIsDisplayed()
     }
 
     @Test
@@ -234,7 +233,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.MainMenuEntry.About::class.java)
-        composeRule.onNodeWithText("About").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("About").assertIsDisplayed()
     }
 
     @Test
@@ -248,7 +247,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Help::class.java)
-        composeRule.onNodeWithText("Help").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Help").assertIsDisplayed()
     }
 
     @Test
@@ -262,7 +261,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Backup::class.java)
-        composeRule.onNodeWithText("Backup and restore").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Backup and restore").assertIsDisplayed()
     }
 
     @Test
@@ -276,7 +275,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Export::class.java)
-        composeRule.onNodeWithText("Export session data").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Export session data").assertIsDisplayed()
     }
 
     @Test
@@ -290,7 +289,7 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Appearance::class.java)
-        composeRule.onNodeWithText("Appearance").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Appearance").assertIsDisplayed()
     }
 
     @Test
@@ -304,6 +303,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.License::class.java)
-        composeRule.onNodeWithText("Licenses").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Licenses").assertIsDisplayed()
     }
 }

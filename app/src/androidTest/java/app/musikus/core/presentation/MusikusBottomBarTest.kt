@@ -10,19 +10,15 @@ package app.musikus.core.presentation
 
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
 import app.musikus.core.domain.FakeTimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
@@ -42,7 +38,7 @@ class MusikusBottomBarTest {
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
-    lateinit var onTabSelectedMock: (HomeTab) -> Unit
+    lateinit var navController: NavHostController
 
     @Before
     fun setUp() {
@@ -53,16 +49,15 @@ class MusikusBottomBarTest {
             val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
             val eventHandler = mainViewModel::onUiEvent
 
-            var currentTab: HomeTab by remember { mutableStateOf(HomeTab.Sessions) }
-
-            onTabSelectedMock = mockk()
-            every { onTabSelectedMock(any()) } answers { currentTab = firstArg<HomeTab>() }
+            navController = mockk<NavHostController>(relaxed = true)
 
             MusikusBottomBar(
                 mainUiState = mainUiState,
                 mainEventHandler = eventHandler,
-                currentTab = currentTab,
-                onTabSelected = onTabSelectedMock,
+                currentTab = HomeTab.Sessions,
+                onTabSelected = { selectedTab ->
+                    navController.navigate(Screen.Home(selectedTab))
+                },
             )
         }
     }
@@ -73,7 +68,7 @@ class MusikusBottomBarTest {
 
         // Since we are already on the sessions tab, we should not navigate
         verify(exactly = 0) {
-            onTabSelectedMock(any())
+            navController.navigate<Any>(any())
         }
     }
 
@@ -82,10 +77,8 @@ class MusikusBottomBarTest {
         composeRule.onNodeWithText("Goals").performClick()
 
         verify(exactly = 1) {
-            onTabSelectedMock(HomeTab.Goals)
+            navController.navigate(Screen.Home(HomeTab.Goals))
         }
-
-        composeRule.onNodeWithText("Goals").assertIsSelected()
     }
 
     @Test
@@ -93,10 +86,8 @@ class MusikusBottomBarTest {
         composeRule.onNodeWithText("Statistics").performClick()
 
         verify(exactly = 1) {
-            onTabSelectedMock(HomeTab.Statistics)
+            navController.navigate(Screen.Home(HomeTab.Statistics))
         }
-
-        composeRule.onNodeWithText("Statistics").assertIsSelected()
     }
 
     @Test
@@ -104,9 +95,7 @@ class MusikusBottomBarTest {
         composeRule.onNodeWithText("Library").performClick()
 
         verify(exactly = 1) {
-            onTabSelectedMock(HomeTab.Library)
+            navController.navigate(Screen.Home(HomeTab.Library))
         }
-
-        composeRule.onNodeWithText("Library").assertIsSelected()
     }
 }

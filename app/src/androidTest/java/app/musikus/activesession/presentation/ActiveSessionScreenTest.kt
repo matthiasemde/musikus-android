@@ -23,7 +23,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavHostController
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
-import app.assertWithLease
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
@@ -129,7 +128,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Start practicing").performClick()
 
         composeRule.onNodeWithText("TestItem1").performClick()
-        composeRule.onNodeWithContentDescription("Next item").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithContentDescription("Next item").assertIsDisplayed()
     }
 
     @Test
@@ -142,13 +141,13 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Pause").performClick()
 
         // Pause timer is displayed
-        composeRule.onNodeWithText("Paused 00:00").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("Paused 00:00").assertIsDisplayed()
 
         fakeTimeProvider.advanceTimeBy(90.seconds)
 
         // Pause timer shows correct time
         composeRule.onNodeWithText("Paused 01:30")
-            .assertWithLease { assertIsDisplayed() }
+            .assertIsDisplayed()
             .performClick() // Resume session
 
         // Pause timer is hidden
@@ -171,7 +170,7 @@ class ActiveSessionScreenTest {
             matcher = hasText("TestItem3")
                 and
                 hasAnySibling(hasText("00:00"))
-        ).assertWithLease { assertIsDisplayed() }
+        ).assertIsDisplayed()
     }
 
     @Test
@@ -183,7 +182,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem1").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem1").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
 
         // Open item selector again
         composeRule.onNodeWithContentDescription("Next item").performClick()
@@ -192,7 +191,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithText("TestItem2").performClick()
 
         // Item is selected
-        composeRule.onNodeWithText("TestItem2").assertWithLease { assertIsDisplayed() }
+        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
     }
 
     @Test

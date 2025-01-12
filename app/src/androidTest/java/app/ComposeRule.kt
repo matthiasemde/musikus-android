@@ -10,45 +10,6 @@ package app
 
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import kotlin.time.Duration.Companion.milliseconds
-
-val LeaseSleepDuration = 500.milliseconds
-const val LeaseDefaultAttempts = 10
-
-fun AndroidComposeTestRule<*, *>.assertWithLease(
-    attempts: Int = LeaseDefaultAttempts,
-    assertion: () -> Unit
-) {
-    try {
-        assertion()
-    } catch (e: Throwable) {
-        if (attempts > 0) {
-            Thread.sleep(LeaseSleepDuration.inWholeMilliseconds)
-            assertWithLease(attempts - 1, assertion)
-        } else {
-            throw e
-        }
-    }
-}
-
-fun SemanticsNodeInteraction.assertWithLease(
-    attempts: Int = LeaseDefaultAttempts,
-    assertion: SemanticsNodeInteraction.() -> Unit
-): SemanticsNodeInteraction {
-    try {
-        assertion()
-    } catch (e: Throwable) {
-        if (attempts > 0) {
-            Thread.sleep(LeaseSleepDuration.inWholeMilliseconds)
-            assertWithLease(attempts - 1, assertion)
-        } else {
-            throw e
-        }
-    }
-
-    return this
-}
 
 /**
  * Asserts that the given SemanticsNodeInteractions are vertically ordered on the screen.
