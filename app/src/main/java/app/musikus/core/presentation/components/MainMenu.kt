@@ -70,6 +70,7 @@ fun MainMenu(
     )
 
     Column {
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
         NavigationDrawerItem(
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
             label = {
@@ -77,7 +78,7 @@ fun MainMenu(
                     modifier = Modifier
                         .height(32.dp)
                         .fillMaxWidth(),
-                    alignment = Alignment.TopStart,
+                    alignment = Alignment.Center,
                     painter = painterResource(
                         id = when (theme) {
                             ThemeSelections.SYSTEM -> {

@@ -70,6 +70,7 @@ fun ExportScreen(
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
                 Text(stringResource(R.string.menu_settings_export_button_text))
             }
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Text(
                 text = htmlResource(R.string.menu_settings_export_footnote),
                 style = MaterialTheme.typography.labelMedium,

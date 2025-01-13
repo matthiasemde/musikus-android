@@ -105,7 +105,7 @@ fun BackupScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             Text(
                 text = stringResource(R.string.menu_backup_footnote),
