@@ -98,13 +98,7 @@ fun AboutScreen(
         ) {
             for (group in aboutScreenItems) {
                 for (item in group) {
-                    TwoLiner(
-                        modifier = Modifier.padding(
-                            horizontal = MaterialTheme.spacing.large,
-                            vertical = MaterialTheme.spacing.medium
-                        ),
-                        data = item
-                    )
+                    TwoLiner(data = item)
                 }
                 if (group != aboutScreenItems.last()) {
                     HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))

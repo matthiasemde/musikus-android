@@ -10,9 +10,11 @@ package app.musikus.core.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
@@ -41,13 +43,18 @@ data class TwoLinerData(
 fun TwoLiner(
     modifier: Modifier = Modifier,
     data: TwoLinerData,
+    paddingValues: PaddingValues = PaddingValues(
+        horizontal = MaterialTheme.spacing.large,
+        vertical = MaterialTheme.spacing.medium
+    )
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .conditional(data.onClick != null) {
                 clickable(onClick = { data.onClick?.invoke() })
-            },
+            }
+            .padding(paddingValues),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Leading icon

@@ -102,13 +102,7 @@ fun SettingsScreen(
             ) {
                 for (group in settingsItems) {
                     for (settingsItem in group) {
-                        TwoLiner(
-                            modifier = Modifier.padding(
-                                horizontal = MaterialTheme.spacing.large,
-                                vertical = MaterialTheme.spacing.medium
-                            ),
-                            data = settingsItem
-                        )
+                        TwoLiner(data = settingsItem)
                     }
                     if (group != settingsItems.last()) {
                         HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))

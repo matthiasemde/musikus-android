@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -106,13 +107,12 @@ fun GoalCard(
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
                     TwoLiner(
-                        modifier = Modifier
-                            .padding(vertical = MaterialTheme.spacing.small)
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         data = TwoLinerData(
                             firstLine = goal.title,
                             secondLine = UiText.DynamicString(goal.subtitle.asAnnotatedString())
-                        )
+                        ),
+                        paddingValues = PaddingValues(vertical = MaterialTheme.spacing.small)
                     )
 
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
