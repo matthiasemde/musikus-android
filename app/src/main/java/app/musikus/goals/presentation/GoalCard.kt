@@ -171,6 +171,8 @@ fun GoalCard(
                     style = MaterialTheme.typography.bodyLarge
                 )
 
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
                 LinearProgressIndicator(
                     modifier = Modifier
                         .height(8.dp)
@@ -178,6 +180,8 @@ fun GoalCard(
                     progress = { animatedProgressPercent },
                     color = libraryItemColor ?: MaterialTheme.colorScheme.primary,
                 )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
                 // Time left
                 Text(
