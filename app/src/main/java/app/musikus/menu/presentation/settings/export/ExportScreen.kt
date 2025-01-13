@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.menu.presentation.settings.export
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import app.musikus.R
@@ -60,11 +62,18 @@ fun ExportScreen(
                 text = stringResource(id = R.string.menu_settings_export_text)
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+            val context = LocalContext.current
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                onClick = { /*TODO*/ }
+                onClick = {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.core_coming_soon),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             ) {
                 Icon(imageVector = Icons.Default.Download, contentDescription = null)
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
