@@ -112,7 +112,8 @@ fun MainScreen(
                 ) {
                     MainMenu(
                         navigateTo = { navController.navigate(it) },
-                        onDismiss = { scope.launch { drawerState.close() } }
+                        onDismiss = { scope.launch { drawerState.close() } },
+                        theme = theme
                     )
                 }
             },
@@ -174,7 +175,8 @@ fun AnnouncementDialog(
     ) {
         Surface(
             modifier = Modifier.padding(vertical = 64.dp),
-            shape = MaterialTheme.shapes.extraLarge
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
                 val scrollState = rememberScrollState()

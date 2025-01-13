@@ -75,7 +75,7 @@ fun NumberInput(
     var focused by remember { mutableStateOf(false) }
 
     val containerColor = if (!focused) {
-        MaterialTheme.colorScheme.surfaceContainerHigh
+        MaterialTheme.colorScheme.surfaceContainerHighest
     } else {
         MaterialTheme.colorScheme.primaryContainer
     }
@@ -131,7 +131,7 @@ fun NumberInput(
                     }
                 },
             value = displayValue.value,
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onPrimaryContainer),
             textStyle = if (focused) {
                 textStyle.copy(color = MaterialTheme.colorScheme.onPrimaryContainer, textAlign = TextAlign.Center)
             } else {
