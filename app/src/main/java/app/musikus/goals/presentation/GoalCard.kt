@@ -111,7 +111,7 @@ fun GoalCard(
                             .weight(1f),
                         data = TwoLinerData(
                             firstLine = goal.title,
-                            secondLine = UiText.DynamicString(goal.subtitle.asAnnotatedString().trim())
+                            secondLine = UiText.DynamicString(goal.subtitle.asAnnotatedString())
                         )
                     )
 
