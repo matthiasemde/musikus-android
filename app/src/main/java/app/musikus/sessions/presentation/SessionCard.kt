@@ -189,8 +189,7 @@ fun SessionCard(
                         Surface(
                             modifier = Modifier
                                 .width(6.dp)
-                                .fillMaxHeight()
-                                .padding(vertical = 2.dp),
+                                .fillMaxHeight(),
                             shape = MaterialTheme.shapes.small,
                             color = libraryItemColors[item.colorIndex]
                         ) { }
