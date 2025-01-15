@@ -124,14 +124,14 @@ class Recorder(
     fun delete() {
         if (state.value != RecorderState.PAUSED) {
             throw IllegalRecorderStateException(
-                context.getString(R.string.recorder_illegal_state_exception_delete_while_not_paused)
+                context.getString(R.string.recorder_illegal_state_exception_discard_while_not_paused)
             )
         }
         mediaRecorder?.apply {
             stop()
             release()
         } ?: throw IllegalRecorderStateException(
-            context.getString(R.string.recorder_illegal_state_exception_delete_while_uninitialized)
+            context.getString(R.string.recorder_illegal_state_exception_discard_while_uninitialized)
         )
         recordingUri?.let {
             context.contentResolver.delete(it, null, null)

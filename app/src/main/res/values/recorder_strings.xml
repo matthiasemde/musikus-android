@@ -14,7 +14,7 @@
     <string name="recorder_service_final_notification_text">click to open</string>
 
     <!-- RecorderToolbar -->
-    <string name="recorder_toolbar_delete">Delete</string>
+    <string name="recorder_toolbar_discard">Discard</string>
     <string name="recorder_toolbar_main_button_uninitialized_description">Microphone not available</string>
     <string name="recorder_toolbar_main_button_idle_description">Start recording</string>
     <string name="recorder_toolbar_main_button_recording_description">Pause recording</string>
@@ -32,9 +32,9 @@
     <string name="recorder_save_recording_dialog_name_label">Recording name</string>
     <string name="recorder_save_recording_dialog_confirm">Save</string>
 
-    <!-- RecorderDeleteRecordingDialog -->
-    <string name="recorder_delete_recording_dialog">Delete recording</string>
-    <string name="recorder_delete_recording_dialog_confirm">Delete</string>
+    <!-- RecorderDiscardRecordingDialog -->
+    <string name="recorder_discard_recording_dialog">Discard recording</string>
+    <string name="recorder_discard_recording_dialog_confirm">Discard</string>
 
     <!-- RecorderContentValues -->
     <string name="recorder_content_values_album" translatable="false">Musikus</string>
@@ -60,8 +60,8 @@
     <string name="recorder_illegal_state_exception_resume_while_not_paused">Tried to resume while recorder is not paused</string>
     <string name="recorder_illegal_state_exception_resume_while_uninitialized">Tried to resume recording without initializing mediaRecorder</string>
 
-    <string name="recorder_illegal_state_exception_delete_while_not_paused">Can only delete recording from paused state"</string>
-    <string name="recorder_illegal_state_exception_delete_while_uninitialized">Tried to delete recording without initializing mediaRecorder</string>
+    <string name="recorder_illegal_state_exception_discard_while_not_paused">Can only discard recording from paused state"</string>
+    <string name="recorder_illegal_state_exception_discard_while_uninitialized">Tried to discard recording without initializing mediaRecorder</string>
 
     <string name="recorder_illegal_state_exception_save_while_not_paused">Can only save recording from paused state"</string>
     <string name="recorder_illegal_state_exception_save_while_uninitialized">Tried to save recording without initializing mediaRecorder</string>
