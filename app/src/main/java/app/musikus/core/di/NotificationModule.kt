@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.core.di
 
-import android.app.NotificationManager
 import android.content.Context
-import app.musikus.core.presentation.createNotificationChannels
+import app.musikus.core.presentation.MusikusNotificationManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,10 +23,9 @@ object NotificationModule {
 
     @Provides
     @Singleton
-    fun provideNotificationManager(
+    fun provideMusikusNotificationManager(
         @ApplicationContext context: Context
-    ): NotificationManager {
-        createNotificationChannels(context)
-        return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    ): MusikusNotificationManager {
+        return MusikusNotificationManager(context)
     }
 }

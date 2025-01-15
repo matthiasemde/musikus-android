@@ -3,7 +3,7 @@
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-    Copyright (c) 2024 Matthias Emde
+    Copyright (c) 2024-2025 Matthias Emde
 -->
 <resources>
 
@@ -49,6 +49,7 @@
     <string name="active_session_end_session_dialog_confirm">Save</string>
 
     <!-- ActiveSessionService -->
+    <string name="active_session_service_notification_channel_description">Notification to keep track of the running session</string>
     <string name="active_session_service_notification_title">Practicing for %1$s</string>
     <string name="active_session_service_notification_title_paused">Practicing Paused</string>
     <string name="active_session_service_notification_description_paused">%1$s - Total: %2$s</string>

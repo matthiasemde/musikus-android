@@ -8,9 +8,7 @@
 
 package app.musikus.activesession.presentation
 
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.rule.ServiceTestRule
@@ -31,15 +29,9 @@ class SessionServiceTest {
     @get:Rule(order = 1)
     val serviceRule = ServiceTestRule()
 
-    lateinit var context: Context
-    lateinit var notificationManager: NotificationManager
-
     @Before
     fun setUp() {
         hiltRule.inject()
-
-        context = ApplicationProvider.getApplicationContext<Context>()
-        notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     }
 
     @Test
@@ -47,7 +39,7 @@ class SessionServiceTest {
     fun testWithBoundService() {
         // Create the start intent
         val startIntent = Intent(
-            context,
+            ApplicationProvider.getApplicationContext<Context>(),
             SessionService::class.java
         ).apply {
             action = ActiveSessionServiceActions.START.name
