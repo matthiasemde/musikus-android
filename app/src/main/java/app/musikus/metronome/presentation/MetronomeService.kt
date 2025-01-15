@@ -177,7 +177,7 @@ class MetronomeService : Service() {
             .setContentTitle(title)
             .setContentIntent(pendingIntentTapAction)
             .setContentText(description)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT) // only relevant below Oreo, else channel priority is used
+            .setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         return builder.build()

@@ -324,7 +324,7 @@ class RecorderService : Service() {
             .setContentText(text)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntentTapAction)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            .setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }

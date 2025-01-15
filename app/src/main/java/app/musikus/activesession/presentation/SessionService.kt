@@ -261,9 +261,10 @@ class SessionService : Service() {
             setOnlyAlertOnce(true)
             setContentTitle(title)
             setContentText(description)
-            setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             setContentIntent(activeSessionIntent(null))
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             if (!useCases.isSessionPaused()) {
                 addAction(
                     R.drawable.ic_pause,

@@ -39,7 +39,7 @@ class MusikusNotificationManager(context: Context) {
         createNotificationChannels(context)
     }
 
-    fun createNotificationChannels(context: Context) {
+    private fun createNotificationChannels(context: Context) {
         // Create the NotificationChannel, but only on API 26+ because
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(
@@ -49,34 +49,35 @@ class MusikusNotificationManager(context: Context) {
             val sessionNotificationChannel = NotificationChannel(
                 SESSION_NOTIFICATION_CHANNEL_ID,
                 SESSION_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = context.getString(R.string.active_session_service_notification_channel_description)
             }
 
-            // Register the channel with the system
-            notificationManager.createNotificationChannel(sessionNotificationChannel)
-
             val metronomeNotificationChannel = NotificationChannel(
                 METRONOME_NOTIFICATION_CHANNEL_ID,
                 METRONOME_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = context.getString(R.string.metronome_service_notification_channel_description)
             }
 
-            // Register the channel with the system
-            notificationManager.createNotificationChannel(metronomeNotificationChannel)
-
             val recorderNotificationChannel = NotificationChannel(
                 RECORDER_NOTIFICATION_CHANNEL_ID,
                 RECORDER_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = context.getString(R.string.recorder_service_notification_channel_description)
             }
-            // Register the channel with the system
-            notificationManager.createNotificationChannel(recorderNotificationChannel)
+
+            // Register the channels with the system
+            notificationManager.createNotificationChannels(
+                listOf(
+                    sessionNotificationChannel,
+                    recorderNotificationChannel,
+                    metronomeNotificationChannel
+                )
+            )
         }
     }
 }
