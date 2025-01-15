@@ -129,6 +129,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -260,6 +261,9 @@ fun ActiveSession(
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
 
+    /**
+     * Observe events sent from the viewmodel
+     */
     ObserveAsEvents(viewModel.eventChannel) { event ->
         when (event) {
             is ActiveSessionEvent.HideTools -> {
@@ -268,6 +272,16 @@ fun ActiveSession(
                 }
             }
         }
+    }
+
+    /**
+     * Keep screen on while session is running
+     */
+    val sessionState by uiState.value.sessionState.collectAsState()
+
+    val view = LocalView.current
+    LaunchedEffect(sessionState) {
+        view.keepScreenOn = sessionState == ActiveSessionState.RUNNING
     }
 
     /**
