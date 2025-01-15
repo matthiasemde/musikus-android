@@ -240,7 +240,7 @@ class SessionService : Service() {
         title: String,
         description: String,
     ): Notification {
-        val icon = R.mipmap.ic_launcher_foreground
+        val icon = R.drawable.ic_notification
 
         val pauseButtonIntent = Intent(BROADCAST_INTENT_FILTER).apply {
             putExtra("action", ActiveSessionActions.PAUSE.toString())

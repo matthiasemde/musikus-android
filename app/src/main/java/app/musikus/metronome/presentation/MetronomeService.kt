@@ -166,7 +166,7 @@ class MetronomeService : Service() {
         title: String,
         description: String
     ): Notification {
-        val icon = R.mipmap.ic_launcher_foreground
+        val icon = R.drawable.ic_metronome
 
         val builder = NotificationCompat.Builder(this, musikusNotificationManager.METRONOME_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(icon) // without icon, setOngoing does not work
