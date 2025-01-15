@@ -204,7 +204,7 @@ class ActiveSessionScreenTest {
         composeRule.onNodeWithContentDescription("Discard").performClick()
 
         // Confirm discard
-        composeRule.onNodeWithText("Discard session?", substring = true).performClick()
+        composeRule.onNodeWithText("Discard session").performClick()
 
         // Navigate up is called
         verify(exactly = 1) {
