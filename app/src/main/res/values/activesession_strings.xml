@@ -10,7 +10,8 @@
     <!-- ActiveSession -->
     <string name="active_session_toolbar_metronome">Metronome</string>
     <string name="active_session_toolbar_recorder">Recorder</string>
-    <string name="active_session_discard_session_dialog_confirm">Discard session? All progress will be lost!</string>
+    <string name="active_session_discard_session_dialog_explanation">Discard session? All progress will be lost!</string>
+    <string name="active_session_discard_session_dialog_confirm">Discard session</string>
 
     <!-- ActiveSessionTopBar -->
     <string name="active_session_top_bar_pause">Pause</string>

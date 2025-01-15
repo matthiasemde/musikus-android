@@ -453,8 +453,9 @@ private fun ActiveSessionScreen(
     /** Discard Session Dialog */
     if (dialogUiState.value.discardDialogVisible) {
         DeleteConfirmationBottomSheet(
-            confirmationIcon = Icons.Default.Delete,
-            confirmationText = stringResource(id = R.string.active_session_discard_session_dialog_confirm),
+            explanation = UiText.StringResource(R.string.active_session_discard_session_dialog_explanation),
+            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+            confirmationText = UiText.StringResource(R.string.active_session_discard_session_dialog_confirm),
             onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) },
             onConfirm = {
                 eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
