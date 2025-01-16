@@ -26,7 +26,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -38,10 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -55,6 +51,7 @@ import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.coroutines.launch
 
@@ -92,15 +89,9 @@ fun MainScreen(
         val scope = rememberCoroutineScope()
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-        val lifeCycleOwner = LocalLifecycleOwner.current
-
-        LaunchedEffect(viewModel.eventChannel, lifeCycleOwner.lifecycle) {
-            lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.eventChannel.collect {
-                    when (it) {
-                        is MainEvent.OpenMainDrawer -> drawerState.open()
-                    }
-                }
+        ObserveAsEvents(viewModel.eventChannel) { event ->
+            when (event) {
+                is MainEvent.OpenMainDrawer -> drawerState.open()
             }
         }
 

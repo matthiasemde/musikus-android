@@ -143,10 +143,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
@@ -173,6 +170,7 @@ import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
@@ -188,11 +186,8 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -344,18 +339,6 @@ fun ActiveSession(
 
             else -> {
                 // do nothing
-            }
-        }
-    }
-}
-
-@Composable
-private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: (T) -> Unit) {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    LaunchedEffect(flow, lifecycleOwner.lifecycle) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            withContext(Dispatchers.Main.immediate) {
-                flow.collect(onEvent)
             }
         }
     }

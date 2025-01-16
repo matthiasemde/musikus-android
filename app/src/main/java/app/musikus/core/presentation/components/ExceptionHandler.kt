@@ -9,13 +9,9 @@
 package app.musikus.core.presentation.components
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
+import app.musikus.core.presentation.utils.ObserveAsEvents
 import kotlinx.coroutines.flow.Flow
 
-// inspired by: https://www.youtube.com/watch?v=njchj9d_Lf8 (Phillip Lackner)
 
 @Composable
 inline fun <reified T> ExceptionHandler(
@@ -23,16 +19,10 @@ inline fun <reified T> ExceptionHandler(
     crossinline exceptionHandler: (T) -> Unit,
     crossinline onUnhandledException: (Exception) -> Unit
 ) {
-    val lifeCycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(exceptionChannel, lifeCycleOwner.lifecycle) {
-        lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            exceptionChannel.collect {
-                when (it) {
-                    is T -> exceptionHandler(it)
-                    else -> onUnhandledException(it)
-                }
-            }
+    ObserveAsEvents(exceptionChannel) {
+        when (it) {
+            is T -> exceptionHandler(it)
+            else -> onUnhandledException(it)
         }
     }
 }
