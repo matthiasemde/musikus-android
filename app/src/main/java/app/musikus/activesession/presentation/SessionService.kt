@@ -3,13 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
+ * Copyright (c) 2024-2025 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.presentation
 
 import android.app.Notification
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.TaskStackBuilder
@@ -31,7 +30,7 @@ import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.MusikusNotificationManager
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,7 +71,7 @@ class SessionService : Service() {
     private var _timer: Timer? = null
 
     @Inject
-    lateinit var notificationManager: NotificationManager
+    lateinit var musikusNotificationManager: MusikusNotificationManager
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -189,7 +188,7 @@ class SessionService : Service() {
     private fun updateNotification() {
         Log.d(LOG_TAG, "updateNotification")
         applicationScope.launch {
-            notificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+            musikusNotificationManager.notificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
         }
     }
 
@@ -241,7 +240,7 @@ class SessionService : Service() {
         title: String,
         description: String,
     ): Notification {
-        val icon = R.mipmap.ic_launcher_foreground
+        val icon = R.drawable.ic_notification
 
         val pauseButtonIntent = Intent(BROADCAST_INTENT_FILTER).apply {
             putExtra("action", ActiveSessionActions.PAUSE.toString())
@@ -254,7 +253,7 @@ class SessionService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID).run {
+        return NotificationCompat.Builder(this, musikusNotificationManager.SESSION_NOTIFICATION_CHANNEL_ID).run {
             setSmallIcon(icon) // without icon, setOngoing does not work
             setOngoing(
                 true
@@ -262,9 +261,10 @@ class SessionService : Service() {
             setOnlyAlertOnce(true)
             setContentTitle(title)
             setContentText(description)
-            setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             setContentIntent(activeSessionIntent(null))
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             if (!useCases.isSessionPaused()) {
                 addAction(
                     R.drawable.ic_pause,

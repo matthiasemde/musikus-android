@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.em
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
@@ -41,6 +43,10 @@ data class TwoLinerData(
 fun TwoLiner(
     modifier: Modifier = Modifier,
     data: TwoLinerData,
+    paddingValues: PaddingValues = PaddingValues(
+        horizontal = MaterialTheme.spacing.large,
+        vertical = MaterialTheme.spacing.medium
+    )
 ) {
     Row(
         modifier = modifier
@@ -48,10 +54,7 @@ fun TwoLiner(
             .conditional(data.onClick != null) {
                 clickable(onClick = { data.onClick?.invoke() })
             }
-            .padding(
-                horizontal = MaterialTheme.spacing.large,
-                vertical = MaterialTheme.spacing.medium
-            ),
+            .padding(paddingValues),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Leading icon
@@ -63,7 +66,11 @@ fun TwoLiner(
         // Content
         Column {
             data.firstLine?.let {
-                Text(text = it.asString())
+                Text(
+                    text = it.asString(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
 
             data.secondLine?.let {

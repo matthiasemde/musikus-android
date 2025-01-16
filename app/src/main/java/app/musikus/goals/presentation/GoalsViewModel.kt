@@ -263,11 +263,11 @@ class GoalsViewModel @Inject constructor(
             is GoalsUiEvent.GoalSortModeSelected -> onSortModeSelected(event.mode)
 
             is GoalsUiEvent.ArchiveButtonPressed -> {
-                _showDeleteOrArchiveDialog.update { true }
                 _deleteOrArchiveDialogIsArchiveAction.update { true }
+                _showDeleteOrArchiveDialog.update { true }
             }
             is GoalsUiEvent.DeleteButtonPressed -> {
-                _showDeleteOrArchiveDialog.update { false }
+                _deleteOrArchiveDialogIsArchiveAction.update { false }
                 _showDeleteOrArchiveDialog.update { true }
             }
             is GoalsUiEvent.DeleteOrArchiveDialogDismissed -> {

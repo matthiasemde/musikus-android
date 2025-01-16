@@ -3,13 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.recorder.presentation
 
 import android.app.Notification
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.TaskStackBuilder
@@ -26,7 +25,7 @@ import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.MusikusNotificationManager
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
@@ -79,7 +78,7 @@ class RecorderService : Service() {
     lateinit var applicationScope: CoroutineScope
 
     @Inject
-    lateinit var notificationManager: NotificationManager
+    lateinit var musikusNotificationManager: MusikusNotificationManager
 
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
@@ -296,7 +295,7 @@ class RecorderService : Service() {
 
     private fun updateNotification(duration: Duration) {
         val notification: Notification = getNotification(duration)
-        notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+        musikusNotificationManager.notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
     private fun setFinalNotification() {
@@ -305,7 +304,7 @@ class RecorderService : Service() {
             text = getString(R.string.recorder_service_final_notification_text),
             persistent = false
         )
-        notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+        musikusNotificationManager.notificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
     private fun getNotification(duration: Duration): Notification {
@@ -316,7 +315,7 @@ class RecorderService : Service() {
     }
 
     private fun getBasicNotification(title: String, text: CharSequence, persistent: Boolean = true): Notification {
-        return NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
+        return NotificationCompat.Builder(this, musikusNotificationManager.RECORDER_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_microphone) // without icon, setOngoing does not work
             .setOngoing(
                 persistent
@@ -325,7 +324,7 @@ class RecorderService : Service() {
             .setContentText(text)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntentTapAction)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            .setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }

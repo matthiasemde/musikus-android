@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.metronome.presentation
@@ -24,8 +24,8 @@ import app.musikus.R
 import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.di.IoScope
-import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.core.presentation.MainActivity
+import app.musikus.core.presentation.MusikusNotificationManager
 import app.musikus.metronome.domain.usecase.MetronomeUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +58,9 @@ class MetronomeService : Service() {
     @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
+
+    @Inject
+    lateinit var musikusNotificationManager: MusikusNotificationManager
 
     @Inject
     @IoScope
@@ -163,9 +166,9 @@ class MetronomeService : Service() {
         title: String,
         description: String
     ): Notification {
-        val icon = R.mipmap.ic_launcher_foreground
+        val icon = R.drawable.ic_metronome
 
-        val builder = NotificationCompat.Builder(this, METRONOME_NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, musikusNotificationManager.METRONOME_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(icon) // without icon, setOngoing does not work
             .setOngoing(
                 true
@@ -174,7 +177,7 @@ class MetronomeService : Service() {
             .setContentTitle(title)
             .setContentIntent(pendingIntentTapAction)
             .setContentText(description)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT) // only relevant below Oreo, else channel priority is used
+            .setPriority(NotificationCompat.PRIORITY_LOW) // only relevant below Oreo, else channel priority is used
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         return builder.build()

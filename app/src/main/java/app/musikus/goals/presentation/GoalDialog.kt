@@ -160,12 +160,8 @@ fun GoalDialog(
                         minutesState = minutesState,
                         requestFocusOnInit = true
                     )
-                    confirmButtonEnabled =
-                        confirmButtonEnabled && // https://stackoverflow.com/a/55404768
-                        (
-                            hoursState.currentValue.value
-                                ?: 0
-                            ) > 0 || (minutesState.currentValue.value ?: 0) > 0
+                    // https://stackoverflow.com/a/55404768
+                    confirmButtonEnabled = (hoursState.currentValue.value ?: 0) > 0 || (minutesState.currentValue.value ?: 0) > 0
                 }
                 if (!isEditMode) {
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))

@@ -70,40 +70,29 @@ fun MainMenu(
     )
 
     Column {
-        NavigationDrawerItem(
-            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-            label = {
-                Image(
-                    modifier = Modifier
-                        .height(32.dp)
-                        .fillMaxWidth(),
-                    alignment = Alignment.TopStart,
-                    painter = painterResource(
-                        id = when (theme) {
-                            ThemeSelections.SYSTEM -> {
-                                if (isSystemInDarkTheme()) {
-                                    R.drawable.musikus_logo_dark
-                                } else {
-                                    R.drawable.musikus_logo_light
-                                }
-                            }
-                            ThemeSelections.DAY -> R.drawable.musikus_logo_light
-                            ThemeSelections.NIGHT -> R.drawable.musikus_logo_dark
+        Image(
+            modifier = Modifier
+                .padding(vertical = MaterialTheme.spacing.medium + MaterialTheme.spacing.small)
+                .height(32.dp)
+                .fillMaxWidth(),
+            alignment = Alignment.Center,
+            painter = painterResource(
+                id = when (theme) {
+                    ThemeSelections.SYSTEM -> {
+                        if (isSystemInDarkTheme()) {
+                            R.drawable.musikus_logo_dark
+                        } else {
+                            R.drawable.musikus_logo_light
                         }
-                    ),
-                    contentDescription = null
-                )
-            },
-            selected = false,
-            onClick = {}
+                    }
+                    ThemeSelections.DAY -> R.drawable.musikus_logo_light
+                    ThemeSelections.NIGHT -> R.drawable.musikus_logo_dark
+                }
+            ),
+            contentDescription = stringResource(R.string.core_app_name)
         )
 
-        HorizontalDivider(
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.spacing.medium,
-                vertical = MaterialTheme.spacing.small
-            )
-        )
+        HorizontalDivider(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
         Spacer(modifier = Modifier.weight(1f))
 

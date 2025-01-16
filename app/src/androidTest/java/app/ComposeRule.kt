@@ -35,3 +35,28 @@ fun assertNodesInVerticalOrder(vararg nodes: SemanticsNodeInteraction) {
         }
     }
 }
+
+/**
+ * Asserts that the given SemanticsNodeInteractions are horizontally ordered on the screen.
+ *
+ * This function iterates through the provided nodes and verifies that each node is
+ * positioned to the left of the subsequent node in the list. It checks if the right bound
+ * of the current node is less than or equal to the left bound of the next node.
+ *
+ * If any two consecutive nodes violate this horizontal order, an assertion error is thrown.
+ *
+ * @param nodes The SemanticsNodeInteractions to be checked for horizontal order.
+ *
+ * @throws AssertionError If any two consecutive nodes are not horizontally ordered as expected.
+ */
+fun assertNodesInHorizontalOrder(vararg nodes: SemanticsNodeInteraction) {
+    for (i in 0 until nodes.size - 1) {
+        val currentBounds = nodes[i].getBoundsInRoot()
+        val nextBounds = nodes[i + 1].getBoundsInRoot()
+
+        check(currentBounds.right <= nextBounds.left) {
+            "Expected node ${i + 1} to be to the left of node ${i + 2}, but was not. " +
+                "Bounds: current = $currentBounds, next = $nextBounds"
+        }
+    }
+}

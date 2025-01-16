@@ -215,16 +215,14 @@ fun AppearanceScreen(
                                 onClick = { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
                             )
                             Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                            TwoLiner(
-                                data = TwoLinerData(
-                                    firstLine = UiText.DynamicString(selection.label.asString()),
-                                    secondLine = UiText.DynamicString(selection.description.asString())
-                                )
+                            TwoLiner(data = TwoLinerData(
+                                firstLine = UiText.DynamicString(selection.label.asString()),
+                                secondLine = UiText.DynamicString(selection.description.asString())
                             )
-                        }
+                        )
                     }
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))}
             }
         }
     }

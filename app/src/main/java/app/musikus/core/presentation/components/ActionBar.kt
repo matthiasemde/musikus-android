@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -21,6 +21,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import app.musikus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +35,13 @@ fun ActionBar(
     onDeleteHandler: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(text = stringResource(id = R.string.components_action_bar_title, numSelectedItems)) },
+        title = {
+            Text(
+                text = stringResource(id = R.string.components_action_bar_title, numSelectedItems),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         colors = TopAppBarDefaults.largeTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,

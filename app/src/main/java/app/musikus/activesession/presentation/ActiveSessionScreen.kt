@@ -129,6 +129,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -260,6 +261,9 @@ fun ActiveSession(
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
 
+    /**
+     * Observe events sent from the viewmodel
+     */
     ObserveAsEvents(viewModel.eventChannel) { event ->
         when (event) {
             is ActiveSessionEvent.HideTools -> {
@@ -268,6 +272,16 @@ fun ActiveSession(
                 }
             }
         }
+    }
+
+    /**
+     * Keep screen on while session is running
+     */
+    val sessionState by uiState.value.sessionState.collectAsState()
+
+    val view = LocalView.current
+    LaunchedEffect(sessionState) {
+        view.keepScreenOn = sessionState == ActiveSessionState.RUNNING
     }
 
     /**
@@ -453,8 +467,9 @@ private fun ActiveSessionScreen(
     /** Discard Session Dialog */
     if (dialogUiState.value.discardDialogVisible) {
         DeleteConfirmationBottomSheet(
-            confirmationIcon = Icons.Default.Delete,
-            confirmationText = stringResource(id = R.string.active_session_discard_session_dialog_confirm),
+            explanation = UiText.StringResource(R.string.active_session_discard_session_dialog_explanation),
+            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+            confirmationText = UiText.StringResource(R.string.active_session_discard_session_dialog_confirm),
             onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) },
             onConfirm = {
                 eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
@@ -978,8 +993,8 @@ private fun PracticeTimer(
                 ElevatedButton(
                     onClick = onResumeTimer,
                     colors = ButtonDefaults.elevatedButtonColors().copy(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Icon(

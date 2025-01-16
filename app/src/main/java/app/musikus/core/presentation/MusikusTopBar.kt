@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.core.presentation
@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import app.musikus.R
 import app.musikus.core.presentation.utils.UiText
 
@@ -43,7 +44,13 @@ fun MusikusTopBar(
     if (isTopLevel) {
         LargeTopAppBar(
             scrollBehavior = scrollBehavior,
-            title = { Text(text = title.asString()) },
+            title = {
+                Text(
+                    text = title.asString(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             navigationIcon = {
                 if (openMainMenu == null) {
                     throw IllegalArgumentException("openMainMenu must be provided for top level screens")
@@ -68,7 +75,13 @@ fun MusikusTopBar(
     } else {
         TopAppBar(
             scrollBehavior = scrollBehavior,
-            title = { Text(text = title.asString()) },
+            title = {
+                Text(
+                    text = title.asString(),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             navigationIcon = {
                 if (navigateUp == null) {
                     throw IllegalArgumentException("navigateUp must be provided for non-top level screens")

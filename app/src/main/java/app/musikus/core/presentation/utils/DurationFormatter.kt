@@ -105,7 +105,8 @@ fun getDurationString(
                 }
 
                 if (minutes > 0 || duration == 0.seconds) {
-                    append("$spaceOrNot$minutes")
+                    if (totalHours > 0) append(spaceOrNot)
+                    append("$minutes")
                     withStyle(SpanStyle(fontSize = SCALE_FACTOR_FOR_SMALL_TEXT.em)) {
                         append("m")
                     }

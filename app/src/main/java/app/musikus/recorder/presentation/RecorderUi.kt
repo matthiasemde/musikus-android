@@ -263,7 +263,7 @@ fun RecorderToolbar(
             AnimatedVisibility(showDeleteAndSave) {
                 Row {
                     TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
-                        Text(text = stringResource(id = R.string.recorder_toolbar_delete))
+                        Text(text = stringResource(id = R.string.recorder_toolbar_discard))
                     }
                 }
             }
@@ -717,10 +717,10 @@ private fun DialogDeleteRecording(
                         .padding(horizontal = MaterialTheme.spacing.large)
                         .padding(top = MaterialTheme.spacing.medium),
                     style = MaterialTheme.typography.titleLarge,
-                    text = stringResource(id = R.string.recorder_delete_recording_dialog),
+                    text = stringResource(id = R.string.recorder_discard_recording_dialog),
                 )
                 DialogActions(
-                    confirmButtonText = stringResource(id = R.string.recorder_delete_recording_dialog_confirm),
+                    confirmButtonText = stringResource(id = R.string.recorder_discard_recording_dialog_confirm),
                     onDismissHandler = onDismiss,
                     onConfirmHandler = onConfirm
                 )

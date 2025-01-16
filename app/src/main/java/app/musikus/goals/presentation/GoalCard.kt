@@ -3,31 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.goals.presentation
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -38,16 +38,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.musikus.R
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.components.TwoLiner
+import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.asAnnotatedString
 import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.goals.data.entities.GoalType
@@ -84,15 +85,9 @@ fun GoalCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-//                    Row(
-//                        modifier = Modifier
-//                            .height(IntrinsicSize.Min)
-//                    ) {
                     /** Goal Type */
                     Icon(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .size(24.dp),
+                        modifier = Modifier.size(24.dp),
                         imageVector =
                         if (description.repeat) {
                             Icons.Rounded.Repeat
@@ -109,24 +104,18 @@ fun GoalCard(
                         tint = libraryItemColor ?: MaterialTheme.colorScheme.primary
                     )
 
-                    /** Color indicator */
-//                        libraryItemColor?.let {
-//                            Box(
-//                                modifier = Modifier
-//                                    .fillMaxHeight()
-//                                    .padding(end = 8.dp)
-//                                    .width(6.dp)
-//                                    .clip(RoundedCornerShape(4.dp))
-//                                    .background(it)
-//                            )
-//                        }
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
-                    /** Goal Title */
-                    Text(
+                    TwoLiner(
                         modifier = Modifier.weight(1f),
-                        text = goal.title.asAnnotatedString()
+                        data = TwoLinerData(
+                            firstLine = goal.title,
+                            secondLine = UiText.DynamicString(goal.subtitle.asAnnotatedString())
+                        ),
+                        paddingValues = PaddingValues(vertical = MaterialTheme.spacing.small)
                     )
-//                    }
+
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
                     /** remaining time */
                     val remainingTime = ChronoUnit.SECONDS.between(
@@ -135,12 +124,12 @@ fun GoalCard(
                     ).seconds
 
                     Surface(
-                        modifier = Modifier.padding(start = 8.dp),
                         shape = MaterialTheme.shapes.small,
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
                     ) {
                         Text(
-                            modifier = Modifier.padding(8.dp),
+                            modifier = Modifier.padding(MaterialTheme.spacing.small),
+                            style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             text = if (remainingTime.isPositive()) {
                                 stringResource(
@@ -154,13 +143,7 @@ fun GoalCard(
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                /** Goal Description */
-                Text(
-                    text = goal.subtitle.asAnnotatedString(),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
-                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 /** ProgressBar */
                 val targetSeconds = goal.instance.target.inWholeSeconds
@@ -179,70 +162,37 @@ fun GoalCard(
                 val animatedProgressLeft = targetSeconds - animatedProgress
                 val animatedProgressPercent = (animatedProgress / targetSeconds).coerceIn(0f, 1f)
 
-                Box(
+                // Time practiced
+                Text(
+                    text = getDurationString(
+                        animatedProgress.toInt().seconds,
+                        DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
+                    ),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                LinearProgressIndicator(
                     modifier = Modifier
-                        .padding(top = 12.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                ) {
-                    LinearProgressIndicator(
-                        progress = { animatedProgressPercent },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp),
-                        color = libraryItemColor ?: MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                        drawStopIndicator = {},
-                        gapSize = 0.dp
-                    )
-                    Row(
-                        modifier = Modifier
-                            .matchParentSize(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (animatedProgressPercent < 1f) {
-                            Text(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                text = getDurationString(
-                                    animatedProgress.toInt().seconds,
-                                    DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
-                                ),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Text(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                text = getDurationString(
-                                    animatedProgressLeft.toInt().seconds,
-                                    DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
-                                ),
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                        }
-                        AnimatedVisibility(
-                            visible = animatedProgressPercent == 1f,
-                            enter = scaleIn(
-                                spring(
-                                    stiffness = Spring.StiffnessVeryLow,
-                                    dampingRatio = Spring.DampingRatioMediumBouncy
-                                )
-                            ),
-                        ) {
-                            Text(
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                text = stringResource(id = R.string.goals_goal_card_achieved),
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        }
-                    }
-                }
+                        .height(8.dp)
+                        .fillMaxWidth(),
+                    progress = { animatedProgressPercent },
+                    color = libraryItemColor ?: MaterialTheme.colorScheme.primary,
+                )
+
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+                // Time left
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = getDurationString(
+                        animatedProgressLeft.toInt().seconds,
+                        DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = End
+                )
             }
             if (description.paused) {
                 Icon(

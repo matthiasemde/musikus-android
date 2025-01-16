@@ -9,13 +9,13 @@
 package app.musikus.library.presentation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
@@ -35,11 +36,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -78,11 +79,7 @@ fun LibraryFolderComponent(
         onLongClick = onLongClick,
         shape = MaterialTheme.shapes.large,
     ) {
-        Surface(
-            modifier = Modifier
-                .size(150.dp),
-            color = colorScheme.surfaceContainer,
-        ) {
+        ElevatedCard(Modifier.size(150.dp)) {
             Column(
                 modifier = Modifier
                     .padding(8.dp)
@@ -95,6 +92,8 @@ fun LibraryFolderComponent(
                     style = MaterialTheme.typography.titleMedium,
                     color = colorScheme.primary,
                     textAlign = TextAlign.Center,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     modifier = Modifier.padding(top = 4.dp),
@@ -128,29 +127,32 @@ fun LibraryItemComponent(
     ) {
         Row(
             modifier = modifier
-                .padding(vertical = MaterialTheme.spacing.small)
+                .padding(
+                    vertical = MaterialTheme.spacing.small,
+                    horizontal = MaterialTheme.spacing.extraLarge
+                )
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
                 .alpha(if (!enabled) 0.5f else 1f),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
-            Box(
+            Surface(
                 modifier = Modifier
                     .width(10.dp)
-                    .height(30.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .align(Alignment.CenterVertically)
-                    .background(libraryItemColors[item.colorIndex])
-            )
+                    .fillMaxHeight()
+                    .padding(vertical = 2.dp),
+                shape = MaterialTheme.shapes.small,
+                color = libraryItemColors[item.colorIndex]
+            ) { }
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             Column {
                 Text(
-                    modifier = Modifier.basicMarquee(),
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = colorScheme.onSurface,
                     fontWeight = FontWeight.Medium,
-                    maxLines = 1,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = stringResource(

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023-2024 Matthias Emde
+ * Copyright (c) 2023-2025 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.goalstatistics
@@ -40,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.text.style.TextOverflow
@@ -226,9 +225,7 @@ fun GoalStatisticsGoalSelector(
                             progress = { animatedProgress },
                             modifier = Modifier.matchParentSize(),
                             color = color,
-                            strokeCap = StrokeCap.Round,
                             drawStopIndicator = {},
-                            gapSize = 0.dp,
                         )
                     }
                     AnimatedVisibility(
