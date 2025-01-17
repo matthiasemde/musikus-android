@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Archive
@@ -64,9 +65,12 @@ import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -92,6 +96,24 @@ fun GoalsScreen(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
         onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
     )
+
+    val goalsListState = rememberLazyListState()
+
+    /**
+     * Collect and handle events from the view model
+     */
+    ObserveAsEvents(viewModel.eventChannel) { event ->
+        when (event) {
+            is GoalsEvent.ScrollToGoal -> {
+                // The short delay improves the feel of the animation.
+                delay(300.milliseconds)
+                goalsListState.animateScrollToItem(
+                    index = event.goalIndex,
+                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
+                )
+            }
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = bottomBarHeight), // makes sure FAB is above the bottom Bar
@@ -181,6 +203,7 @@ fun GoalsScreen(
             // Goal List
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
+                state = goalsListState,
                 contentPadding = PaddingValues(
                     start = MaterialTheme.spacing.large,
                     end = MaterialTheme.spacing.large,
@@ -195,7 +218,7 @@ fun GoalsScreen(
                 ) { goal ->
                     val descriptionId = goal.description.description.id
                     Selectable(
-                        modifier = Modifier.animateItem(),
+                        modifier = Modifier.animateItemPlacement(),
                         selected = descriptionId in contentUiState.selectedGoalIds,
                         onShortClick = {
                             eventHandler(

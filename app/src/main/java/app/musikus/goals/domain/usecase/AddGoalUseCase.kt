@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.goals.domain.usecase
@@ -32,7 +32,7 @@ class AddGoalUseCase(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>?
-    ) {
+    ): Pair<UUID, UUID> {
         if (descriptionCreationAttributes.periodInPeriodUnits <= 0) {
             throw InvalidGoalDescriptionException("Period in period units must be greater than 0")
         }
@@ -79,7 +79,7 @@ class AddGoalUseCase(
             GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
         }
 
-        goalRepository.addNewGoal(
+        return goalRepository.addNewGoal(
             descriptionCreationAttributes = descriptionCreationAttributes,
             instanceCreationAttributes = instanceCreationAttributes.copy(
                 startTimestamp = startTimestamp

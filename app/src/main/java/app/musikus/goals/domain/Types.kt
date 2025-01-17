@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde
  */
 
 package app.musikus.goals.domain
@@ -41,7 +41,7 @@ interface GoalRepository {
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>?,
-    )
+    ): Pair<UUID, UUID>
 
     suspend fun addNewInstance(
         instanceCreationAttributes: GoalInstanceCreationAttributes

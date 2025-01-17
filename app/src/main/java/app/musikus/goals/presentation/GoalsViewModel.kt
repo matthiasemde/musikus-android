@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.goals.presentation
@@ -24,10 +24,13 @@ import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.DialogMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,6 +50,10 @@ data class GoalDialogData(
     val initialTarget: Duration = 0.seconds,
     val oneShot: Boolean = false,
 )
+
+sealed class GoalsEvent {
+    data class ScrollToGoal(val goalIndex: Int) : GoalsEvent()
+}
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
@@ -100,6 +107,9 @@ class GoalsViewModel @Inject constructor(
     // Delete or Archive dialog
     private val _showDeleteOrArchiveDialog = MutableStateFlow(false)
     private val _deleteOrArchiveDialogIsArchiveAction = MutableStateFlow(false)
+
+    private val _eventChannel = Channel<GoalsEvent>()
+    val eventChannel = _eventChannel.receiveAsFlow()
 
     /**
      *  Composing the Ui state
@@ -449,7 +459,12 @@ class GoalsViewModel @Inject constructor(
                 } else {
                     emptyList()
                 }
-            )
+            ).let { (_, newGoalInstanceId) ->
+                val newGoalIndex = currentGoals.map {
+                    it.indexOfFirst { it.instance.id == newGoalInstanceId }
+                }.first { it != -1 }
+                _eventChannel.send(GoalsEvent.ScrollToGoal(newGoalIndex))
+            }
             clearDialog()
         }
     }

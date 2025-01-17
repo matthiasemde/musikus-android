@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde
  */
 
 package app.musikus.goals.data
@@ -45,13 +45,24 @@ class GoalRepositoryImpl(
 
     /** Mutators */
 
-    /** Add */
+    /**
+     * Adds a new goal to the database.
+     *
+     * This function inserts a new goal description and corresponding goal instance into the database.
+     * It also associates any specified library items with the new goal.
+     *
+     * @param descriptionCreationAttributes The attributes used to create the goal description.
+     * @param instanceCreationAttributes The attributes used to create the goal instance.
+     * @param libraryItemIds A list of UUIDs representing library items to be associated with the goal.
+     *
+     * @return A Pair containing the UUID of the newly created goal description and the UUID of the newly created goal instance.
+     */
     override suspend fun addNewGoal(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>?,
-    ) {
-        descriptionDao.insert(
+    ): Pair<UUID, UUID> {
+        return descriptionDao.insert(
             descriptionCreationAttributes = descriptionCreationAttributes,
             instanceCreationAttributes = instanceCreationAttributes,
             libraryItemIds = libraryItemIds,
