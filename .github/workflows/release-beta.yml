@@ -1,10 +1,11 @@
-name: RELEASE-ALPHA
+name: RELEASE-BETA
 
 on:
   workflow_dispatch:
 
 env:
   JAVA_VERSION: 17
+  JAVA_DISTRO: 'zulu'
   UPLOAD_KEY_STORE_PATH: ${{ github.workspace }}/upload_keystore.jks
   SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/signing_keystore.jks
   SERVICE_ACCOUNT_JSON_PATH: ${{ github.workspace }}/service_account.json
@@ -138,8 +139,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
+          distribution: ${{ env.JAVA_DISTRO }}
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
       - name: Decode keystore
         env:
@@ -194,8 +199,12 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: gradle
+          distribution: ${{ env.JAVA_DISTRO }}
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
+          cache-read-only: true
 
       - name: Decode keystore
         env:
@@ -220,12 +229,12 @@ jobs:
           ./gradlew bundleRelease
           ./gradlew assembleRelease
 
-      - name: Upload bundle to the Google Play Console alpha track
+      - name: Upload bundle to the Google Play Console beta track
         uses: r0adkll/upload-google-play@v1
         with:
           packageName: app.musikus
           serviceAccountJson: ${{ env.SERVICE_ACCOUNT_JSON_PATH }}
           releaseFiles: app/build/outputs/bundle/release/*.aab
           releaseName: ${{ env.version_name }}
-          track: alpha
+          track: beta
           status: draft
