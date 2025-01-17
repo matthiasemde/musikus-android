@@ -104,6 +104,9 @@ fun Library(
     ObserveAsEvents(viewModel.eventChannel) { event ->
         when (event) {
             is LibraryCoreEvent.ScrollToFolder -> {
+                if (itemsListState.firstVisibleItemIndex > 0) {
+                    itemsListState.animateScrollToItem(index = 0)
+                }
                 // The short delay improves the feel of the animation.
                 delay(300.milliseconds)
                 foldersListState.animateScrollToItem(
@@ -186,7 +189,9 @@ fun Library(
                 contentPadding = paddingValues,
                 contentUiState = contentUiState,
                 navigateToFolderDetails = navigateToFolderDetails,
-                eventHandler = eventHandler
+                eventHandler = eventHandler,
+                foldersListState = foldersListState,
+                itemsListState = itemsListState,
             )
 
             // Show hint if no items or folders are in the library
@@ -246,6 +251,7 @@ fun LibraryContent(
     itemsListState: LazyListState,
 ) {
     LazyColumn(
+        state = itemsListState,
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding() + 16.dp,
@@ -306,7 +312,7 @@ fun LibraryContent(
                         key = { it.folder.id }
                     ) { folderWithItems ->
                         val folder = folderWithItems.folder
-                        Row(modifier = Modifier.animateItem()) {
+                        Row(modifier = Modifier.animateItemPlacement()) {
                             LibraryFolderComponent(
                                 folder = folder,
                                 numItems = folderWithItems.items.size,
