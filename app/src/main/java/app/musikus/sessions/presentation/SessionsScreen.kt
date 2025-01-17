@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -60,7 +63,9 @@ import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationString
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
+import kotlinx.coroutines.delay
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -88,6 +93,16 @@ fun SessionsScreen(
     val fabExpanded by remember {
         derivedStateOf {
             sessionsListState.firstVisibleItemIndex == 0
+        }
+    }
+
+    /**
+     * When a session is finished, scroll to the top
+     */
+    LaunchedEffect(mainUiState.isSessionRunning) {
+        if (!mainUiState.isSessionRunning) {
+            delay(300.milliseconds)
+            sessionsListState.animateScrollToItem(0)
         }
     }
 
@@ -165,8 +180,8 @@ fun SessionsScreen(
                 contentPadding = PaddingValues(
                     start = MaterialTheme.spacing.large,
                     end = MaterialTheme.spacing.large,
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
                 ),
                 state = sessionsListState,
             ) {
@@ -220,6 +235,11 @@ fun SessionsScreen(
                             }
                         }
                     }
+                }
+
+                // extra large spacer as footer for clearing the fab button
+                item {
+                    Spacer(modifier = Modifier.height(56.dp))
                 }
             }
 
