@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2025 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.goals.presentation
@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -76,7 +77,8 @@ fun GoalCard(
 
     ElevatedCard(
         modifier = modifier
-            .blur(if (description.paused) 1.5.dp else 0.dp)
+            .blur(if (description.paused) 1.5.dp else 0.dp),
+        elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Box {
             Column(modifier = Modifier.padding(16.dp)) {

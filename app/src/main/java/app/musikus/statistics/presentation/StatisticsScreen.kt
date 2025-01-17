@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023-2024 Matthias Emde
+ * Copyright (c) 2023-2025 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.statistics.presentation
@@ -33,6 +33,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -247,7 +248,8 @@ fun StatisticsSessionsCard(
     navigateToSessionStatistics: () -> Unit,
 ) {
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(
             modifier = Modifier
@@ -381,7 +383,8 @@ fun StatisticsGoalsCard(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
+            .wrapContentHeight(),
+        elevation = CardDefaults.cardElevation(0.dp),
     ) {
         Column(
             modifier = Modifier
@@ -492,7 +495,10 @@ fun StatisticsGoalsCard(
 fun StatisticsRatingsCard(
     uiState: StatisticsRatingsCardUiState
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

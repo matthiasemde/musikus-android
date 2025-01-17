@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2025 Matthias Emde
+ * Copyright (c) 2022-2025 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.sessions.presentation
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -125,7 +126,9 @@ fun SessionCard(
     // used as ratio for the two columns
     val goldenRatio = 1.618f
 
-    ElevatedCard {
+    ElevatedCard(
+        elevation = CardDefaults.cardElevation(0.dp),
+    ) {
         /** Card Header */
         Row(
             modifier = Modifier
