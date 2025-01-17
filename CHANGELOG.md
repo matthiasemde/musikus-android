@@ -1,4 +1,10 @@
 Initial revision
+## [v0.11.1] - 2025-01-17
+### :bug: Bug Fixes
+- [`9e5f755`](https://github.com/matthiasemde/musikus-android/commit/9e5f75560defb52d2f9918558f270e4bc2c3e16b) - replace content padding in lists by spacers *(PR [#160](https://github.com/matthiasemde/musikus-android/pull/160) by [@matthiasemde](https://github.com/matthiasemde))*
+- [`f6d8142`](https://github.com/matthiasemde/musikus-android/commit/f6d81420690c3fcd41d59a12ac50fb7905f27d03) - remove card elevation on all cards *(PR [#161](https://github.com/matthiasemde/musikus-android/pull/161) by [@mipro98](https://github.com/mipro98))*
+
+
 ## [v0.11.0] - 2025-01-16
 ### :sparkles: New Features
 - [`2d2268c`](https://github.com/matthiasemde/musikus-android/commit/2d2268c3de88d85edb23bf0896882f9920d0b49c) - add navigation drawer and abstract top bar *(PR [#134](https://github.com/matthiasemde/musikus-android/pull/134) by [@matthiasemde](https://github.com/matthiasemde))*
@@ -54,3 +60,4 @@ Initial revision
 [v0.9.3]: https://github.com/matthiasemde/musikus-android/compare/v0.9.2...v0.9.3
 [v0.10.0]: https://github.com/matthiasemde/musikus-android/compare/v0.9.3...v0.10.0
 [v0.11.0]: https://github.com/matthiasemde/musikus-android/compare/v0.10.0...v0.11.0
+[v0.11.1]: https://github.com/matthiasemde/musikus-android/compare/v0.11.0...v0.11.1
