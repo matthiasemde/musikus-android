@@ -21,10 +21,14 @@ import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,6 +48,11 @@ data class LibraryItemEditData(
     val colorIndex: Int,
     val folderId: UUID?,
 )
+
+sealed class LibraryCoreEvent {
+    data class ScrollToFolder(val folderIndex: Int) : LibraryCoreEvent()
+    data class ScrollToItem(val itemIndex: Int) : LibraryCoreEvent()
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class LibraryCoreViewModel(
@@ -91,6 +100,9 @@ abstract class LibraryCoreViewModel(
 
     // Delete dialog
     private val _showDeleteDialog = MutableStateFlow(false)
+
+    private val _eventChannel = Channel<LibraryCoreEvent>()
+    val eventChannel = _eventChannel.receiveAsFlow()
 
     /** Combining imported and own flows  */
     private val items = activeFolderId.flatMapLatest { activeFolderId ->
@@ -420,7 +432,7 @@ abstract class LibraryCoreViewModel(
     private fun onFolderDialogConfirmed() {
         viewModelScope.launch {
             val folderData = _folderEditData.value ?: return@launch
-            _folderToEditId.value?.let {
+            val folderId = _folderToEditId.value?.also {
                 libraryUseCases.editFolder(
                     id = it,
                     updateAttributes = LibraryFolderUpdateAttributes(
@@ -430,14 +442,20 @@ abstract class LibraryCoreViewModel(
             } ?: libraryUseCases.addFolder(
                 LibraryFolderCreationAttributes(name = folderData.name)
             )
+
             clearFolderDialog()
+
+            val newFolderIndex = foldersWithItems.map {
+                it.indexOfFirst { it.folder.id == folderId }
+            }.first { it != -1 }
+            _eventChannel.send(LibraryCoreEvent.ScrollToFolder(newFolderIndex))
         }
     }
 
     private fun onItemDialogConfirmed() {
         viewModelScope.launch {
             val itemData = _itemEditData.value ?: return@launch
-            _itemToEditId.value?.let {
+            val itemId = _itemToEditId.value?.also {
                 libraryUseCases.editItem(
                     id = it,
                     LibraryItemUpdateAttributes(
@@ -453,7 +471,13 @@ abstract class LibraryCoreViewModel(
                     libraryFolderId = Nullable(itemData.folderId)
                 )
             )
+
             clearItemDialog()
+
+            val newItemIndex = items.map {
+                it.indexOfFirst { it.id == itemId }
+            }.first { it != -1 }
+            _eventChannel.send(LibraryCoreEvent.ScrollToItem(newItemIndex))
         }
     }
 

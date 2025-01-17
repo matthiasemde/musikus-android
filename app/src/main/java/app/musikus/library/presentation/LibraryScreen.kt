@@ -27,8 +27,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MusicNote
@@ -63,8 +65,11 @@ import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryFolderSortMode
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +94,33 @@ fun Library(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
         onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
     )
+
+    val foldersListState = rememberLazyListState()
+    val itemsListState = rememberLazyListState()
+
+    /**
+     * Collect and handle events from the view model
+     */
+    ObserveAsEvents(viewModel.eventChannel) { event ->
+        when (event) {
+            is LibraryCoreEvent.ScrollToFolder -> {
+                // The short delay improves the feel of the animation.
+                delay(300.milliseconds)
+                foldersListState.animateScrollToItem(
+                    index = event.folderIndex,
+                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
+                )
+            }
+            is LibraryCoreEvent.ScrollToItem -> {
+                // The short delay improves the feel of the animation.
+                delay(300.milliseconds)
+                itemsListState.animateScrollToItem(
+                    index = event.itemIndex,
+                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
+                )
+            }
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = bottomBarHeight), // makes sure FAB is above the bottom Bar
@@ -209,7 +241,9 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     contentUiState: LibraryContentUiState,
     navigateToFolderDetails: (Screen.LibraryFolderDetails) -> Unit,
-    eventHandler: LibraryUiEventHandler
+    eventHandler: LibraryUiEventHandler,
+    foldersListState: LazyListState,
+    itemsListState: LazyListState,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -259,6 +293,7 @@ fun LibraryContent(
             /** Folders */
             item {
                 LazyRow(
+                    state = foldersListState,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     // header and footer items replace contentPadding

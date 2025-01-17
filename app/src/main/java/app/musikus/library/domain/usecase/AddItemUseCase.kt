@@ -11,6 +11,7 @@ package app.musikus.library.domain.usecase
 import app.musikus.library.data.entities.InvalidLibraryItemException
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.domain.LibraryRepository
+import java.util.UUID
 
 class AddItemUseCase(
     private val libraryRepository: LibraryRepository
@@ -19,7 +20,7 @@ class AddItemUseCase(
     @Throws(InvalidLibraryItemException::class)
     suspend operator fun invoke(
         creationAttributes: LibraryItemCreationAttributes
-    ) {
+    ): UUID {
         if (creationAttributes.name.isBlank()) {
             throw InvalidLibraryItemException("Item name cannot be empty")
         }
@@ -35,7 +36,7 @@ class AddItemUseCase(
             throw InvalidLibraryItemException("Folder (${creationAttributes.libraryFolderId.value}) does not exist")
         }
 
-        libraryRepository.addItem(
+        return libraryRepository.addItem(
             creationAttributes = creationAttributes
         )
     }

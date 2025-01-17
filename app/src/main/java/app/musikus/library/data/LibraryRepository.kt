@@ -27,12 +27,12 @@ class LibraryRepositoryImpl(
 
     /** Mutators */
     /** Add */
-    override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
-        folderDao.insert(creationAttributes)
+    override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes): UUID {
+        return folderDao.insert(creationAttributes)
     }
 
-    override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
-        itemDao.insert(creationAttributes)
+    override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes): UUID {
+        return itemDao.insert(creationAttributes)
     }
 
     /** Edit */

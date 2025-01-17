@@ -23,8 +23,8 @@ interface LibraryRepository {
 
     /** Mutators */
     /** Add */
-    suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes)
-    suspend fun addItem(creationAttributes: LibraryItemCreationAttributes)
+    suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes): UUID
+    suspend fun addItem(creationAttributes: LibraryItemCreationAttributes): UUID
 
     /** Edit */
     suspend fun editFolder(id: UUID, updateAttributes: LibraryFolderUpdateAttributes)
