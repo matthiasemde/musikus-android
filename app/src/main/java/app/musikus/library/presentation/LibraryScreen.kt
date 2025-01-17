@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -214,12 +215,18 @@ fun LibraryContent(
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 16.dp,
-            bottom = contentPadding.calculateBottomPadding() + 56.dp,
+            top = contentPadding.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding(),
         ),
     ) {
         val foldersUiState = contentUiState.foldersUiState
         val itemsUiState = contentUiState.itemsUiState
+
+        // header and footer items replace contentPadding
+        // but also serve to anchor the column when inserting items
+        item {
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        }
 
         /** Folders */
         if (foldersUiState != null) {
@@ -261,11 +268,12 @@ fun LibraryContent(
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // header and footer items replace contentPadding
-                    // but also serve to fixate the list when inserting items
+                    // start and end spacers replace contentPadding
+                    // but also serve to anchor the row when inserting items
                     item {
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     }
+
                     items(
                         items = foldersUiState.foldersWithItems,
                         key = { it.folder.id }
@@ -287,10 +295,17 @@ fun LibraryContent(
                             )
                         }
                     }
+
+                    // small spacer at the end of the row
                     item {
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     }
                 }
+            }
+
+            // small spacer between folders and items
+            item {
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             }
         }
 
@@ -300,6 +315,11 @@ fun LibraryContent(
                 uiState = itemsUiState,
                 libraryCoreEventHandler = { eventHandler(LibraryUiEvent.CoreUiEvent(it)) },
             )
+        }
+
+        // extra large spacer as footer for clearing the fab button
+        item {
+            Spacer(modifier = Modifier.height(56.dp))
         }
     }
 }

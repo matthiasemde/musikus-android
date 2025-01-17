@@ -19,9 +19,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -178,17 +180,25 @@ fun GoalsScreen(
         content = { paddingValues ->
             val contentUiState = uiState.contentUiState
 
+            val verticalArrangementSpacing = MaterialTheme.spacing.medium
+
             // Goal List
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(
                     start = MaterialTheme.spacing.large,
                     end = MaterialTheme.spacing.large,
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
                 ),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(verticalArrangementSpacing),
             ) {
+                // header and footer spacers replace contentPadding
+                // but also serve to anchor the column when inserting items
+                item {
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                }
+
                 items(
                     items = contentUiState.currentGoals,
                     key = { it.instance.id },
@@ -219,6 +229,11 @@ fun GoalsScreen(
                             timeProvider = timeProvider
                         )
                     }
+                }
+
+                // extra large spacer as footer for clearing the fab button
+                item {
+                    Spacer(modifier = Modifier.height(56.dp - verticalArrangementSpacing))
                 }
             }
 
