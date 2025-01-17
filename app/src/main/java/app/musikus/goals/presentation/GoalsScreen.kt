@@ -69,8 +69,6 @@ import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -105,12 +103,7 @@ fun GoalsScreen(
     ObserveAsEvents(viewModel.eventChannel) { event ->
         when (event) {
             is GoalsEvent.ScrollToGoal -> {
-                // The short delay improves the feel of the animation.
-                delay(300.milliseconds)
-                goalsListState.animateScrollToItem(
-                    index = event.goalIndex,
-                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
-                )
+                goalsListState.smoothlyScrollToItem(event.goalIndex)
             }
         }
     }
@@ -218,7 +211,7 @@ fun GoalsScreen(
                 ) { goal ->
                     val descriptionId = goal.description.description.id
                     Selectable(
-                        modifier = Modifier.animateItemPlacement(),
+                        modifier = Modifier.animateItem(),
                         selected = descriptionId in contentUiState.selectedGoalIds,
                         onShortClick = {
                             eventHandler(

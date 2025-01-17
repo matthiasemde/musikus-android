@@ -64,12 +64,11 @@ import app.musikus.core.presentation.components.MiniFABData
 import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.SortMenu
+import app.musikus.core.presentation.components.smoothlyScrollToItem
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.ObserveAsEvents
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryFolderSortMode
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,20 +106,10 @@ fun Library(
                 if (itemsListState.firstVisibleItemIndex > 0) {
                     itemsListState.animateScrollToItem(index = 0)
                 }
-                // The short delay improves the feel of the animation.
-                delay(300.milliseconds)
-                foldersListState.animateScrollToItem(
-                    index = event.folderIndex,
-                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
-                )
+                foldersListState.smoothlyScrollToItem(event.folderIndex)
             }
             is LibraryCoreEvent.ScrollToItem -> {
-                // The short delay improves the feel of the animation.
-                delay(300.milliseconds)
-                itemsListState.animateScrollToItem(
-                    index = event.itemIndex,
-                    scrollOffset = -150 // small scroll offset to make sure the item above is partially visible
-                )
+                itemsListState.smoothlyScrollToItem(event.itemIndex)
             }
         }
     }
