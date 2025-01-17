@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024-2025 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.library.presentation
@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -79,7 +80,10 @@ fun LibraryFolderComponent(
         onLongClick = onLongClick,
         shape = MaterialTheme.shapes.large,
     ) {
-        ElevatedCard(Modifier.size(150.dp)) {
+        ElevatedCard(
+            Modifier.size(150.dp),
+            elevation = CardDefaults.cardElevation(0.dp),
+        ) {
             Column(
                 modifier = Modifier
                     .padding(8.dp)
