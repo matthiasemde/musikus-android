@@ -437,7 +437,7 @@ class GoalsViewModel @Inject constructor(
     ) {
         val dialogData = _dialogData.value ?: return
         viewModelScope.launch {
-            _goalToEditId.value?.let { goalToEditId ->
+            val goalInstanceId = _goalToEditId.value?.also { goalToEditId ->
                 goalsUseCases.edit(
                     descriptionId = goalToEditId,
                     instanceUpdateAttributes = GoalInstanceUpdateAttributes(
@@ -459,13 +459,14 @@ class GoalsViewModel @Inject constructor(
                 } else {
                     emptyList()
                 }
-            ).let { (_, newGoalInstanceId) ->
-                val newGoalIndex = currentGoals.map {
-                    it.indexOfFirst { it.instance.id == newGoalInstanceId }
-                }.first { it != -1 }
-                _eventChannel.send(GoalsEvent.ScrollToGoal(newGoalIndex))
-            }
+            ).let { (_, goalInstanceId) -> goalInstanceId }
+
             clearDialog()
+
+            val newGoalIndex = currentGoals.map {
+                it.indexOfFirst { it.instance.id == goalInstanceId }
+            }.first { it != -1 }
+            _eventChannel.send(GoalsEvent.ScrollToGoal(newGoalIndex))
         }
     }
 }
