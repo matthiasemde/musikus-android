@@ -44,12 +44,12 @@ Your personal practice companion
 **Musikus is an app designed for musicians to support them during practicing with various handy features and tools.**
 
 * 📅 **Session Overview**: Review your past practice sessions at a glance.
-* 🎵 **Metronome**: Keep perfect time with our precise metronome.
+* 🎵 **Metronome**: Stay perfectly in time with our precise metronome.
 * 🎤 **Recorder**: Capture your practice sessions and listen back to track your improvement.
-* 🎯 **Goals**: Set and achieve daily, weekly, and monthly goals to stay motivated and on track.
+* 🎯 **Goals**: Set and achieve daily, weekly, and monthly goals to stay motivated.
 * 📊 **Statistics**: Gain insights into your practice habits with detailed statistics.
 
-## 🧪 Musikus is in beta
+## 🧪 Musikus is in Open Beta
 
 If you have any feedback, bug reports or feature requests, please open a [new issue](https://github.com/matthiasemde/musikus-android/issues/new).
 
