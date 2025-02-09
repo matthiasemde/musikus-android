@@ -33,7 +33,6 @@ Your personal practice companion
 </p>
 
 
-<div align="center">
 
 <!-- [Screenshots] -->
 
