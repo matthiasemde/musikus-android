@@ -24,7 +24,10 @@ Your personal practice companion
 
 <!-- Big badges -->
 <div align="center">
-
+  
+<img src="images/screenshots.webp" height="600">
+</br>
+  
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
     alt="Get it on Google Play"
     height="80">](https://play.google.com/store/apps/details?id=app.musikus)
