@@ -10,6 +10,7 @@ package app.musikus.activesession.presentation
 
 import android.app.Application
 import android.os.Build
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
@@ -265,6 +266,7 @@ class ActiveSessionViewModel @Inject constructor(
         lastPracticedDates,
     ) { visible, runningItem, folders, items, lastPracticedDates ->
         if (!visible) return@combine null
+        Log.d("ActiveSessionViewModel", "NewItemSelectorUiState: $items")
         NewItemSelectorUiState(
             runningItem = runningItem,
             folders = folders.map { it.folder },

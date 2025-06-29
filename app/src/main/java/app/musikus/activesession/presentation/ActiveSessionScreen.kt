@@ -1272,7 +1272,14 @@ private fun NewItemSelector(
 ) {
     val _uiState = uiState.value ?: return // unpacking & null check
 
+
     var selectedFolder: UUID? by remember { mutableStateOf(_uiState.runningItem?.libraryFolderId) }
+
+    // selectedFolder has to be tied to ViewModel state to be consistent with displayed items
+    LaunchedEffect(selectedFolder) {
+        onFolderChanged(selectedFolder)
+    }
+
     var createMenuShown by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth()) {
@@ -1325,7 +1332,7 @@ private fun NewItemSelector(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         // Folders
-        val folders = remember { _uiState.folders.toImmutableList() }
+        val folders = _uiState.folders.toImmutableList()
         if (folders.isNotEmpty()) {
             LibraryFoldersRow(
                 folders = folders,
@@ -1336,7 +1343,6 @@ private fun NewItemSelector(
                     {
                             folderId ->
                         selectedFolder = folderId
-                        onFolderChanged(folderId)
                     }
                 }
             )
@@ -1361,9 +1367,8 @@ private fun NewItemSelector(
         }
 
         // Items
-        val items = remember { _uiState.items.toImmutableList() }
         LibraryItemList(
-            items = items,
+            items = _uiState.items.toImmutableList(),
             // TODO update last practiced Dates for items during session
             lastPracticedDates = _uiState.lastPracticedDates.toImmutableMap(),
             onItemClick = { libraryItem ->
