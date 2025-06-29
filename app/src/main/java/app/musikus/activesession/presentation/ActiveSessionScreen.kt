@@ -134,7 +134,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
@@ -148,8 +147,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
-import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
@@ -157,6 +156,7 @@ import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.ExceptionHandler
+import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.components.SwipeToDeleteContainer
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.fadingEdge
@@ -164,7 +164,6 @@ import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2
 import app.musikus.core.presentation.theme.MusikusPreviewElement3
-import app.musikus.core.presentation.theme.MusikusPreviewElement4
 import app.musikus.core.presentation.theme.MusikusPreviewElement5
 import app.musikus.core.presentation.theme.MusikusPreviewElement6
 import app.musikus.core.presentation.theme.MusikusPreviewWholeScreen
@@ -176,6 +175,7 @@ import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.LibraryItemComponent
@@ -433,7 +433,10 @@ private fun ActiveSessionScreen(
             },
             onNewItem = remember { { } },
             onNewFolder = remember { { } },
-            onDismissed = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
+            onDismissed = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } },
+            onFolderChanged = remember { {
+                eventHandler(ActiveSessionUiEvent.NewItemSelectorFolderSelected(it))
+            } }
         )
     }
 
@@ -735,6 +738,7 @@ private fun NewItemSelectorBottomSheet(
     onNewItem: () -> Unit,
     onNewFolder: () -> Unit,
     onDismissed: () -> Unit,
+    onFolderChanged: (UUID?) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     ModalBottomSheet(
@@ -751,6 +755,7 @@ private fun NewItemSelectorBottomSheet(
             onItemSelected = onItemSelected,
             onNewItem = onNewItem,
             onNewFolder = onNewFolder,
+            onFolderChanged = onFolderChanged,
             onClose = remember {
                 {
                     scope.launch {
@@ -1262,6 +1267,7 @@ private fun NewItemSelector(
     onItemSelected: (LibraryItem) -> Unit,
     onNewItem: () -> Unit = {},
     onNewFolder: () -> Unit = {},
+    onFolderChanged: (UUID?) -> Unit = {},
     onClose: () -> Unit = {},
 ) {
     val _uiState = uiState.value ?: return // unpacking & null check
@@ -1319,8 +1325,7 @@ private fun NewItemSelector(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         // Folders
-        val folders =
-            remember { _uiState.foldersWithItems.map { it.folder }.toImmutableList() }
+        val folders = remember { _uiState.folders.toImmutableList() }
         if (folders.isNotEmpty()) {
             LibraryFoldersRow(
                 folders = folders,
@@ -1331,6 +1336,7 @@ private fun NewItemSelector(
                     {
                             folderId ->
                         selectedFolder = folderId
+                        onFolderChanged(folderId)
                     }
                 }
             )
@@ -1340,14 +1346,22 @@ private fun NewItemSelector(
         // and also to show it when folders are not shown
         HorizontalDivider()
 
-        val items = remember(selectedFolder) {
-            // all items of the selected folder or root items if not found in folders
-            _uiState.foldersWithItems.firstOrNull {
-                it.folder.id == selectedFolder
-            }?.items?.toImmutableList() ?: _uiState.rootItems.toImmutableList()
+        Row(Modifier.fillMaxWidth(1f)) {
+            Spacer(Modifier.weight(1f))
+            var showSortMenu by remember { mutableStateOf(false) }
+            SortMenu(
+                show = showSortMenu,
+                sortItemDescription = "",
+                sortModes = LibraryItemSortMode.entries,
+                currentSortMode = LibraryItemSortMode.DATE_ADDED,
+                currentSortDirection = SortDirection.DESCENDING,
+                onShowMenuChanged = { showSortMenu = !showSortMenu },
+                onSelectionHandler = { }
+            )
         }
 
         // Items
+        val items = remember { _uiState.items.toImmutableList() }
         LibraryItemList(
             items = items,
             // TODO update last practiced Dates for items during session
@@ -1646,83 +1660,83 @@ private fun PreviewLibraryRow(
         )
     }
 }
-
-@MusikusPreviewElement4
-@Composable
-private fun PreviewNewItemSelector(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-    MusikusThemedPreview(theme) {
-        Column {
-            NewItemSelector(
-                uiState = remember {
-                    mutableStateOf(
-                        NewItemSelectorUiState(
-                            foldersWithItems = dummyFolders.map {
-                                LibraryFolderWithItems(
-                                    it,
-                                    dummyLibraryItems.toList()
-                                )
-                            }.toList(),
-                            rootItems = dummyLibraryItems.toList(),
-                            runningItem = dummyLibraryItems.first().copy(
-                                libraryFolderId = UUIDConverter.fromInt(1)
-                            ),
-                            lastPracticedDates = emptyMap(),
-                        )
-                    )
-                },
-                onItemSelected = { }
-            )
-        }
-    }
-}
-
-@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-@Composable
-private fun PreviewNewItemSelectorNoFolders() {
-    MusikusThemedPreview {
-        Column {
-            NewItemSelector(
-                uiState = remember {
-                    mutableStateOf(
-                        NewItemSelectorUiState(
-                            foldersWithItems = emptyList(),
-                            rootItems = dummyLibraryItems.toList(),
-                            runningItem = dummyLibraryItems.first(),
-                            lastPracticedDates = emptyMap(),
-                        )
-                    )
-                },
-                onItemSelected = { }
-            )
-        }
-    }
-}
-
-@Preview(name = "One Folder", group = "Element 4", showSystemUi = true)
-@Composable
-private fun PreviewNewItemSelectorOneFolder() {
-    MusikusThemedPreview {
-        Column {
-            NewItemSelector(
-                uiState = remember {
-                    mutableStateOf(
-                        NewItemSelectorUiState(
-                            foldersWithItems = dummyFolders.take(1).map {
-                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
-                            }.toList(),
-                            runningItem = dummyLibraryItems.first(),
-                            rootItems = dummyLibraryItems.toList(),
-                            lastPracticedDates = emptyMap(),
-                        )
-                    )
-                },
-                onItemSelected = { }
-            )
-        }
-    }
-}
+//
+//@MusikusPreviewElement4
+//@Composable
+//private fun PreviewNewItemSelector(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//    MusikusThemedPreview(theme) {
+//        Column {
+//            NewItemSelector(
+//                uiState = remember {
+//                    mutableStateOf(
+//                        NewItemSelectorUiState(
+//                            foldersWithItems = dummyFolders.map {
+//                                LibraryFolderWithItems(
+//                                    it,
+//                                    dummyLibraryItems.toList()
+//                                )
+//                            }.toList(),
+//                            rootItems = dummyLibraryItems.toList(),
+//                            runningItem = dummyLibraryItems.first().copy(
+//                                libraryFolderId = UUIDConverter.fromInt(1)
+//                            ),
+//                            lastPracticedDates = emptyMap(),
+//                        )
+//                    )
+//                },
+//                onItemSelected = { }
+//            )
+//        }
+//    }
+//}
+//
+//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+//@Composable
+//private fun PreviewNewItemSelectorNoFolders() {
+//    MusikusThemedPreview {
+//        Column {
+//            NewItemSelector(
+//                uiState = remember {
+//                    mutableStateOf(
+//                        NewItemSelectorUiState(
+//                            foldersWithItems = emptyList(),
+//                            rootItems = dummyLibraryItems.toList(),
+//                            runningItem = dummyLibraryItems.first(),
+//                            lastPracticedDates = emptyMap(),
+//                        )
+//                    )
+//                },
+//                onItemSelected = { }
+//            )
+//        }
+//    }
+//}
+//
+//@Preview(name = "One Folder", group = "Element 4", showSystemUi = true)
+//@Composable
+//private fun PreviewNewItemSelectorOneFolder() {
+//    MusikusThemedPreview {
+//        Column {
+//            NewItemSelector(
+//                uiState = remember {
+//                    mutableStateOf(
+//                        NewItemSelectorUiState(
+//                            foldersWithItems = dummyFolders.take(1).map {
+//                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
+//                            }.toList(),
+//                            runningItem = dummyLibraryItems.first(),
+//                            rootItems = dummyLibraryItems.toList(),
+//                            lastPracticedDates = emptyMap(),
+//                        )
+//                    )
+//                },
+//                onItemSelected = { }
+//            )
+//        }
+//    }
+//}
 
 @MusikusPreviewElement5
 @Composable

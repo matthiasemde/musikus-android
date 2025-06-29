@@ -10,8 +10,8 @@ package app.musikus.activesession.presentation
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
-import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
@@ -83,9 +83,9 @@ data class ActiveSessionEndDialogUiState(
 @Stable
 data class NewItemSelectorUiState(
     val runningItem: LibraryItem?,
-    val foldersWithItems: List<LibraryFolderWithItems>,
+    val folders: List<LibraryFolder>,
+    val items: List<LibraryItem>,   // ony items from displayed Folder
     val lastPracticedDates: Map<UUID, ZonedDateTime?>,
-    val rootItems: List<LibraryItem>,
 )
 
 // @Stable
@@ -111,6 +111,7 @@ sealed class ActiveSessionUiEvent {
     data object ToggleNewItemSelector : ActiveSessionUiEvent()
     data object ToggleFinishDialog : ActiveSessionUiEvent()
     data object ToggleDiscardDialog : ActiveSessionUiEvent()
+    data class NewItemSelectorFolderSelected(val folderId: UUID?) : ActiveSessionUiEvent()
 }
 
 sealed class ActiveSessionEndDialogUiEvent {

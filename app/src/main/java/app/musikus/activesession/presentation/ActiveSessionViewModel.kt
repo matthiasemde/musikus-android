@@ -95,32 +95,10 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionState.UNKNOWN
     )
 
-    private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
+    private val libraryFolders = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
-    )
-
-    private val rootItems = libraryUseCases.getSortedItems(Nullable(null)).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    private val allLibraryItems = combine(
-        libraryFoldersWithItems,
-        rootItems
-    ) { folders, rootItems ->
-        folders.flatMap { it.items } + rootItems
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val lastPracticedDates = allLibraryItems.flatMapLatest {
-        libraryUseCases.getLastPracticedDate(it)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
     )
 
     /** ------------------- Own StateFlow UI state ------------------------------------------- */
@@ -130,6 +108,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
     private val _newItemSelectorVisible = MutableStateFlow(false)
+    private val _displayedFolder = MutableStateFlow<UUID?>(null)
 
     private val _exceptionChannel = Channel<ActiveSessionException>()
     val exceptionChannel = _exceptionChannel.receiveAsFlow()
@@ -148,6 +127,24 @@ class ActiveSessionViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = Duration.ZERO
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val libraryItemsSelectedFolder = _displayedFolder.flatMapLatest { folderId ->
+        libraryUseCases.getSortedItems(Nullable(folderId))
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val lastPracticedDates = libraryItemsSelectedFolder.flatMapLatest {
+        libraryUseCases.getLastPracticedDate(it)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
     )
 
     private val ongoingPauseDuration = timeProvider.clock.map { now ->
@@ -263,16 +260,16 @@ class ActiveSessionViewModel @Inject constructor(
     private val newItemSelectorUiState = combine(
         _newItemSelectorVisible,
         runningLibraryItem,
-        libraryFoldersWithItems,
+        libraryFolders,
+        libraryItemsSelectedFolder,
         lastPracticedDates,
-        rootItems,
-    ) { visible, runningItem, folders, lastPracticedDates, rootItems ->
+    ) { visible, runningItem, folders, items, lastPracticedDates ->
         if (!visible) return@combine null
         NewItemSelectorUiState(
             runningItem = runningItem,
-            foldersWithItems = folders,
-            lastPracticedDates = lastPracticedDates,
-            rootItems = rootItems
+            folders = folders.map { it.folder },
+            items = items,
+            lastPracticedDates = lastPracticedDates
         )
     }.stateIn(
         scope = viewModelScope,
@@ -354,6 +351,7 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
             is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
             is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
+            is ActiveSessionUiEvent.NewItemSelectorFolderSelected -> _displayedFolder.update { event.folderId }
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> activeSessionUseCases.reset()
             ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
