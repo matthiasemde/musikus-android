@@ -20,6 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -34,14 +38,14 @@ import app.musikus.core.domain.SortMode
 @Composable
 fun <T : SortMode<*>> SortMenu(
     modifier: Modifier = Modifier,
-    show: Boolean,
     sortItemDescription: String,
     sortModes: List<T>,
     currentSortMode: T,
     currentSortDirection: SortDirection,
-    onShowMenuChanged: (Boolean) -> Unit,
     onSelectionHandler: (T) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+
     val mainContentDescription =
         stringResource(id = R.string.components_sort_menu_content_description, sortItemDescription)
     val dropdownContentDescription =
@@ -50,7 +54,7 @@ fun <T : SortMode<*>> SortMenu(
         modifier = modifier.semantics {
             contentDescription = mainContentDescription
         },
-        onClick = { onShowMenuChanged(!show) }
+        onClick = { expanded = !expanded },
     ) {
         Text(
             modifier = Modifier.padding(end = 8.dp),
@@ -71,8 +75,8 @@ fun <T : SortMode<*>> SortMenu(
                 contentDescription = dropdownContentDescription
             },
             offset = DpOffset((-10).dp, 10.dp),
-            expanded = show,
-            onDismissRequest = { onShowMenuChanged(false) },
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
         ) {
             // Menu Header
             Text(

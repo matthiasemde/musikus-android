@@ -10,7 +10,6 @@ package app.musikus.activesession.presentation
 
 import android.app.Application
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
@@ -18,13 +17,23 @@ import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.SessionStatus
 import app.musikus.core.data.Nullable
 import app.musikus.core.di.ApplicationScope
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
+import app.musikus.library.presentation.LibraryCoreUiEvent
+import app.musikus.library.presentation.LibraryFoldersSortMenuUiState
+import app.musikus.library.presentation.LibraryFoldersUiState
+import app.musikus.library.presentation.LibraryItemsSortMenuUiState
+import app.musikus.library.presentation.LibraryItemsUiState
+import app.musikus.library.presentation.LibraryUiEvent
 import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.sessions.data.entities.SectionCreationAttributes
@@ -37,7 +46,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.SharingStarted.Companion.Eagerly
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -56,7 +66,7 @@ import kotlin.time.Duration.Companion.seconds
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
     application: Application,
-    libraryUseCases: LibraryUseCases,
+    private val libraryUseCases: LibraryUseCases,
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
@@ -68,19 +78,19 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val state = activeSessionUseCases.getState().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.Eagerly,
+        started = Eagerly,
         initialValue = null
     )
 
     private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
     private val runningLibraryItem = activeSessionUseCases.getRunningItem().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = null
     )
 
@@ -92,14 +102,32 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = ActiveSessionState.UNKNOWN
     )
 
     private val libraryFolders = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = emptyList()
+    )
+
+    private val itemSortInfo = libraryUseCases.getItemSortInfo().stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = SortInfo(
+            mode = LibraryItemSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT,
+        )
+    )
+
+    private val folderSortInfo = libraryUseCases.getFolderSortInfo().stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = SortInfo(
+            mode = LibraryFolderSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT,
+        )
     )
 
     /** ------------------- Own StateFlow UI state ------------------------------------------- */
@@ -126,25 +154,27 @@ class ActiveSessionViewModel @Inject constructor(
         } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
+    /** Items from selected folder */
     @OptIn(ExperimentalCoroutinesApi::class)
     private val libraryItemsSelectedFolder = _displayedFolder.flatMapLatest { folderId ->
         libraryUseCases.getSortedItems(Nullable(folderId))
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
+    /** Last practiced dates for items in the selected folder */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val lastPracticedDates = libraryItemsSelectedFolder.flatMapLatest {
-        libraryUseCases.getLastPracticedDate(it)
+    private val lastPracticedDates = libraryItemsSelectedFolder.flatMapLatest { items ->
+        libraryUseCases.getLastPracticedDate(items)
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = emptyMap()
     )
 
@@ -155,7 +185,7 @@ class ActiveSessionViewModel @Inject constructor(
         } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
@@ -166,7 +196,7 @@ class ActiveSessionViewModel @Inject constructor(
         } ?: Duration.ZERO
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = Duration.ZERO
     )
 
@@ -174,7 +204,7 @@ class ActiveSessionViewModel @Inject constructor(
         it >= 1.seconds
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = false
     )
 
@@ -202,7 +232,7 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(Duration.ZERO),
             subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading)
@@ -231,7 +261,7 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = null
     )
 
@@ -254,28 +284,79 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = null
+    )
+
+    private val libraryItemsUiState = combine(
+        itemSortInfo,
+        libraryItemsSelectedFolder,
+        lastPracticedDates,
+    ) { sortInfo, items, dates ->
+        LibraryItemsUiState(
+            itemsWithLastPracticedDate = items.map { item ->
+                item to dates[item.id]
+            },
+            selectedItemIds = emptySet(),
+            sortMenuUiState = LibraryItemsSortMenuUiState(
+                mode = sortInfo.mode,
+                direction = sortInfo.direction,
+            ),
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryItemsUiState(
+            itemsWithLastPracticedDate = emptyList(),
+            selectedItemIds = emptySet(),
+            sortMenuUiState = LibraryItemsSortMenuUiState(
+                mode = LibraryItemSortMode.DEFAULT,
+                direction = SortDirection.DEFAULT,
+            ),
+        )
+    )
+
+    private val libraryFoldersUiState = combine(
+        folderSortInfo,
+        libraryFolders,
+    ) { sortInfo, folders ->
+        LibraryFoldersUiState(
+            foldersWithItems = folders,
+            selectedFolderIds = emptySet(),
+            sortMenuUiState = LibraryFoldersSortMenuUiState(
+                mode = sortInfo.mode,
+                direction = sortInfo.direction,
+            ),
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryFoldersUiState(
+            foldersWithItems = emptyList(),
+            selectedFolderIds = emptySet(),
+            sortMenuUiState = LibraryFoldersSortMenuUiState(
+                mode = LibraryFolderSortMode.DEFAULT,
+                direction = SortDirection.DEFAULT,
+            ),
+        )
     )
 
     private val newItemSelectorUiState = combine(
         _newItemSelectorVisible,
         runningLibraryItem,
-        libraryFolders,
-        libraryItemsSelectedFolder,
-        lastPracticedDates,
-    ) { visible, runningItem, folders, items, lastPracticedDates ->
+        libraryItemsUiState,
+        libraryFoldersUiState,
+    ) { visible, runningItem, libraryItemsUiState, libraryFoldersUiState ->
         if (!visible) return@combine null
-        Log.d("ActiveSessionViewModel", "NewItemSelectorUiState: $items")
+
         NewItemSelectorUiState(
             runningItem = runningItem,
-            folders = folders.map { it.folder },
-            items = items,
-            lastPracticedDates = lastPracticedDates
+            libraryItemsUiState = libraryItemsUiState,
+            libraryFoldersUiState = libraryFoldersUiState
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = null
     )
 
@@ -291,7 +372,7 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = null
     )
 
@@ -305,7 +386,7 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = WhileSubscribed(5000),
         initialValue = ActiveSessionDialogsUiState(
             endDialogUiState = _endDialogUiState.value,
             discardDialogVisible = _discardDialogVisible.value
@@ -353,7 +434,6 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
             is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
             is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
-            is ActiveSessionUiEvent.NewItemSelectorFolderSelected -> _displayedFolder.update { event.folderId }
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> activeSessionUseCases.reset()
             ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
@@ -364,9 +444,36 @@ class ActiveSessionViewModel @Inject constructor(
                 }
                 _newItemSelectorVisible.update { !it }
             }
+            is ActiveSessionUiEvent.NewItemSelectorEvent -> {
+                return onNewItemSelectorEvent(event.libraryEvent)
+            }
         }
 
         // events are consumed by default
+        return true
+    }
+
+    private fun onNewItemSelectorEvent(event: LibraryUiEvent): Boolean {
+        when (event) {
+            is LibraryUiEvent.CoreUiEvent -> {
+                // handle core events like navigation
+                when (event.coreEvent) {
+                    is LibraryCoreUiEvent.ItemPressed -> viewModelScope.launch {
+                        if (event.coreEvent.longClick) return@launch // ignore long clicks
+                        selectItem(event.coreEvent.item)
+                    }
+                    is LibraryCoreUiEvent.ItemSortModeSelected -> viewModelScope.launch {
+                        libraryUseCases.selectItemSortMode(event.coreEvent.mode)
+                    }
+                    else -> return false // event not handled
+                }
+            }
+            is LibraryUiEvent.FolderPressed -> {
+                // select folder in new item selector
+                _displayedFolder.update { event.folderId }
+            }
+            else -> return false // event not handled
+        }
         return true
     }
 
@@ -403,6 +510,8 @@ class ActiveSessionViewModel @Inject constructor(
             item = item,
             at = timeProvider.now()
         )
+
+
     }
 
     private suspend fun deleteSection(sectionId: UUID) {

@@ -141,14 +141,12 @@ fun GoalsScreen(
                 actions = {
                     val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
-                        show = sortMenuUiState.show,
                         sortModes = GoalsSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = stringResource(
                             id = R.string.goals_screen_top_bar_sort_menu_item_description
                         ),
-                        onShowMenuChanged = { eventHandler(GoalsUiEvent.GoalSortMenuPressed) },
                         onSelectionHandler = { eventHandler(GoalsUiEvent.GoalSortModeSelected(it)) }
                     )
                 }

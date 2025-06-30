@@ -22,22 +22,18 @@ data class LibraryActionModeUiState(
 )
 
 data class LibraryFoldersSortMenuUiState(
-    val show: Boolean,
-
     val mode: SortMode<LibraryFolder>,
     val direction: SortDirection,
 )
 
 data class LibraryFoldersUiState(
     val foldersWithItems: List<LibraryFolderWithItems>,
-    val selectedFolderIds: Set<UUID>,
+    val selectedFolderIds: Set<UUID?>,
 
     val sortMenuUiState: LibraryFoldersSortMenuUiState
 )
 
 data class LibraryItemsSortMenuUiState(
-    val show: Boolean,
-
     val mode: SortMode<LibraryItem>,
     val direction: SortDirection,
 )

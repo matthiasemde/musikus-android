@@ -15,7 +15,6 @@ typealias LibraryCoreUiEventHandler = (LibraryCoreUiEvent) -> Boolean
 
 sealed class LibraryCoreUiEvent {
     data class ItemPressed(val item: LibraryItem, val longClick: Boolean) : LibraryCoreUiEvent()
-    data object ItemSortMenuPressed : LibraryCoreUiEvent()
     data class ItemSortModeSelected(val mode: LibraryItemSortMode) : LibraryCoreUiEvent()
 
     data object DeleteButtonPressed : LibraryCoreUiEvent()

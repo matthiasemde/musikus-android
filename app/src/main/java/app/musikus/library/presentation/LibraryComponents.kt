@@ -8,7 +8,10 @@
 
 package app.musikus.library.presentation
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,13 +30,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -46,6 +58,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import app.musikus.R
+import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.musikusFormat
@@ -64,10 +77,12 @@ import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.menu.domain.ColorSchemeSelections
+import kotlinx.collections.immutable.ImmutableList
 import java.time.ZonedDateTime
+import java.util.UUID
 
 @Composable
-fun LibraryFolderComponent(
+fun LibraryFolderComponentLarge(
     folder: LibraryFolder,
     numItems: Int,
     selected: Boolean,
@@ -108,6 +123,97 @@ fun LibraryFolderComponent(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun LibraryFoldersSwipeRow(
+    modifier: Modifier = Modifier,
+    folders: ImmutableList<LibraryFolderWithItems>,
+    showBadge: Boolean = true,
+    highlightedFolderId: UUID?,
+    folderWithBadge: UUID?,
+    onFolderSelected: (UUID?) -> Unit,
+) {
+    // translate highlightedFolderId to selectedTabIndex
+    // since the first tab is the "no folder" tab, add +1 (note: indexOfFirst returns -1 if not found)
+    val selectedTabIndex = remember(highlightedFolderId) {
+        folders.indexOfFirst { it.folder.id == highlightedFolderId } + 1
+    }
+
+    ScrollableTabRow(
+        modifier = modifier.fillMaxWidth(),
+        selectedTabIndex = selectedTabIndex,
+        containerColor = colorScheme.surfaceContainerLow, // match color of ModalBottomSheet
+        divider = { }
+    ) {
+        LibraryFolderComponentSmall(
+            folder = null,
+            onClick = { onFolderSelected(null) },
+            isSelected = highlightedFolderId == null,
+            showBadge = showBadge && folderWithBadge == null
+        )
+
+        folders.forEach { folder ->
+            LibraryFolderComponentSmall(
+                folder = folder.folder,
+                onClick = { onFolderSelected(folder.folder.id) },
+                isSelected = folder.folder.id == highlightedFolderId,
+                showBadge = showBadge && folder.folder.id == folderWithBadge
+            )
+        }
+    }
+}
+
+@Composable
+fun LibraryFolderComponentSmall(
+    folder: LibraryFolder?,
+    onClick: (LibraryFolder?) -> Unit,
+    isSelected: Boolean,
+    showBadge: Boolean = false,
+) {
+    val textColor = if (isSelected) {
+        colorScheme.primary
+    } else {
+        colorScheme.onSurfaceVariant
+    }
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            colorScheme.primary
+        } else {
+            colorScheme.onSurfaceVariant
+        },
+        label = "color",
+        animationSpec = tween(200)
+    )
+
+    Tab(
+        modifier = Modifier.size(70.dp),
+        selected = isSelected,
+        onClick = { onClick(folder) },
+    ) {
+        BadgedBox(
+            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
+            badge = { if (showBadge) Badge() }
+        ) {
+            Icon(
+                imageVector = if (isSelected) Icons.Filled.Folder else Icons.Outlined.Folder,
+                tint = iconColor,
+                contentDescription = null
+            )
+        }
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+        Text(
+            modifier = Modifier
+                .padding(horizontal = MaterialTheme.spacing.small)
+                .basicMarquee(),
+            text = folder?.name ?: stringResource(id = R.string.active_session_library_folder_element_default),
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }
 
@@ -197,13 +303,12 @@ fun LazyListScope.libraryItemsComponent(
                 )
 
                 val sortMenuUiState = uiState.sortMenuUiState
+
                 SortMenu(
-                    show = sortMenuUiState.show,
                     sortModes = LibraryItemSortMode.entries,
                     currentSortMode = sortMenuUiState.mode,
                     currentSortDirection = sortMenuUiState.direction,
                     sortItemDescription = stringResource(id = R.string.library_content_items_sort_menu_description),
-                    onShowMenuChanged = { libraryCoreEventHandler(LibraryCoreUiEvent.ItemSortMenuPressed) },
                     onSelectionHandler = {
                         libraryCoreEventHandler(LibraryCoreUiEvent.ItemSortModeSelected(it as LibraryItemSortMode))
                     }
@@ -323,6 +428,8 @@ fun LibraryDialogs(
         )
     }
 }
+
+/** --------------------------------- Previews --------------------------------- */
 
 @PreviewLightDark
 @Composable

@@ -21,7 +21,6 @@ sealed class GoalsUiEvent {
         val longClick: Boolean
     ) : GoalsUiEvent()
 
-    data object GoalSortMenuPressed : GoalsUiEvent()
     data class GoalSortModeSelected(val mode: GoalsSortMode) : GoalsUiEvent()
 
     data object ArchiveButtonPressed : GoalsUiEvent()

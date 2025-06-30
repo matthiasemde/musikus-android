@@ -76,18 +76,10 @@ fun LibraryFolderDetailsScreen(
                     val sortMenuUiState = uiState.itemsSortMenuUiState
 
                     SortMenu(
-                        show = sortMenuUiState.show,
                         sortModes = LibraryItemSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = stringResource(id = R.string.library_content_items_sort_menu_description),
-                        onShowMenuChanged = {
-                            eventHandler(
-                                LibraryFolderDetailsUiEvent.CoreUiEvent(
-                                    LibraryCoreUiEvent.ItemSortMenuPressed
-                                )
-                            )
-                        },
                         onSelectionHandler = {
                             eventHandler(
                                 LibraryFolderDetailsUiEvent.CoreUiEvent(
