@@ -427,6 +427,10 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles UI events from the Active Session screen.
+     * Returns true if the event was consumed, false otherwise.
+     */
     fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
@@ -445,6 +449,7 @@ class ActiveSessionViewModel @Inject constructor(
                 _newItemSelectorVisible.update { !it }
             }
             is ActiveSessionUiEvent.NewItemSelectorEvent -> {
+                // redirect events to NewItemSelector event handler
                 return onNewItemSelectorEvent(event.libraryEvent)
             }
         }
@@ -453,6 +458,10 @@ class ActiveSessionViewModel @Inject constructor(
         return true
     }
 
+    /**
+     * Handles events from the New Item Selector Bottom Sheet.
+     * Returns true if the event was consumed, false otherwise.
+     */
     private fun onNewItemSelectorEvent(event: LibraryUiEvent): Boolean {
         when (event) {
             is LibraryUiEvent.CoreUiEvent -> {
@@ -471,6 +480,11 @@ class ActiveSessionViewModel @Inject constructor(
             is LibraryUiEvent.FolderPressed -> {
                 // select folder in new item selector
                 _displayedFolder.update { event.folderId }
+            }
+            is LibraryUiEvent.FolderSortModeSelected -> {
+                viewModelScope.launch {
+                    libraryUseCases.selectFolderSortMode(event.mode)
+                }
             }
             else -> return false // event not handled
         }

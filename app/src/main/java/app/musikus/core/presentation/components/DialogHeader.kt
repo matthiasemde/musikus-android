@@ -41,7 +41,7 @@ fun DialogHeader(
             Icon(
                 modifier = Modifier.size(24.dp).align(Alignment.CenterVertically),
                 imageVector = icon.asIcon(),
-                contentDescription = "jksdshf",
+                contentDescription = "dialogIcon",
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
 

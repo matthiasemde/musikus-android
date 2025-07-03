@@ -15,7 +15,6 @@ import app.musikus.library.data.LibraryFolderSortMode
 import app.musikus.library.domain.usecase.LibraryUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -134,6 +133,7 @@ class LibraryViewModel @Inject constructor(
             is LibraryUiEvent.FolderSortModeSelected -> onFolderSortModeSelected(event.mode)
             is LibraryUiEvent.FolderPressed -> return onFolderClicked(event.folderId, event.longClick)
             is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
+            else -> return false // Unhandled event
         }
 
         // events are consumed by default

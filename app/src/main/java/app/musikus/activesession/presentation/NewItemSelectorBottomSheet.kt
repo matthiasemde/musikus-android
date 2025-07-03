@@ -23,13 +23,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,19 +41,36 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import app.musikus.R
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.presentation.components.DialogActions
+import app.musikus.core.presentation.components.DialogHeader
+import app.musikus.core.presentation.components.SortMenu
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.presentation.LibraryCoreUiEvent
+import app.musikus.library.presentation.LibraryFoldersSortMenuUiState
 import app.musikus.library.presentation.LibraryFoldersSwipeRow
+import app.musikus.library.presentation.LibraryItemsSortMenuUiState
 import app.musikus.library.presentation.LibraryUiEvent
 import app.musikus.library.presentation.LibraryUiEventHandler
 import app.musikus.library.presentation.libraryItemsComponent
+import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -99,14 +119,24 @@ private fun NewItemSelectorLayout(
 ) {
     val _uiState = uiState.value ?: return // unpacking & null check
 
-    var selectedFolder: UUID? by remember { mutableStateOf(_uiState.runningItem?.libraryFolderId) }
+    var selectedFolder: UUID? by rememberSaveable { mutableStateOf(_uiState.runningItem?.libraryFolderId) }
+
+    var sortDialogShown: Boolean by rememberSaveable { mutableStateOf(false) }
 
     // selectedFolder has to be tied to ViewModel state to be consistent with displayed items
     LaunchedEffect(selectedFolder) {
         eventHandler(LibraryUiEvent.FolderPressed(selectedFolder, longClick = false))
     }
 
-    var createMenuShown by remember { mutableStateOf(false) }
+    // show sorting dialog when requested
+    if (sortDialogShown) {
+        LibrarySortingDialog(
+            onDismiss = { sortDialogShown = false },
+            eventHandler = eventHandler,
+            libraryFoldersSortMenuUiState = _uiState.libraryFoldersUiState.sortMenuUiState,
+            libraryItemsSortMenuUiState = _uiState.libraryItemsUiState.sortMenuUiState
+        )
+    }
 
     Column(modifier.fillMaxSize()) {
         // Header + Close Button
@@ -126,30 +156,14 @@ private fun NewItemSelectorLayout(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            /* TODO implement Creating Folders + Items
-            IconButton(
-                onClick = { createMenuShown = true },
-                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small)
+            OutlinedButton(
+                onClick = { sortDialogShown = true },
             ) {
-                Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
-
-                DropdownMenu(
-                    expanded = createMenuShown,
-                    onDismissRequest = { createMenuShown = false },
-                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                ) {
-
-                    DropdownMenuItem(
-                        onClick = onNewItem,
-                        text = { Text(text = stringResource(id = R.string.active_session_new_item_selector_create_item) }
-                    )
-                    DropdownMenuItem(
-                        onClick = onNewFolder,
-                        text = { Text(text = stringResource(id = R.string.active_session_new_item_selector_create_folder) }
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.active_session_new_item_selector_sort_menu_button),
+                    style = MaterialTheme.typography.titleMedium,
+                )
             }
-             */
 
             IconButton(onClick = onClose) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
@@ -166,8 +180,7 @@ private fun NewItemSelectorLayout(
                 showBadge = _uiState.runningItem != null,
                 folderWithBadge = _uiState.runningItem?.libraryFolderId,
                 onFolderSelected = remember {
-                    {
-                            folderId ->
+                    { folderId ->
                         selectedFolder = folderId
                     }
                 }
@@ -186,15 +199,125 @@ private fun NewItemSelectorLayout(
             ).add(WindowInsets.navigationBars).asPaddingValues() // don't get covered by navbars
         ) {
             libraryItemsComponent(
+                showHeader = false,
                 uiState = _uiState.libraryItemsUiState,
                 libraryCoreEventHandler = {
-                    if (it is LibraryCoreUiEvent.ItemPressed && it.longClick == false) {
+                    if (it is LibraryCoreUiEvent.ItemPressed && !it.longClick) {
                         onClose() // close bottom sheet when an item is selected
                     }
-                    eventHandler( LibraryUiEvent.CoreUiEvent(it) )
-               },
+                    eventHandler(LibraryUiEvent.CoreUiEvent(it))
+                },
             )
         }
 
     }
 }
+
+@Composable
+private fun LibrarySortingDialog(
+    onDismiss: () -> Unit,
+    eventHandler: LibraryUiEventHandler,
+    libraryItemsSortMenuUiState: LibraryItemsSortMenuUiState,
+    libraryFoldersSortMenuUiState: LibraryFoldersSortMenuUiState
+) {
+
+    Dialog(
+        onDismissRequest = onDismiss,
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Column {
+                DialogHeader(
+                    title = stringResource(id = R.string.active_session_new_item_selector_sort_menu_title),
+                    icon = UiIcon.DynamicIcon(Icons.Default.SwapVert)
+                )
+
+                Spacer(Modifier.height(MaterialTheme.spacing.medium))
+                DialogSortMenuRow(stringResource(R.string.active_session_new_item_selector_sort_menu_folders)) {
+                    SortMenu(
+                        sortItemDescription = stringResource(R.string.active_session_new_item_selector_sort_menu_folders),
+                        sortModes = LibraryFolderSortMode.entries,
+                        currentSortMode = libraryFoldersSortMenuUiState.mode,
+                        currentSortDirection = libraryFoldersSortMenuUiState.direction,
+                        onSelectionHandler = {
+                            eventHandler(LibraryUiEvent.FolderSortModeSelected(it as LibraryFolderSortMode))
+                        }
+                    )
+                }
+
+                Spacer(Modifier.height(MaterialTheme.spacing.large))
+                DialogSortMenuRow(stringResource(R.string.active_session_new_item_selector_sort_menu_items)) {
+                    SortMenu(
+                        sortItemDescription = stringResource(R.string.active_session_new_item_selector_sort_menu_items),
+                        sortModes = LibraryItemSortMode.entries,
+                        currentSortMode = libraryItemsSortMenuUiState.mode,
+                        currentSortDirection = libraryItemsSortMenuUiState.direction,
+                        onSelectionHandler = {
+                            eventHandler(
+                                LibraryUiEvent.CoreUiEvent(LibraryCoreUiEvent.ItemSortModeSelected(it as LibraryItemSortMode))
+                            )
+                        }
+                    )
+                }
+
+                DialogActions(
+                    dismissButtonText = stringResource(id = R.string.core_dialog_close),
+                    onDismissHandler = onDismiss,
+                    onConfirmHandler = {},
+                    confirmButtonVisible = false
+
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogSortMenuRow(
+    text: String,
+    content: @Composable () -> Unit,
+) {
+    Row (Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
+        Text(
+            text,
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .fillMaxWidth(0.4f),
+            textAlign = TextAlign.End,
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(Modifier.width(MaterialTheme.spacing.medium))
+
+        Surface(
+            Modifier,
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            content()
+        }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewLibrarySortingDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme = theme) {
+        LibrarySortingDialog(
+            onDismiss = {},
+            eventHandler = {false},
+            libraryFoldersSortMenuUiState = LibraryFoldersSortMenuUiState(
+                mode = LibraryFolderSortMode.DEFAULT,
+                direction = SortDirection.DEFAULT
+            ),
+            libraryItemsSortMenuUiState = LibraryItemsSortMenuUiState(
+                mode = LibraryItemSortMode.DEFAULT,
+                direction = SortDirection.DEFAULT
+            )
+        )
+    }
+}
+

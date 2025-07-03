@@ -134,11 +134,12 @@ fun LibraryFoldersSwipeRow(
     highlightedFolderId: UUID?,
     folderWithBadge: UUID?,
     onFolderSelected: (UUID?) -> Unit,
+    includeRootFolder: Boolean = true,
 ) {
     // translate highlightedFolderId to selectedTabIndex
-    // since the first tab is the "no folder" tab, add +1 (note: indexOfFirst returns -1 if not found)
     val selectedTabIndex = remember(highlightedFolderId) {
-        folders.indexOfFirst { it.folder.id == highlightedFolderId } + 1
+        // since the first tab is the "no folder" tab, add +1 (note: indexOfFirst returns -1 if not found)
+        folders.indexOfFirst { it.folder.id == highlightedFolderId } + if (includeRootFolder) 1 else 0
     }
 
     ScrollableTabRow(
@@ -147,12 +148,14 @@ fun LibraryFoldersSwipeRow(
         containerColor = colorScheme.surfaceContainerLow, // match color of ModalBottomSheet
         divider = { }
     ) {
-        LibraryFolderComponentSmall(
-            folder = null,
-            onClick = { onFolderSelected(null) },
-            isSelected = highlightedFolderId == null,
-            showBadge = showBadge && folderWithBadge == null
-        )
+        if (includeRootFolder) {
+            LibraryFolderComponentSmall(
+                folder = null,
+                onClick = { onFolderSelected(null) },
+                isSelected = highlightedFolderId == null,
+                showBadge = showBadge && folderWithBadge == null
+            )
+        }
 
         folders.forEach { folder ->
             LibraryFolderComponentSmall(
