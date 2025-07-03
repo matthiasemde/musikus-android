@@ -106,16 +106,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
-import app.musikus.core.data.UUIDConverter
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
-import app.musikus.core.presentation.theme.MusikusPreviewElement5
-import app.musikus.core.presentation.theme.MusikusPreviewElement6
 import app.musikus.core.presentation.theme.MusikusPreviewWholeScreen
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
@@ -125,7 +121,6 @@ import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.LibraryItemComponent
 import app.musikus.menu.domain.ColorSchemeSelections
@@ -970,157 +965,7 @@ private fun PreviewActiveSessionScreen(
         )
     }
 }
-//
-//@MusikusPreviewElement1
-//@Composable
-//private fun PreviewCurrentItem(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        CurrentPracticingItem(
-//            uiState = remember { mutableStateOf(dummyRunningItem) },
-//            screenSizeClass = ScreenSizeDefaults.Phone
-//        )
-//    }
-//}
-//
-//@MusikusPreviewElement2
-//@Composable
-//private fun PreviewSectionItem(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        SectionListElement(
-//            item = dummySections.first(),
-//            showSnackbar = { },
-//        )
-//    }
-//}
-//
-//@MusikusPreviewElement3
-//@Composable
-//private fun PreviewLibraryRow(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme = theme) {
-//        LibraryFoldersSwipeRow(
-//            folders = dummyFolders.toImmutableList(),
-//            highlightedFolderId = dummyFolders.first().id,
-//            folderWithBadge = dummyFolders.toList()[2].id,
-//            onFolderSelected = {}
-//        )
-//    }
-//}
-//
-//@MusikusPreviewElement4
-//@Composable
-//private fun PreviewNewItemSelector(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        Column {
-//            NewItemSelector(
-//                uiState = remember {
-//                    mutableStateOf(
-//                        NewItemSelectorUiState(
-//                            foldersWithItems = dummyFolders.map {
-//                                LibraryFolderWithItems(
-//                                    it,
-//                                    dummyLibraryItems.toList()
-//                                )
-//                            }.toList(),
-//                            rootItems = dummyLibraryItems.toList(),
-//                            runningItem = dummyLibraryItems.first().copy(
-//                                libraryFolderId = UUIDConverter.fromInt(1)
-//                            ),
-//                            lastPracticedDates = emptyMap(),
-//                        )
-//                    )
-//                },
-//                onItemSelected = { }
-//            )
-//        }
-//    }
-//}
-//
-//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-//@Composable
-//private fun PreviewNewItemSelectorNoFolders() {
-//    MusikusThemedPreview {
-//        Column {
-//            NewItemSelector(
-//                uiState = remember {
-//                    mutableStateOf(
-//                        NewItemSelectorUiState(
-//                            foldersWithItems = emptyList(),
-//                            rootItems = dummyLibraryItems.toList(),
-//                            runningItem = dummyLibraryItems.first(),
-//                            lastPracticedDates = emptyMap(),
-//                        )
-//                    )
-//                },
-//                onItemSelected = { }
-//            )
-//        }
-//    }
-//}
-//
-//@Preview(name = "One Folder", group = "Element 4", showSystemUi = true)
-//@Composable
-//private fun PreviewNewItemSelectorOneFolder() {
-//    MusikusThemedPreview {
-//        Column {
-//            NewItemSelector(
-//                uiState = remember {
-//                    mutableStateOf(
-//                        NewItemSelectorUiState(
-//                            foldersWithItems = dummyFolders.take(1).map {
-//                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
-//                            }.toList(),
-//                            runningItem = dummyLibraryItems.first(),
-//                            rootItems = dummyLibraryItems.toList(),
-//                            lastPracticedDates = emptyMap(),
-//                        )
-//                    )
-//                },
-//                onItemSelected = { }
-//            )
-//        }
-//    }
-//}
 
-@MusikusPreviewElement5
-@Composable
-private fun PreviewLibraryItem(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-    MusikusThemedPreview(theme = theme) {
-        LibraryItemComponent(
-            item = dummyLibraryItems.first(),
-            lastPracticedDate = ZonedDateTime.now(),
-            selected = false,
-            onShortClick = { /*TODO*/ },
-            onLongClick = { /*TODO*/ }
-        )
-    }
-}
-
-@MusikusPreviewElement6
-@Composable
-private fun PreviewEndSessionDialog(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-    MusikusThemedPreview(theme = theme) {
-        EndSessionDialog(
-            rating = 3,
-            comment = "This is a comment for my session for the Previews. :)",
-            onConfirm = {},
-            onDismiss = {},
-            onRatingChanged = {},
-            onCommentChanged = {}
-        )
-    }
-}
 
 /** -------------------------------- Preview Parameter Providers -------------------------------- */
 
@@ -1149,39 +994,8 @@ object ScreenSizeDefaults {
     )
 }
 
-private val dummyRunningItem = ActiveSessionCurrentItemUiState(
+internal val dummyRunningItem = ActiveSessionCurrentItemUiState(
     color = libraryItemColors[Random.nextInt(libraryItemColors.size)],
     name = LoremIpsum(Random.nextInt(4, 10)).values.first(),
     durationText = "32:19",
 )
-
-private val dummySections = (0..10).asSequence().map {
-    CompletedSectionUiState(
-        id = UUIDConverter.fromInt(it),
-        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
-        durationText = "12:32",
-        color = libraryItemColors[it % libraryItemColors.size],
-    )
-}
-
-private val dummyFolders = (0..10).asSequence().map {
-    LibraryFolder(
-        id = UUIDConverter.fromInt(it),
-        customOrder = null,
-        name = LoremIpsum(Random.nextInt(1, 5)).values.first(),
-        modifiedAt = TimeProvider.uninitializedDateTime,
-        createdAt = TimeProvider.uninitializedDateTime
-    )
-}
-
-private val dummyLibraryItems = (1..20).asSequence().map {
-    LibraryItem(
-        id = UUIDConverter.fromInt(it),
-        createdAt = TimeProvider.uninitializedDateTime,
-        modifiedAt = TimeProvider.uninitializedDateTime,
-        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
-        colorIndex = it % libraryItemColors.size,
-        customOrder = null,
-        libraryFolderId = null
-    )
-}

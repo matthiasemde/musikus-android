@@ -48,16 +48,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
-import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
@@ -66,13 +67,18 @@ import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.presentation.LibraryCoreUiEvent
 import app.musikus.library.presentation.LibraryFoldersSortMenuUiState
 import app.musikus.library.presentation.LibraryFoldersSwipeRow
+import app.musikus.library.presentation.LibraryFoldersUiState
 import app.musikus.library.presentation.LibraryItemsSortMenuUiState
+import app.musikus.library.presentation.LibraryItemsUiState
 import app.musikus.library.presentation.LibraryUiEvent
 import app.musikus.library.presentation.LibraryUiEventHandler
+import app.musikus.library.presentation.dummyFolders
+import app.musikus.library.presentation.dummyLibraryItems
 import app.musikus.library.presentation.libraryItemsComponent
 import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
 import java.util.UUID
 
 
@@ -300,7 +306,9 @@ private fun DialogSortMenuRow(
     }
 }
 
-@MusikusPreviewElement1
+/** Previews */
+
+@PreviewLightDark
 @Composable
 private fun PreviewLibrarySortingDialog(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
@@ -320,4 +328,115 @@ private fun PreviewLibrarySortingDialog(
         )
     }
 }
+
+@PreviewLightDark
+@Composable
+private fun PreviewNewItemSelector(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        Surface (color = MaterialTheme.colorScheme.surfaceContainer) {
+            NewItemSelectorLayout(
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            runningItem = dummyLibraryItems.first().copy(
+                                libraryFolderId = UUIDConverter.fromInt(1)
+                            ),
+                            libraryFoldersUiState = LibraryFoldersUiState(
+                                foldersWithItems = dummyFolders.toImmutableList(),
+                                sortMenuUiState = LibraryFoldersSortMenuUiState(
+                                    mode = LibraryFolderSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                ),
+                                selectedFolderIds = setOf(null),
+                            ),
+                            libraryItemsUiState = LibraryItemsUiState(
+                                itemsWithLastPracticedDate = dummyLibraryItems.map {
+                                    it to ZonedDateTime.now()
+                                }.toImmutableList(),
+                                selectedItemIds = emptySet(),
+                                sortMenuUiState = LibraryItemsSortMenuUiState(
+                                    mode = LibraryItemSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                )
+                            )
+                        )
+                    )
+                },
+                eventHandler = { false }
+            )
+        }
+    }
+}
+
+
+
+//@PreviewLightDark
+//@Composable
+//private fun PreviewNewItemSelectorNoFolders(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//    MusikusThemedPreview(theme) {
+//        Surface (color = MaterialTheme.colorScheme.surfaceContainer) {
+//            NewItemSelectorLayout(
+//                uiState = remember {
+//                    mutableStateOf(
+//                        NewItemSelectorUiState(
+//                            runningItem = dummyLibraryItems.first().copy(
+//                                libraryFolderId = UUIDConverter.fromInt(1)
+//                            ),
+//                            libraryFoldersUiState = L(null),
+//                                sortMenuUiState = LibraryFoldersSortMenuUiState(
+//                                    mode = LibraryFolderSortMode.DEFAULT,
+//                                    direction = SortDirection.DEFAULT
+//                                ),
+//                                selectedFolderIds = setOf(null),
+//                            ),
+//                            libraryItemsUiState = LibraryItemsUiState(
+//                                itemsWithLastPracticedDate = dummyLibraryItems.map {
+//                                    it to ZonedDateTime.now()
+//                                }.toImmutableList(),
+//                                selectedItemIds = emptySet(),
+//                                sortMenuUiState = LibraryItemsSortMenuUiState(
+//                                    mode = LibraryItemSortMode.DEFAULT,
+//                                    direction = SortDirection.DEFAULT
+//                                )
+//                            )
+//                        )
+//                    )
+//                },
+//                eventHandler = { false }
+//            )
+//        }
+//    }
+//}
+//
+//
+//@PreviewLightDark
+//@Composable
+//private fun PreviewNewItemSelectorOneFolder() {
+//    MusikusThemedPreview {
+//        Column {
+//            NewItemSelector(
+//                uiState = remember {
+//                    mutableStateOf(
+//                        NewItemSelectorUiState(
+//                            foldersWithItems = dummyFolders.take(1).map {
+//                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
+//                            }.toList(),
+//                            runningItem = dummyLibraryItems.first(),
+//                            rootItems = dummyLibraryItems.toList(),
+//                            lastPracticedDates = emptyMap(),
+//                        )
+//                    )
+//                },
+//                onItemSelected = { }
+//            )
+//        }
+//    }
+//}
+//
+//
+
 

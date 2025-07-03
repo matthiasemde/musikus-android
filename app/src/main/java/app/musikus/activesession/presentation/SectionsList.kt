@@ -47,13 +47,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.R
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.components.SwipeToDeleteContainer
 import app.musikus.core.presentation.components.fadingEdge
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusThemedPreview
+import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.menu.domain.ColorSchemeSelections
+import kotlin.random.Random
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -189,3 +198,26 @@ private fun SectionListElement(
         }
     }
 }
+
+@PreviewLightDark
+@Composable
+private fun PreviewSectionItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        SectionListElement(
+            item = dummySections.first(),
+            showSnackbar = { },
+        )
+    }
+}
+
+internal val dummySections = (0..10).asSequence().map {
+    CompletedSectionUiState(
+        id = UUIDConverter.fromInt(it),
+        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
+        durationText = "12:32",
+        color = libraryItemColors[it % libraryItemColors.size],
+    )
+}
+

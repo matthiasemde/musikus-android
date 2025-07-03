@@ -40,18 +40,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.sessions.presentation.RatingBar
 
 
@@ -265,3 +272,36 @@ internal fun EndSessionDialog(
     }
 }
 
+
+/** Previews */
+
+
+@PreviewLightDark
+@Composable
+private fun PreviewEndSessionDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme = theme) {
+        EndSessionDialog(
+            rating = 3,
+            comment = "This is a comment for my session for the Previews. :)",
+            onConfirm = {},
+            onDismiss = {},
+            onRatingChanged = {},
+            onCommentChanged = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewCurrentItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        CurrentPracticingItem(
+            uiState = remember { mutableStateOf(dummyRunningItem) },
+            screenSizeClass = ScreenSizeDefaults.Phone
+        )
+    }
+}

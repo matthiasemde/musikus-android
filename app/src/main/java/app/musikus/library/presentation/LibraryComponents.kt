@@ -56,11 +56,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.musikusFormat
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
@@ -78,8 +80,10 @@ import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 @Composable
 fun LibraryFolderComponentLarge(
@@ -456,4 +460,45 @@ private fun PreviewLibraryItem(
             onLongClick = {},
         )
     }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewLibraryRow(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme = theme) {
+        LibraryFoldersSwipeRow(
+            folders = dummyFolders.toImmutableList(),
+            highlightedFolderId = dummyFolders.first().folder.id,
+            folderWithBadge = dummyFolders.toList()[2].folder.id,
+            onFolderSelected = {}
+        )
+    }
+}
+
+
+val dummyFolders = (0..10).asSequence().map {
+    LibraryFolderWithItems(
+        folder = LibraryFolder(
+            id = UUIDConverter.fromInt(it),
+            customOrder = null,
+            name = LoremIpsum(Random.nextInt(1, 5)).values.first(),
+            modifiedAt = TimeProvider.uninitializedDateTime,
+            createdAt = TimeProvider.uninitializedDateTime
+        ),
+        items = emptyList()
+    )
+}
+
+val dummyLibraryItems = (1..20).asSequence().map {
+    LibraryItem(
+        id = UUIDConverter.fromInt(it),
+        createdAt = TimeProvider.uninitializedDateTime,
+        modifiedAt = TimeProvider.uninitializedDateTime,
+        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
+        colorIndex = it % libraryItemColors.size,
+        customOrder = null,
+        libraryFolderId = null
+    )
 }
