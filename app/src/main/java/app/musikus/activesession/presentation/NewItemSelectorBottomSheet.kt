@@ -7,6 +7,7 @@
  */
 package app.musikus.activesession.presentation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -32,7 +36,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -158,13 +161,33 @@ private fun NewItemSelectorLayout(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            TextButton(
-                onClick = { sortDialogShown = true },
-            ) {
-                Text(
-                    text = stringResource(R.string.active_session_new_item_selector_sort_menu_button),
-                    style = MaterialTheme.typography.labelMedium,
-                )
+            // Dropdown for sorting
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.active_session_new_item_selector_sort_menu_content_description)
+                    )
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(id = R.string.active_session_new_item_selector_sort_menu_title)) },
+                        onClick = {
+                            expanded = false
+                            sortDialogShown = true
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.SwapVert,
+                                contentDescription = stringResource(R.string.active_session_new_item_selector_sort_menu_content_description)
+                            )
+                        }
+                    )
+                }
             }
 
             IconButton(onClick = onClose) {
