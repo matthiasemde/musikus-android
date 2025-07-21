@@ -291,6 +291,7 @@ fun LazyListScope.libraryItemsComponent(
     uiState: LibraryItemsUiState,
     libraryCoreEventHandler: LibraryCoreUiEventHandler,
     showHeader: Boolean = true,
+    disabledItems: Set<UUID> = emptySet(),
 ) {
     if (showHeader) {
         item {
@@ -335,7 +336,8 @@ fun LazyListScope.libraryItemsComponent(
                 lastPracticedDate = lastPracticedDate,
                 selected = item.id in uiState.selectedItemIds,
                 onShortClick = { libraryCoreEventHandler(LibraryCoreUiEvent.ItemPressed(item, longClick = false)) },
-                onLongClick = { libraryCoreEventHandler(LibraryCoreUiEvent.ItemPressed(item, longClick = true)) }
+                onLongClick = { libraryCoreEventHandler(LibraryCoreUiEvent.ItemPressed(item, longClick = true)) },
+                enabled = item.id !in disabledItems
             )
         }
     }

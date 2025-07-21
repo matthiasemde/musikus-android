@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,10 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -50,7 +49,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.data.UUIDConverter
@@ -92,15 +90,13 @@ fun NewItemSelectorBottomSheet(
 ) {
     val scope = rememberCoroutineScope()
     ModalBottomSheet(
-        contentWindowInsets = { WindowInsets(top = 0.dp) }, // makes sure the scrim covers the status bar
+//        contentWindowInsets = { WindowInsets.statusBars }, // TODO: fix window insets when API is updated
         onDismissRequest = remember { onDismissed },
         sheetState = sheetState,
         shape = RectangleShape,
         dragHandle = {},
     ) {
         NewItemSelectorLayout(
-            modifier = Modifier
-                .fillMaxHeight(0.6f), // avoid jumping height when changing folders
             uiState = uiState,
             eventHandler = eventHandler,
             onClose = remember {
@@ -162,12 +158,12 @@ private fun NewItemSelectorLayout(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            OutlinedButton(
+            TextButton(
                 onClick = { sortDialogShown = true },
             ) {
                 Text(
                     text = stringResource(R.string.active_session_new_item_selector_sort_menu_button),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
 
@@ -207,6 +203,7 @@ private fun NewItemSelectorLayout(
             libraryItemsComponent(
                 showHeader = false,
                 uiState = _uiState.libraryItemsUiState,
+                disabledItems = setOf(_uiState.runningItem?.id ?: UUID.randomUUID()),
                 libraryCoreEventHandler = {
                     if (it is LibraryCoreUiEvent.ItemPressed && !it.longClick) {
                         onClose() // close bottom sheet when an item is selected
