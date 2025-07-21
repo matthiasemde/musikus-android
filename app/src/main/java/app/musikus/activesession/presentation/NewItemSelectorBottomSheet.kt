@@ -371,72 +371,86 @@ private fun PreviewNewItemSelector(
 }
 
 
+@PreviewLightDark
+@Composable
+private fun PreviewNewItemSelectorNoFolders(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        Surface (color = MaterialTheme.colorScheme.surfaceContainer) {
+            NewItemSelectorLayout(
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            runningItem = dummyLibraryItems.first().copy(
+                                libraryFolderId = UUIDConverter.fromInt(1)
+                            ),
+                            libraryFoldersUiState = LibraryFoldersUiState(
+                                foldersWithItems = emptyList(),
+                                sortMenuUiState = LibraryFoldersSortMenuUiState(
+                                    mode = LibraryFolderSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                ),
+                                selectedFolderIds = setOf(null),
+                            ),
+                            libraryItemsUiState = LibraryItemsUiState(
+                                itemsWithLastPracticedDate = dummyLibraryItems.map {
+                                    it to ZonedDateTime.now()
+                                }.toImmutableList(),
+                                selectedItemIds = emptySet(),
+                                sortMenuUiState = LibraryItemsSortMenuUiState(
+                                    mode = LibraryItemSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                )
+                            )
+                        )
+                    )
+                },
+                eventHandler = { false }
+            )
+        }
+    }
+}
 
-//@PreviewLightDark
-//@Composable
-//private fun PreviewNewItemSelectorNoFolders(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        Surface (color = MaterialTheme.colorScheme.surfaceContainer) {
-//            NewItemSelectorLayout(
-//                uiState = remember {
-//                    mutableStateOf(
-//                        NewItemSelectorUiState(
-//                            runningItem = dummyLibraryItems.first().copy(
-//                                libraryFolderId = UUIDConverter.fromInt(1)
-//                            ),
-//                            libraryFoldersUiState = L(null),
-//                                sortMenuUiState = LibraryFoldersSortMenuUiState(
-//                                    mode = LibraryFolderSortMode.DEFAULT,
-//                                    direction = SortDirection.DEFAULT
-//                                ),
-//                                selectedFolderIds = setOf(null),
-//                            ),
-//                            libraryItemsUiState = LibraryItemsUiState(
-//                                itemsWithLastPracticedDate = dummyLibraryItems.map {
-//                                    it to ZonedDateTime.now()
-//                                }.toImmutableList(),
-//                                selectedItemIds = emptySet(),
-//                                sortMenuUiState = LibraryItemsSortMenuUiState(
-//                                    mode = LibraryItemSortMode.DEFAULT,
-//                                    direction = SortDirection.DEFAULT
-//                                )
-//                            )
-//                        )
-//                    )
-//                },
-//                eventHandler = { false }
-//            )
-//        }
-//    }
-//}
-//
-//
-//@PreviewLightDark
-//@Composable
-//private fun PreviewNewItemSelectorOneFolder() {
-//    MusikusThemedPreview {
-//        Column {
-//            NewItemSelector(
-//                uiState = remember {
-//                    mutableStateOf(
-//                        NewItemSelectorUiState(
-//                            foldersWithItems = dummyFolders.take(1).map {
-//                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
-//                            }.toList(),
-//                            runningItem = dummyLibraryItems.first(),
-//                            rootItems = dummyLibraryItems.toList(),
-//                            lastPracticedDates = emptyMap(),
-//                        )
-//                    )
-//                },
-//                onItemSelected = { }
-//            )
-//        }
-//    }
-//}
-//
-//
 
+@PreviewLightDark
+@Composable
+private fun PreviewNewItemSelectorOneFolder(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        Surface (color = MaterialTheme.colorScheme.surfaceContainer) {
+            NewItemSelectorLayout(
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            runningItem = dummyLibraryItems.first().copy(
+                                libraryFolderId = UUIDConverter.fromInt(1)
+                            ),
+                            libraryFoldersUiState = LibraryFoldersUiState(
+                                foldersWithItems = dummyFolders.take(1).toList(),
+                                sortMenuUiState = LibraryFoldersSortMenuUiState(
+                                    mode = LibraryFolderSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                ),
+                                selectedFolderIds = setOf(null),
+                            ),
+                            libraryItemsUiState = LibraryItemsUiState(
+                                itemsWithLastPracticedDate = dummyLibraryItems.map {
+                                    it to ZonedDateTime.now()
+                                }.toImmutableList(),
+                                selectedItemIds = emptySet(),
+                                sortMenuUiState = LibraryItemsSortMenuUiState(
+                                    mode = LibraryItemSortMode.DEFAULT,
+                                    direction = SortDirection.DEFAULT
+                                )
+                            )
+                        )
+                    )
+                },
+                eventHandler = { false }
+            )
+        }
+    }
+}
 

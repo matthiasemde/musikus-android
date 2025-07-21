@@ -27,12 +27,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -58,8 +60,12 @@ import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.sessions.presentation.RatingBar
+import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
@@ -183,7 +189,9 @@ internal fun CurrentPracticingItem(
 }
 
 
-// FAB for new Item
+/**
+ * Floating Action Button to select new item for new section.
+ */
 @Composable
 internal fun AddSectionFAB(
     sessionState: State<ActiveSessionState>,
@@ -273,6 +281,20 @@ internal fun EndSessionDialog(
 }
 
 
+@Composable
+internal fun PauseButton(
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Pause,
+            contentDescription = stringResource(id = R.string.active_session_top_bar_pause)
+        )
+    }
+}
+
 /** Previews */
 
 
@@ -301,6 +323,26 @@ private fun PreviewCurrentItem(
     MusikusThemedPreview(theme) {
         CurrentPracticingItem(
             uiState = remember { mutableStateOf(dummyRunningItem) },
+            screenSizeClass = ScreenSizeDefaults.Phone
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewPracticeTimer(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        PracticeTimer(
+            uiState = remember {
+                mutableStateOf(ActiveSessionTimerUiState(
+                        timerText = getDurationString((42 * 60 + 57).seconds, DurationFormat.MS_DIGITAL).toString(),
+                        subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading_paused))
+                )
+            },
+            sessionState = remember { mutableStateOf(ActiveSessionState.PAUSED) },
+            onResumeTimer = {},
             screenSizeClass = ScreenSizeDefaults.Phone
         )
     }

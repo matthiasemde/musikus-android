@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,8 +38,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -51,7 +47,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
@@ -121,13 +116,10 @@ import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.library.presentation.LibraryItemComponent
 import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.metronome.presentation.MetronomeUi
 import app.musikus.recorder.presentation.RecorderUi
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -136,8 +128,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import java.time.ZonedDateTime
-import java.util.UUID
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -731,19 +721,7 @@ private fun ActiveSessionTopBar(
     )
 }
 
-@Composable
-private fun PauseButton(
-    onClick: () -> Unit,
-) {
-    IconButton(
-        onClick = onClick
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Pause,
-            contentDescription = stringResource(id = R.string.active_session_top_bar_pause)
-        )
-    }
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -867,33 +845,6 @@ private fun SheetDragHandle() {
         shape = RoundedCornerShape(50),
         content = { }
     )
-}
-
-@Composable
-private fun LibraryItemList(
-    modifier: Modifier = Modifier,
-    items: ImmutableList<LibraryItem>,
-    lastPracticedDates: ImmutableMap<UUID, ZonedDateTime?>,
-    onItemClick: (LibraryItem) -> Unit,
-    activeItemId: UUID?,
-) {
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = WindowInsets(
-            top = MaterialTheme.spacing.small,
-        ).add(WindowInsets.navigationBars).asPaddingValues() // don't get covered by navbars
-    ) {
-        items(items) {
-            LibraryItemComponent(
-                item = it,
-                lastPracticedDate = lastPracticedDates.filterKeys { key -> key == it.id }.values.firstOrNull(),
-                selected = false,
-                onShortClick = { onItemClick(it) },
-                onLongClick = { },
-                enabled = activeItemId != it.id
-            )
-        }
-    }
 }
 
 /**
