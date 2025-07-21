@@ -141,7 +141,7 @@ fun LibraryFoldersSwipeRow(
     includeRootFolder: Boolean = true,
 ) {
     // translate highlightedFolderId to selectedTabIndex
-    val selectedTabIndex = remember(highlightedFolderId) {
+    val selectedTabIndex = remember(highlightedFolderId, key2 = folders) {
         // since the first tab is the "no folder" tab, add +1 (note: indexOfFirst returns -1 if not found)
         folders.indexOfFirst { it.folder.id == highlightedFolderId } + if (includeRootFolder) 1 else 0
     }
