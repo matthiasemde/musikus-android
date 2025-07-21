@@ -350,7 +350,7 @@ private fun ActiveSessionScreen(
      */
 
     /** New Item Selector */
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val newItemSelectorState = uiState.value.newItemSelectorUiState.collectAsState()
 
     if (newItemSelectorState.value != null) {
