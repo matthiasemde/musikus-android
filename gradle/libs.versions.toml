@@ -36,6 +36,7 @@ mockk = "1.13.14"
 room = "2.6.1"
 room-testing = "1.1.1"
 detekt = "1.23.7"
+fastlane-screengrab = "2.1.1"
 # @keep
 targetSdk = "35"
 google-truth = "1.4.4"
@@ -102,6 +103,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
+fastlane-screengrab = { module = "tools.fastlane:screengrab", version.ref = "fastlane-screengrab" }
 
 
 [plugins]

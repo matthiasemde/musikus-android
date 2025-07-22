@@ -367,6 +367,7 @@ dependencies {
     testImplementation(libs.mockk.agent)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
+    androidTestImplementation(libs.fastlane.screengrab)
 
     // Unit tests
     testImplementation(libs.androidx.test.core)
