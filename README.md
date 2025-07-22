@@ -24,10 +24,10 @@ Your personal practice companion
 
 <!-- Big badges -->
 <div align="center">
-  
+
 <img src="images/screenshots.webp" height="600">
 </br>
-  
+
 [<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
     alt="Get it on Google Play"
     height="80">](https://play.google.com/store/apps/details?id=app.musikus)
@@ -44,7 +44,7 @@ Your personal practice companion
 
 * ⏱️ **Time Tracking**: Track the time you practiced.
 * 📅 **Session Overview**: Review your past practice sessions at a glance.
-* 🎵 **Metronome**: Stay perfectly in time with our precise metronome.
+* 🎵 **Metronome**: Stay perfectly in time with a precise metronome.
 * 🎤 **Recorder**: Capture your practice sessions and listen back to track your improvement.
 * 🎯 **Goals**: Set and achieve daily, weekly, and monthly goals to stay motivated.
 * 📊 **Statistics**: Gain insights into your practice habits with detailed statistics.
