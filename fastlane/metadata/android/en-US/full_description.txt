@@ -1,0 +1,33 @@
+(full app description, max 4000 chars, basic HTML allowed)
+
+see https://gitlab.com/IzzyOnDroid/repo/-/wikis/Fastlane#formatting-descriptions
+
+
+=== Current description: ===
+
+Boost your practice!
+
+Musikus helps you while practicing your instrument with time tracking and other smart features.
+
+This music practice app is designed to be a musician’s tool for everyday practice and help you in improving your habits. All you need in one app!
+
+<b>Personalized Time Tracker:</b>
+Start tracking your practice time for any piece, exercise, scale, or anything you want to practice with a single touch. Afterwards, you can rate your session and optionally add comment.
+
+<b>Goals:</b>
+Set daily, weekly or monthly time goals and check your results.
+
+<b>Metronome:</b>
+With adjustable tempo, subdivision and highlights on beats.
+
+<b>Audio Recorder:</b>
+Easily record and listen to yourself without switching apps.
+
+<b>Statistics:</b>
+Different diagrams and charts will show your improvements over time.
+
+<b>Library:</b>
+Define and manage your practice items (scales, pieces and other exercises...).
+
+Disclaimer:
+Musikus does some of it's work in the background. If you track a practice session, use the metronome, record yourself, or play a recording back, the app will continue tracking, playing or recording, even if you close it.
