@@ -1,3 +1,0 @@
-(full app description, max 4000 chars, basic HTML allowed)
-
-see https://gitlab.com/IzzyOnDroid/repo/-/wikis/Fastlane#formatting-descriptions
