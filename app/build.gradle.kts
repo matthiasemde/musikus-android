@@ -161,6 +161,13 @@ android {
         xmlOutput = file("$reportsPath/lint/android.xml")
         textOutput = file("$reportsPath/lint/android.txt")
     }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
 }
 
 room {
