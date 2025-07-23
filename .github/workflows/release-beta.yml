@@ -52,7 +52,7 @@ jobs:
           VERSION_CODE=$(date +"%y%V%u42")
           echo "version_name=${VERSION_NAME}" >> "$GITHUB_ENV"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
-          echo "tag_name=${SEMANTIC_VERSION}" >> "$GITHUB_ENV"    
+          echo "tag_name=${SEMANTIC_VERSION}" >> "$GITHUB_ENV"
 
       - name: Decode release bot public and private signing key
         run: |
@@ -74,7 +74,7 @@ jobs:
           sed -i "
             s/versionName=.*/versionName=$version_name/
             s/versionCode=.*/versionCode=$version_code/
-          " build.properties   
+          " build.properties
 
       - name: Add release tag to remote
         run: |
@@ -133,7 +133,7 @@ jobs:
 
       - name: Write commit hash to build.properties
         run: |
-          COMMIT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_HASH=$(git rev-parse --short=7 HEAD)
           sed -i "s/commitHash=.*/commitHash=$COMMIT_HASH/" build.properties
 
       - uses: actions/setup-java@v4
@@ -193,7 +193,7 @@ jobs:
 
       - name: Write commit hash to build.properties
         run: |
-          COMMIT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_HASH=$(git rev-parse --short=7 HEAD)
           sed -i "s/commitHash=.*/commitHash=$COMMIT_HASH/" build.properties
 
       - uses: actions/setup-java@v4
