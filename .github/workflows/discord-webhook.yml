@@ -31,7 +31,6 @@ jobs:
             exit 1
           fi
 
-
       - name: Send Discord notification for Release
         if: github.event_name == 'release'
         run: |
