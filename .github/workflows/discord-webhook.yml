@@ -15,7 +15,7 @@ jobs:
       - name: Send Discord notification for PR
         if: github.event_name == 'pull_request'
         run: |
-          BODY=$(cat <<EOF
+          BODY=$(cat <<'EOF'
           ${{ github.event.pull_request.body }}
           EOF
           )
@@ -23,7 +23,7 @@ jobs:
             -X POST \
             -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
             --arg url "${{ github.event.pull_request.html_url }}" \
-            --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
+            --arg body "$BODY" \
             --arg branch "${{ github.event.pull_request.head.ref }}" \
             '{"content": "📣 **New Pull Request**: [\($title)](\($url))\n\n📝 **Description**: \($body)\n\n🚀 **Branch**: \($branch)"}')" \
             ${{ secrets.DISCORD_WEBHOOK_URL }})
