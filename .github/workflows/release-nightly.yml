@@ -63,7 +63,7 @@ jobs:
       - name: Write version name, version code, and commit hash to build.properties
         if: env.skip_nightly == 'false'
         run: |
-          COMMIT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_HASH=$(git rev-parse --short=7 HEAD)
           sed -i -e "
             s/versionName=.*/versionName=$version_name/
             s/versionCode=.*/versionCode=$version_code/
