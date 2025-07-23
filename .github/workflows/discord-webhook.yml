@@ -15,7 +15,7 @@ jobs:
       - name: Send Discord notification for PR
         if: github.event_name == 'pull_request'
         run: |
-          IFS='' read -r -d '' BODY <<"EOF"
+          IFS='' read -r -d '' BODY <<"EOF" \
             ${{ github.event.pull_request.body }}
           EOF
           response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" \
