@@ -2,7 +2,7 @@ name: DISCORD-WEBHOOK
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, edited]
+    types: [opened, reopened]
   release:
     types: [published]
 
