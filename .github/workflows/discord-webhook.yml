@@ -17,7 +17,7 @@ jobs:
         run: |
           BODY=$'${{ github.event.pull_request.body }}'
           # Escape backticks and parentheses in BODY to avoid breaking Discord formatting
-          ESCAPED_BODY=$(echo "$BODY" | sed "s/`/\\`/g; s/(/'/\\'/g")
+          ESCAPED_BODY=$(echo "$BODY" | sed "s/`/\\`/g; s/(/'/BACKTICK/g")
           response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" \
             -X POST \
             -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
