@@ -16,11 +16,13 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           BODY=$'${{ github.event.pull_request.body }}'
+          # Escape backticks and parentheses in BODY to avoid breaking Discord formatting
+          ESCAPED_BODY=$(echo "$BODY" | sed "s/`/\\`/g; s/(/'/\\'/g")
           response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" \
             -X POST \
             -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
             --arg url "${{ github.event.pull_request.html_url }}" \
-            --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
+            --arg body "$ESCAPED_BODY" \
             --arg branch "${{ github.event.pull_request.head.ref }}" \
             '{"content": "📣 **New Pull Request**: [\($title)](\($url))\n\n📝 **Description**: \($body)\n\n🚀 **Branch**: \($branch)"}')" \
             ${{ secrets.DISCORD_WEBHOOK_URL }})
