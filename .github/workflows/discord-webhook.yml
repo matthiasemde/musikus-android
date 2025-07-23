@@ -23,7 +23,7 @@ jobs:
               -X POST \
               -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
               --arg url "${{ github.event.pull_request.html_url }}" \
-              --arg body "$ESCAPED_BODY" \
+              --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
               --arg branch "${{ github.event.pull_request.head.ref }}" \
               '{"content": "📣 **New Pull Request**: [\($title)](\($url))\n\n📝 **Description**: \($body)\n\n🚀 **Branch**: \($branch)"}')" \
               ${{ secrets.DISCORD_WEBHOOK_URL }})
