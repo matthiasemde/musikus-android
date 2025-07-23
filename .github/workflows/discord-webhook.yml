@@ -37,12 +37,15 @@ jobs:
       - name: Send Discord notification for Release
         if: github.event_name == 'release'
         run: |
-          BODY=$'${{ github.event.release.body }}'
+          BODY=$(cat <<'EOF'
+          ${{ github.event.release.body }}
+          EOF
+          )
           response=$(curl -s -w "%{http_code}" -H "Content-Type: application/json" \
           -X POST \
           -d "$(jq -n --arg title "${{ github.event.release.title }}" \
             --arg url "${{ github.event.release.html_url }}" \
-            --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
+            --arg body "$BODY" \
             --arg tag "${{ github.event.release.tag_name }}" \
             '{"content": "🎉 **New Release**: [\($title)](\($url))\n\n📦 **Version**: \($tag)\n\n📝 **Description**: \($body)"}')" \
           ${{ secrets.DISCORD_WEBHOOK_URL }})
