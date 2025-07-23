@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Send Discord notification for PR
-        if: github.event_name == 'pull_request'
+        # if: github.event_name == 'pull_request'
         run: |
              BODY=$'${{ github.event.pull_request.body }}'
              # Escape backticks and parentheses in BODY to avoid breaking Discord formatting
