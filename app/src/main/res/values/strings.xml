@@ -32,6 +32,10 @@
     <string name="core_announcement_paragraph_4">Thank you for being a part of our beta community. Together, we can make Musikus a fantastic resource for musicians everywhere!</string>
     <string name="core_announcement_paragraph_5">Happy practicing!</string>
 
+    <!-- App Intro -->
+    <string name="core_app_intro_hamburger_menu">Press here to open the sidebar</string>
+    <string name="core_app_intro_hamburger_menu_settings">In the settings, you can change the theme of the app, export your Sessions and more.</string>
+
     <!-- Components -->
 
     <!-- RatingBar -->
@@ -72,5 +76,8 @@
     <!-- DurationInput -->
     <string name="components_duration_input_hours_content_description">Target hours input</string>
     <string name="components_duration_input_minutes_content_description">Target minutes input</string>
+
+    <!-- ShowcaseView Intro Dialog -->
+    <string name="components_showcase_dialog_button">Nice!</string>
 
 </resources>
