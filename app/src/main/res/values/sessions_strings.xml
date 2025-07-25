@@ -28,12 +28,11 @@
     <string name="sessions_session_card_comment">Comment</string>
 
     <!-- App Intro -->
-    <string name="sessions_app_intro_fab">Press here to start tracking a new Session.</string>
-    <string name="sessions_app_intro_fab_resume">Press here to resume your ongoing Session.</string>
+    <string name="sessions_app_intro_fab">Press here to start tracking a new session.</string>
+    <string name="sessions_app_intro_fab_resume">Press here to resume your ongoing session.</string>
     <string name="sessions_app_intro_card">
-        This is a Session card. It shows the practice time, break time, and comment for each recorded Session.
-        Long press the card to edit or delete a Session.
+        A session card displays the practice time, break time, and comment for each recorded session. Long press to edit or delete a session.
     </string>
-    <string name="sessions_app_intro_month_button">Press on the month to hide/display all Sessions of a month.</string>
+    <string name="sessions_app_intro_month_button">Tap the month to show or hide all sessions from that month.</string>
 
 </resources>

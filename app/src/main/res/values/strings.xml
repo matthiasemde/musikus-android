@@ -34,7 +34,7 @@
 
     <!-- App Intro -->
     <string name="core_app_intro_hamburger_menu">Press here to open the sidebar</string>
-    <string name="core_app_intro_hamburger_menu_settings">In the settings, you can change the theme of the app, export your Sessions and more.</string>
+    <string name="core_app_intro_hamburger_menu_settings">In the settings, you can change the theme of the app, export your sessions and more.</string>
 
     <!-- Components -->
 
