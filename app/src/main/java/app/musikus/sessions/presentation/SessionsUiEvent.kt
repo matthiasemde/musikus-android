@@ -27,4 +27,6 @@ sealed class SessionsUiEvent {
     data object UndoButtonPressed : SessionsUiEvent()
 
     data object ClearActionMode : SessionsUiEvent()
+
+    data class UpdateAppIntroDialogIndex(val index: Int) : SessionsUiEvent()
 }

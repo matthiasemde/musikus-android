@@ -115,7 +115,7 @@ fun SessionsScreen(
             delay(300.milliseconds)
             sessionsListState.animateScrollToItem(0)
         }
-        sequenceShowcaseState.start() // TODO add logic for starting showcase
+        sequenceShowcaseState.start(index = uiState.appIntroDialogIndex) // TODO add logic for starting showcase
     }
 
     val context = LocalContext.current
@@ -165,7 +165,10 @@ fun SessionsScreen(
                             MusikusShowcaseDialog(
                                 targetRect = it,
                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_fab),
-                                onClick = { sequenceShowcaseState.next() }
+                                onClick = {
+                                    eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(IntroOrder.FAB.index + 1))
+                                    sequenceShowcaseState.next()
+                                }
                             )
                         }
                     )
@@ -227,7 +230,11 @@ fun SessionsScreen(
                                             MusikusShowcaseDialog(
                                                 targetRect = it,
                                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_month_button),
-                                                onClick = { sequenceShowcaseState.next() }
+                                                onClick = {
+                                                    eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(
+                                                        IntroOrder.MONTH_HEADER.index + 1))
+                                                    sequenceShowcaseState.next()
+                                                }
                                             )
                                         }
                                     )
@@ -275,7 +282,10 @@ fun SessionsScreen(
                                                     MusikusShowcaseDialog(
                                                         targetRect = it,
                                                         text = UiText.StringResource(resId = R.string.sessions_app_intro_card),
-                                                        onClick = { sequenceShowcaseState.next() }
+                                                        onClick = {
+                                                            eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(
+                                                                IntroOrder.SESSION_CARD.index + 1))
+                                                            sequenceShowcaseState.next() }
                                                     )
                                                 }
                                             ),

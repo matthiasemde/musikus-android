@@ -57,6 +57,12 @@ class SessionsViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    private val appIntroDialogIndex = sessionsUseCases.getAppIntroDialogIndex().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+
     /** Own state flow */
 
     private val _selectedSessions = MutableStateFlow<Set<UUID>>(emptySet())
@@ -159,11 +165,13 @@ class SessionsViewModel @Inject constructor(
         actionModeUiState,
         contentUiState,
         deleteDialogUiState,
-    ) { actionModeUiState, contentUiState, deleteDialogUiState ->
+        appIntroDialogIndex
+    ) { actionModeUiState, contentUiState, deleteDialogUiState, appIntroDialogIndex ->
         SessionsUiState(
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             deleteDialogUiState = deleteDialogUiState,
+            appIntroDialogIndex = appIntroDialogIndex
         )
     }.stateIn(
         scope = viewModelScope,
@@ -172,6 +180,7 @@ class SessionsViewModel @Inject constructor(
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
             deleteDialogUiState = deleteDialogUiState.value,
+            appIntroDialogIndex = appIntroDialogIndex.value
         )
     )
 
@@ -191,6 +200,11 @@ class SessionsViewModel @Inject constructor(
             }
             is SessionsUiEvent.UndoButtonPressed -> onRestoreAction()
             is SessionsUiEvent.ClearActionMode -> clearActionMode()
+            is SessionsUiEvent.UpdateAppIntroDialogIndex -> {
+                viewModelScope.launch {
+                    sessionsUseCases.setAppIntroDialogIndex(event.index)
+                }
+            }
         }
 
         // events are consumed by default
