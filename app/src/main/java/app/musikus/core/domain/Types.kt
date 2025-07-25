@@ -44,7 +44,10 @@ data class UserPreferences(
     val metronomeSettings: MetronomeSettings,
 
     // Announcement message
-    val idOfLastAnnouncementSeen: Int
+    val idOfLastAnnouncementSeen: Int,
+
+    // App intro dialogs
+    val appIntroDialogIndices: Map<AppIntroDialogScreens, Int>
 )
 
 interface UserPreferencesRepository {
@@ -59,6 +62,8 @@ interface UserPreferencesRepository {
     val metronomeSettings: Flow<MetronomeSettings>
 
     val idOfLastAnnouncementSeen: Flow<Int>
+
+    val appIntroDialogIndices: Flow<Map<AppIntroDialogScreens, Int>>
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
@@ -75,4 +80,6 @@ interface UserPreferencesRepository {
     suspend fun updateMetronomeSettings(settings: MetronomeSettings)
 
     suspend fun updateIdOfLastAnnouncementSeen(id: Int)
+
+    suspend fun updateAppIntroDialogIndex(screen: AppIntroDialogScreens, index: Int)
 }
