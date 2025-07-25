@@ -64,4 +64,34 @@
     <string name="active_session_service_notification_action_resume">Resume</string>
     <string name="active_session_service_notification_action_finish">Finish</string>
 
+    <!-- App Intro Dialogs -->
+    <string name="active_session_app_intro_fab_start">
+        Press here to start with your first item for today\'s practice session.
+    </string>
+    <string name="active_session_app_intro_practice_timer">
+        This is the practice timer. It shows you how long you have been already practicing.
+    </string>
+    <string name="active_session_app_intro_current_section">
+        This section always shows you the current item you are practicing.
+    </string>
+    <string name="active_session_app_intro_minimize_button">
+        You can minimize the app to continue practicing in the background. You can even leave the app.
+        A notification will remind you of the ongoing session.
+    </string>
+    <string name="active_session_app_intro_pause_button">
+        If you want to take a break, you can pause the session here.
+    </string>
+    <string name="active_session_app_intro_discard_button">
+        Here you can discard the current session. It will be deleted and will not show up in your session list.
+    </string>
+    <string name="active_session_app_intro_finish_button">Press here when you want to finish your session.</string>
+    <string name="active_session_app_intro_fab_next_section">
+        When you\'re done with your first item, you can practice another one and add a new section to your practice session.
+    </string>
+    <string name="active_session_app_intro_past_sections">
+        All practiced sections of this session will be displayed here.
+        You can swipe left to delete a section. The time will be subtracted then.
+    </string>
+    <string name="active_session_app_intro_resume_button">Press here to resume the session.</string>
+
 </resources>
