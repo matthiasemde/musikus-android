@@ -71,6 +71,9 @@ import kotlinx.coroutines.delay
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * The order in which UI items of this screen are introduced by app intro dialogs.
+ */
 private enum class IntroOrder(val index: Int) {
     FAB(0),
     MONTH_HEADER(1),
