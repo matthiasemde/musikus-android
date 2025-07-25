@@ -130,6 +130,12 @@ class ActiveSessionViewModel @Inject constructor(
         )
     )
 
+    private val appIntroDialogIndex = activeSessionUseCases.getAppIntroDialogIndex().stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = 100  // chose a high value to not trigger dialogs when use case is not yet initialized
+    )
+
     /** ------------------- Own StateFlow UI state ------------------------------------------- */
 
     private val _endDialogComment = MutableStateFlow("")
@@ -378,18 +384,21 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val dialogsUiStates = combine(
         _endDialogUiState,
-        _discardDialogVisible
-    ) { endDialog, discardDialogVisible ->
+        _discardDialogVisible,
+        appIntroDialogIndex
+    ) { endDialog, discardDialogVisible, appIntroDialogIndex ->
         ActiveSessionDialogsUiState(
             endDialogUiState = endDialog,
-            discardDialogVisible = discardDialogVisible
+            discardDialogVisible = discardDialogVisible,
+            appIntroDialogIndex = appIntroDialogIndex
         )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = ActiveSessionDialogsUiState(
             endDialogUiState = _endDialogUiState.value,
-            discardDialogVisible = _discardDialogVisible.value
+            discardDialogVisible = _discardDialogVisible.value,
+            appIntroDialogIndex = appIntroDialogIndex.value
         )
     )
 
@@ -451,6 +460,16 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.NewItemSelectorEvent -> {
                 // redirect events to NewItemSelector event handler
                 return onNewItemSelectorEvent(event.libraryEvent)
+            }
+            is ActiveSessionUiEvent.AppIntroDialogConfirmed -> {
+                // index is only allowed to be incremented by one
+                if (appIntroDialogIndex.value != event.index){
+                    return false    // indicate failure / not consumed
+                }
+                viewModelScope.launch {
+                    // store the index which should be shown next time, so add +1
+                    activeSessionUseCases.setAppIntroDialogIndex(event.index + 1)
+                }
             }
         }
 

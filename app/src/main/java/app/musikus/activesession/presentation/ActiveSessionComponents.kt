@@ -57,6 +57,7 @@ import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
+import app.musikus.core.presentation.components.MusikusShowcaseDialog
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
@@ -65,6 +66,8 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.sessions.presentation.RatingBar
+import com.joco.showcase.sequence.SequenceShowcaseScope
+import com.joco.showcase.sequence.SequenceShowcaseState
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -73,6 +76,7 @@ internal fun PracticeTimer(
     uiState: State<ActiveSessionTimerUiState>,
     sessionState: State<ActiveSessionState>,
     modifier: Modifier = Modifier,
+    modifierPausedButton: Modifier = Modifier,
     onResumeTimer: () -> Unit,
     screenSizeClass: ScreenSizeClass,
 ) {
@@ -89,6 +93,7 @@ internal fun PracticeTimer(
         when (sessionState.value) {
             ActiveSessionState.PAUSED -> {
                 ElevatedButton(
+                    modifier = modifierPausedButton,
                     onClick = onResumeTimer,
                     colors = ButtonDefaults.elevatedButtonColors().copy(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -193,11 +198,14 @@ internal fun CurrentPracticingItem(
  * Floating Action Button to select new item for new section.
  */
 @Composable
-internal fun AddSectionFAB(
+internal fun SequenceShowcaseScope.AddSectionFAB(
     sessionState: State<ActiveSessionState>,
     modifier: Modifier = Modifier,
     isVisible: Boolean = true,
     onClick: () -> Unit,
+    appIntroIndex: Int,
+    sequenceShowcaseState: SequenceShowcaseState,
+    eventHandler: ActiveSessionUiEventHandler,
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -214,10 +222,31 @@ internal fun AddSectionFAB(
                 }
         )
         ExtendedFloatingActionButton(
-            onClick = onClick,
+            onClick = {
+                eventHandler(ActiveSessionUiEvent.AppIntroDialogConfirmed(appIntroIndex))
+                sequenceShowcaseState.next()
+                onClick()
+            },
             icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = message) },
             text = { Text(text = message) },
             expanded = true,
+            modifier = Modifier.sequenceShowcaseTarget(
+                index = appIntroIndex,
+                content = {
+                    MusikusShowcaseDialog(
+                        targetRect = it,
+                        text = if (sessionState.value == ActiveSessionState.NOT_STARTED) {
+                            UiText.StringResource(resId = R.string.active_session_app_intro_fab_start)
+                        } else {
+                            UiText.StringResource(resId = R.string.active_session_app_intro_fab_next_section)
+                        },
+                        onClick = {
+                            eventHandler(ActiveSessionUiEvent.AppIntroDialogConfirmed(appIntroIndex))
+                            sequenceShowcaseState.next()
+                        }
+                    )
+                }
+            )
         )
     }
 }
@@ -284,8 +313,10 @@ internal fun EndSessionDialog(
 @Composable
 internal fun PauseButton(
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     IconButton(
+        modifier = modifier,
         onClick = onClick
     ) {
         Icon(

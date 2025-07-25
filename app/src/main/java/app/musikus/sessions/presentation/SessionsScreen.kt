@@ -118,7 +118,7 @@ fun SessionsScreen(
             delay(300.milliseconds)
             sessionsListState.animateScrollToItem(0)
         }
-        sequenceShowcaseState.start(index = uiState.appIntroDialogIndex) // TODO add logic for starting showcase
+        sequenceShowcaseState.start(index = uiState.appIntroDialogIndex)
     }
 
     val context = LocalContext.current
@@ -169,7 +169,7 @@ fun SessionsScreen(
                                 targetRect = it,
                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_fab),
                                 onClick = {
-                                    eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(IntroOrder.FAB.index + 1))
+                                    eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(IntroOrder.FAB.index))
                                     sequenceShowcaseState.next()
                                 }
                             )
@@ -234,8 +234,8 @@ fun SessionsScreen(
                                                 targetRect = it,
                                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_month_button),
                                                 onClick = {
-                                                    eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(
-                                                        IntroOrder.MONTH_HEADER.index + 1))
+                                                    eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(
+                                                        IntroOrder.MONTH_HEADER.index))
                                                     sequenceShowcaseState.next()
                                                 }
                                             )
@@ -286,8 +286,8 @@ fun SessionsScreen(
                                                         targetRect = it,
                                                         text = UiText.StringResource(resId = R.string.sessions_app_intro_card),
                                                         onClick = {
-                                                            eventHandler(SessionsUiEvent.UpdateAppIntroDialogIndex(
-                                                                IntroOrder.SESSION_CARD.index + 1))
+                                                            eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(
+                                                                IntroOrder.SESSION_CARD.index))
                                                             sequenceShowcaseState.next() }
                                                     )
                                                 }
