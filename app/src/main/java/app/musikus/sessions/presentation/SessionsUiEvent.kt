@@ -28,5 +28,5 @@ sealed class SessionsUiEvent {
 
     data object ClearActionMode : SessionsUiEvent()
 
-    data class UpdateAppIntroDialogIndex(val index: Int) : SessionsUiEvent()
+    data class AppIntroDialogConfirmed(val index: Int) : SessionsUiEvent()
 }

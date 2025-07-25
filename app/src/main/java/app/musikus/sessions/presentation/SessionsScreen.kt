@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -65,6 +66,7 @@ import app.musikus.core.presentation.utils.DurationString
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import com.joco.showcase.sequence.SequenceShowcase
+import com.joco.showcase.sequence.SequenceShowcaseState
 import com.joco.showcase.sequence.rememberSequenceShowcaseState
 import com.joco.showcaseview.ShowcaseAlignment
 import kotlinx.coroutines.delay
@@ -118,6 +120,9 @@ fun SessionsScreen(
             delay(300.milliseconds)
             sessionsListState.animateScrollToItem(0)
         }
+    }
+
+    SideEffect {
         sequenceShowcaseState.start(index = uiState.appIntroDialogIndex)
     }
 
@@ -154,7 +159,14 @@ fun SessionsScreen(
                             )
                         )
                     },
-                    onClick = { navigateTo(Screen.ActiveSession()) },
+                    onClick = {
+                        introDialogConfirmed(
+                            index = IntroOrder.FAB.index,
+                            state = sequenceShowcaseState,
+                            eventHandler = eventHandler
+                        )
+                        navigateTo(Screen.ActiveSession())
+                    },
                     expanded = fabExpanded,
                     containerColor =
                         if (mainUiState.isSessionRunning) {
@@ -169,8 +181,11 @@ fun SessionsScreen(
                                 targetRect = it,
                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_fab),
                                 onClick = {
-                                    eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(IntroOrder.FAB.index))
-                                    sequenceShowcaseState.next()
+                                    introDialogConfirmed(
+                                        index = IntroOrder.FAB.index,
+                                        state = sequenceShowcaseState,
+                                        eventHandler = eventHandler
+                                    )
                                 }
                             )
                         }
@@ -224,6 +239,11 @@ fun SessionsScreen(
                                 MonthHeader(
                                     month = monthDatum.month,
                                     onClickHandler = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.MONTH_HEADER.index,
+                                            state = sequenceShowcaseState,
+                                            eventHandler = eventHandler
+                                        )
                                         eventHandler(SessionsUiEvent.MonthHeaderPressed(monthDatum.specificMonth))
                                     },
                                     modifier = Modifier.sequenceShowcaseTarget(
@@ -234,9 +254,11 @@ fun SessionsScreen(
                                                 targetRect = it,
                                                 text = UiText.StringResource(resId = R.string.sessions_app_intro_month_button),
                                                 onClick = {
-                                                    eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(
-                                                        IntroOrder.MONTH_HEADER.index))
-                                                    sequenceShowcaseState.next()
+                                                    introDialogConfirmed(
+                                                        index = IntroOrder.MONTH_HEADER.index,
+                                                        state = sequenceShowcaseState,
+                                                        eventHandler = eventHandler
+                                                    )
                                                 }
                                             )
                                         }
@@ -286,9 +308,12 @@ fun SessionsScreen(
                                                         targetRect = it,
                                                         text = UiText.StringResource(resId = R.string.sessions_app_intro_card),
                                                         onClick = {
-                                                            eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(
-                                                                IntroOrder.SESSION_CARD.index))
-                                                            sequenceShowcaseState.next() }
+                                                            introDialogConfirmed(
+                                                                index = IntroOrder.SESSION_CARD.index,
+                                                                state = sequenceShowcaseState,
+                                                                eventHandler = eventHandler
+                                                            )
+                                                        }
                                                     )
                                                 }
                                             ),
@@ -406,5 +431,15 @@ fun DayHeader(
             text = totalPracticeDuration,
             style = MaterialTheme.typography.bodyLarge
         )
+    }
+}
+
+private fun introDialogConfirmed(
+    index: Int,
+    state: SequenceShowcaseState,
+    eventHandler: SessionsUiEventHandler,
+) {
+    if(eventHandler(SessionsUiEvent.AppIntroDialogConfirmed(index))) {
+        state.next()  // dismiss showcase dialog and proceed to next item next time
     }
 }

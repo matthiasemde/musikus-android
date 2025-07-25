@@ -60,7 +60,7 @@ class SessionsViewModel @Inject constructor(
     private val appIntroDialogIndex = sessionsUseCases.getAppIntroDialogIndex().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0
+        initialValue = 100  // chose a high value to not trigger dialogs when use case is not yet initialized
     )
 
     /** Own state flow */
@@ -200,9 +200,14 @@ class SessionsViewModel @Inject constructor(
             }
             is SessionsUiEvent.UndoButtonPressed -> onRestoreAction()
             is SessionsUiEvent.ClearActionMode -> clearActionMode()
-            is SessionsUiEvent.UpdateAppIntroDialogIndex -> {
+            is SessionsUiEvent.AppIntroDialogConfirmed -> {
+                // index is only allowed to be incremented by one
+                if (appIntroDialogIndex.value != event.index){
+                    return false    // indicate failure / not consumed
+                }
                 viewModelScope.launch {
-                    sessionsUseCases.setAppIntroDialogIndex(event.index)
+                    // store the index which should be shown next time, so add +1
+                    sessionsUseCases.setAppIntroDialogIndex(event.index + 1)
                 }
             }
         }
