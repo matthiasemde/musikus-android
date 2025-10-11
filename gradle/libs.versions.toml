@@ -36,7 +36,6 @@ mockk = "1.13.14"
 room = "2.6.1"
 room-testing = "1.1.1"
 detekt = "1.23.7"
-fastlane-screengrab = "2.1.1"
 # @keep
 targetSdk = "35"
 google-truth = "1.4.4"
