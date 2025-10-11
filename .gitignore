@@ -9,3 +9,6 @@
 .cxx
 local.properties
 musikus.properties
+
+# Google Play service account json key
+play-store-credentials.json
