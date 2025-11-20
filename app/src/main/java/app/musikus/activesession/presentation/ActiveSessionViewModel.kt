@@ -160,7 +160,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** Items from selected folder */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val libraryItemsSelectedFolder = _displayedFolder.flatMapLatest { folderId ->
+    private val items = _displayedFolder.flatMapLatest { folderId ->
         libraryUseCases.getSortedItems(Nullable(folderId))
     }.stateIn(
         scope = viewModelScope,
@@ -170,7 +170,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** Last practiced dates for items in the selected folder */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val lastPracticedDates = libraryItemsSelectedFolder.flatMapLatest { items ->
+    private val lastPracticedDates = items.flatMapLatest { items ->
         libraryUseCases.getLastPracticedDate(items)
     }.stateIn(
         scope = viewModelScope,
@@ -290,7 +290,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryItemsUiState = combine(
         itemSortInfo,
-        libraryItemsSelectedFolder,
+        items,
         lastPracticedDates,
     ) { sortInfo, items, dates ->
         LibraryItemsUiState(
@@ -524,8 +524,6 @@ class ActiveSessionViewModel @Inject constructor(
             item = item,
             at = timeProvider.now()
         )
-
-
     }
 
     private suspend fun deleteSection(sectionId: UUID) {
