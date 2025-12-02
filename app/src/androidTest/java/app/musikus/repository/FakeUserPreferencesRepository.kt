@@ -8,6 +8,7 @@
 
 package app.musikus.repository
 
+import app.musikus.core.domain.AppIntroDialogScreens
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.UserPreferences
@@ -41,7 +42,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
             goalsSortDirection = SortDirection.DEFAULT,
             showPausedGoals = true,
             metronomeSettings = MetronomeSettings.DEFAULT,
-            idOfLastAnnouncementSeen = 0
+            idOfLastAnnouncementSeen = 0,
+            appIntroDialogIndices = AppIntroDialogScreens.entries.associateWith { 0 }
         )
     )
     override val theme: Flow<ThemeSelections>
@@ -78,6 +80,9 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
 
     override val idOfLastAnnouncementSeen: Flow<Int>
         get() = _preferences.map { it.idOfLastAnnouncementSeen }
+
+    override val appIntroDialogIndices: Flow<Map<AppIntroDialogScreens, Int>>
+        get() = _preferences.map { it.appIntroDialogIndices }
 
     override suspend fun updateTheme(theme: ThemeSelections) {
         _preferences.update {
@@ -139,6 +144,14 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
         _preferences.update {
             it.copy(idOfLastAnnouncementSeen = id)
+        }
+    }
+
+    override suspend fun updateAppIntroDialogIndex(screen: AppIntroDialogScreens, index: Int) {
+        _preferences.update { preferences ->
+            val updatedIndices = preferences.appIntroDialogIndices.toMutableMap()
+            updatedIndices[screen] = index
+            preferences.copy(appIntroDialogIndices = updatedIndices)
         }
     }
 }
