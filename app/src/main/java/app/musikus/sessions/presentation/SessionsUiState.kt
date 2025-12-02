@@ -29,5 +29,6 @@ data class SessionsDeleteDialogUiState(
 data class SessionsUiState(
     val actionModeUiState: SessionsActionModeUiState,
     val contentUiState: SessionsContentUiState,
+    val appIntroDialogIndex: Int,
     val deleteDialogUiState: SessionsDeleteDialogUiState?,
 )
