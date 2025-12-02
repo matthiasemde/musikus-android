@@ -75,6 +75,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -105,6 +106,7 @@ import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.ExceptionHandler
+import app.musikus.core.presentation.components.MusikusShowcaseDialog
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewWholeScreen
@@ -119,6 +121,10 @@ import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.metronome.presentation.MetronomeUi
 import app.musikus.recorder.presentation.RecorderUi
+import com.joco.showcase.sequence.SequenceShowcase
+import com.joco.showcase.sequence.SequenceShowcaseScope
+import com.joco.showcase.sequence.SequenceShowcaseState
+import com.joco.showcase.sequence.rememberSequenceShowcaseState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -138,6 +144,25 @@ import kotlin.time.Duration.Companion.seconds
 @Serializable
 enum class ActiveSessionActions {
     PAUSE, FINISH, METRONOME, RECORDER
+}
+
+/**
+ * The order in which UI items of this screen are introduced by app intro dialogs.
+ *
+ * Note: when a UI item is not (yet) visible, the dialog will not be shown and it will not be possible to continue
+ * until the item is visible.
+ */
+private enum class IntroOrder(val index: Int) {
+    FAB_START(0),         // start with the FAB to start a new section
+    PRACTICE_TIMER(1),    // introduce the practice timer
+    CURRENT_SECTION(2),   // introduce the current section item
+    MINIMIZE_BUTTON(3),   // introduce the push to background button
+    PAUSE_BUTTON(4),      // introduce the action buttons: pause,...
+    DISCARD_BUTTON(5),    // ...discard, and
+    FAB_NEXT_SECTION(6),  // introduce the FAB to add a new section
+    PAST_SECTIONS(7),     // introduce the list of past sections
+    FINSIH_BUTTON(8),     // ...finish button
+    RESUME_BUTTON(9),     // introduce the resume button in the practice timer when the user pauses for the first time
 }
 
 data class ToolsTab(
@@ -305,45 +330,52 @@ private fun ActiveSessionScreen(
     sizeClass: ScreenSizeClass,
     showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
 ) {
-    // Custom Scaffold for our elements which adapts to available window sizes
-    ActiveSessionAdaptiveScaffold(
-        screenSizeClass = sizeClass,
-        bottomSheetScaffoldState = bottomSheetScaffoldState,
-        topBar = {
-            ActiveSessionTopBar(
-                sessionState = uiState.value.sessionState.collectAsState(),
-                isFinishedButtonEnabled = uiState.value.isFinishButtonEnabled.collectAsState(),
-                onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
-                onNavigateUp = remember { { navigateUp() } },
-                onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
-                onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
-            )
-        },
-        bottomBar = {
-            ActiveSessionBottomTabs(
-                tabs = tabs,
-                sheetState = bottomSheetScaffoldState,
-                pagerState = bottomSheetPagerState,
-                screenSizeClass = sizeClass,
-            )
-        },
-        mainContent = { padding ->
-            ActiveSessionMainContent(
-                contentPadding = padding,
-                uiState = uiState.value.mainContentUiState.collectAsState(),
-                sessionState = uiState.value.sessionState.collectAsState(),
-                showSnackbar = showSnackbar,
-                eventHandler = eventHandler,
-                screenSizeClass = sizeClass
-            )
-        },
-        toolsContent = {
-            ActiveSessionToolsLayout(
-                tabs = tabs,
-                pagerState = bottomSheetPagerState
-            )
-        }
-    )
+    val sequenceShowcaseState = rememberSequenceShowcaseState()
+    SequenceShowcase(state = sequenceShowcaseState) {
+
+        // Custom Scaffold for our elements which adapts to available window sizes
+        ActiveSessionAdaptiveScaffold(
+            screenSizeClass = sizeClass,
+            bottomSheetScaffoldState = bottomSheetScaffoldState,
+            topBar = {
+                ActiveSessionTopBar(
+                    sessionState = uiState.value.sessionState.collectAsState(),
+                    isFinishedButtonEnabled = uiState.value.isFinishButtonEnabled.collectAsState(),
+                    onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
+                    onNavigateUp = remember { { navigateUp() } },
+                    onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
+                    onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
+                    eventHandler = eventHandler,
+                    sequenceShowcaseState = sequenceShowcaseState,
+                )
+            },
+            bottomBar = {
+                ActiveSessionBottomTabs(
+                    tabs = tabs,
+                    sheetState = bottomSheetScaffoldState,
+                    pagerState = bottomSheetPagerState,
+                    screenSizeClass = sizeClass,
+                )
+            },
+            mainContent = { padding ->
+                ActiveSessionMainContent(
+                    contentPadding = padding,
+                    uiState = uiState.value.mainContentUiState.collectAsState(),
+                    sessionState = uiState.value.sessionState.collectAsState(),
+                    showSnackbar = showSnackbar,
+                    eventHandler = eventHandler,
+                    screenSizeClass = sizeClass,
+                    sequenceShowcaseState = sequenceShowcaseState,
+                )
+            },
+            toolsContent = {
+                ActiveSessionToolsLayout(
+                    tabs = tabs,
+                    pagerState = bottomSheetPagerState
+                )
+            }
+        )
+    }
 
     /**
      * --------------------- Dialogs ---------------------
@@ -401,6 +433,11 @@ private fun ActiveSessionScreen(
                 navigateUp()
             }
         )
+    }
+
+    // Side effect to start the sequence showcase dialog every time the screen is shown
+    SideEffect {
+        sequenceShowcaseState.start(dialogUiState.value.appIntroDialogIndex)
     }
 }
 
@@ -540,7 +577,7 @@ private fun ToolsBottomSheetScaffold(
 }
 
 @Composable
-private fun ActiveSessionMainContent(
+private fun SequenceShowcaseScope.ActiveSessionMainContent(
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass,
     contentPadding: State<PaddingValues>,
@@ -548,6 +585,7 @@ private fun ActiveSessionMainContent(
     sessionState: State<ActiveSessionState>,
     showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     eventHandler: ActiveSessionUiEventHandler,
+    sequenceShowcaseState: SequenceShowcaseState,
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -597,7 +635,42 @@ private fun ActiveSessionMainContent(
                     uiState = uiState.value.timerUiState.collectAsState(),
                     sessionState = sessionState,
                     screenSizeClass = screenSizeClass,
-                    onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
+                    onResumeTimer = remember { {
+                        sequenceShowcaseState.dismiss() // dismiss showcase dialog when resuming timer
+                        eventHandler(ActiveSessionUiEvent.TogglePauseState)
+                    } },
+                    modifier = Modifier.sequenceShowcaseTarget(
+                        index = IntroOrder.PRACTICE_TIMER.index,
+                        content = {
+                            MusikusShowcaseDialog(
+                                targetRect = it,
+                                text = UiText.StringResource(resId = R.string.active_session_app_intro_practice_timer),
+                                onClick = {
+                                    introDialogConfirmed(
+                                        index = IntroOrder.PRACTICE_TIMER.index,
+                                        eventHandler = eventHandler,
+                                        state = sequenceShowcaseState
+                                    )
+                                }
+                            )
+                        }
+                    ),
+                    modifierPausedButton = Modifier.sequenceShowcaseTarget(
+                        index = IntroOrder.RESUME_BUTTON.index,
+                        content = {
+                            MusikusShowcaseDialog(
+                                targetRect = it,
+                                text = UiText.StringResource(resId = R.string.active_session_app_intro_resume_button),
+                                onClick = {
+                                    introDialogConfirmed(
+                                        index = IntroOrder.RESUME_BUTTON.index,
+                                        eventHandler = eventHandler,
+                                        state = sequenceShowcaseState
+                                    )
+                                }
+                            )
+                        }
+                    ),
                 )
 
                 if (limitedHeight) {
@@ -608,7 +681,24 @@ private fun ActiveSessionMainContent(
 
                 // Running Item
                 CurrentPracticingItem(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.large)
+                        .sequenceShowcaseTarget(
+                            index = IntroOrder.CURRENT_SECTION.index,
+                            content = {
+                                MusikusShowcaseDialog(
+                                    targetRect = it,
+                                    text = UiText.StringResource(resId = R.string.active_session_app_intro_current_section),
+                                    onClick = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.CURRENT_SECTION.index,
+                                            eventHandler = eventHandler,
+                                            state = sequenceShowcaseState
+                                        )
+                                    }
+                                )
+                            }
+                        ),
                     screenSizeClass = screenSizeClass,
                     uiState = uiState.value.currentItemUiState.collectAsState(),
                 )
@@ -623,13 +713,33 @@ private fun ActiveSessionMainContent(
                 val pastItemsState = uiState.value.pastSectionsUiState.collectAsState()
                 if (pastItemsState.value != null) {
                     SectionsList(
+                        modifier = Modifier.sequenceShowcaseTarget(
+                            index = IntroOrder.PAST_SECTIONS.index,
+                            content = {
+                                MusikusShowcaseDialog(
+                                    targetRect = it,
+                                    text = UiText.StringResource(resId = R.string.active_session_app_intro_past_sections),
+                                    onClick = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.PAST_SECTIONS.index,
+                                            eventHandler = eventHandler,
+                                            state = sequenceShowcaseState
+                                        )
+                                    }
+                                )
+                            }
+                        ),
                         uiState = pastItemsState,
                         nestedScrollConnection = nestedScrollConnection, // for hiding the FAB
                         listState = sectionsListState,
                         showSnackbar = showSnackbar,
                         onSectionDeleted = remember {
-                            {
-                                    section ->
+                            { section ->
+                                introDialogConfirmed(
+                                    index = IntroOrder.PAST_SECTIONS.index,
+                                    eventHandler = eventHandler,
+                                    state = sequenceShowcaseState
+                                )
                                 eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
                             }
                         },
@@ -646,7 +756,14 @@ private fun ActiveSessionMainContent(
             isVisible = addSectionFABVisible || !limitedHeight, // only hide FAB in landscape layout
             sessionState = sessionState,
             modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
+            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } },
+            sequenceShowcaseState = sequenceShowcaseState,
+            appIntroIndex = if (sessionState.value == ActiveSessionState.NOT_STARTED) {
+                IntroOrder.FAB_START.index
+            } else {
+                IntroOrder.FAB_NEXT_SECTION.index
+            },
+            eventHandler = eventHandler,
         )
     }
 }
@@ -670,20 +787,47 @@ private fun ActiveSessionToolsLayout(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ActiveSessionTopBar(
+private fun SequenceShowcaseScope.ActiveSessionTopBar(
     sessionState: State<ActiveSessionState>,
     isFinishedButtonEnabled: State<Boolean>,
     onDiscard: () -> Unit,
     onNavigateUp: () -> Unit,
     onTogglePause: () -> Unit,
     onSave: () -> Unit,
+    eventHandler: ActiveSessionUiEventHandler,
+    sequenceShowcaseState: SequenceShowcaseState
 ) {
     TopAppBar(
         title = { },
         navigationIcon = {
-            IconButton(onClick = onNavigateUp, content = {
-                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-            })
+            IconButton(
+                modifier = Modifier.sequenceShowcaseTarget(
+                    index = IntroOrder.MINIMIZE_BUTTON.index,
+                    content = {
+                        MusikusShowcaseDialog(
+                            targetRect = it,
+                            text = UiText.StringResource(resId = R.string.active_session_app_intro_minimize_button),
+                            onClick = {
+                                introDialogConfirmed(
+                                    index = IntroOrder.MINIMIZE_BUTTON.index,
+                                    eventHandler = eventHandler,
+                                    state = sequenceShowcaseState
+                                )
+                            }
+                        )
+                    }
+                ),
+                onClick = {
+                    introDialogConfirmed(
+                        index = IntroOrder.MINIMIZE_BUTTON.index,
+                        eventHandler = eventHandler,
+                        state = sequenceShowcaseState
+                    )
+                    onNavigateUp()
+                },
+                content = {
+                    Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+                })
         },
         actions = {
             AnimatedVisibility(
@@ -692,16 +836,64 @@ private fun ActiveSessionTopBar(
                 enter = slideInVertically(),
             ) {
                 Row {
-                    AnimatedVisibility(
-                        visible = sessionState.value == ActiveSessionState.RUNNING,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        PauseButton(onClick = onTogglePause)
-                    }
+//                    AnimatedVisibility(
+//                        visible = sessionState.value == ActiveSessionState.RUNNING,
+//                        enter = fadeIn(),
+//                        exit = fadeOut(),
+//                    ) {
+                        PauseButton(
+                            modifier = Modifier.sequenceShowcaseTarget(
+                                index = IntroOrder.PAUSE_BUTTON.index,
+                                content = {
+                                    MusikusShowcaseDialog(
+                                        targetRect = it,
+                                        text = UiText.StringResource(resId = R.string.active_session_app_intro_pause_button),
+                                        onClick = {
+                                            introDialogConfirmed(
+                                                index = IntroOrder.PAUSE_BUTTON.index,
+                                                eventHandler = eventHandler,
+                                                state = sequenceShowcaseState
+                                            )
+                                        }
+                                    )
+                                }
+                            ),
+                            onClick = {
+                                introDialogConfirmed(
+                                    index = IntroOrder.PAUSE_BUTTON.index,
+                                    eventHandler = eventHandler,
+                                    state = sequenceShowcaseState
+                                )
+                                onTogglePause()
+                            }
+                        )
+//                    }
 
                     IconButton(
-                        onClick = onDiscard,
+                        modifier = Modifier.sequenceShowcaseTarget(
+                            index = IntroOrder.DISCARD_BUTTON.index,
+                            content = {
+                                MusikusShowcaseDialog(
+                                    targetRect = it,
+                                    text = UiText.StringResource(resId = R.string.active_session_app_intro_discard_button),
+                                    onClick = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.DISCARD_BUTTON.index,
+                                            eventHandler = eventHandler,
+                                            state = sequenceShowcaseState
+                                        )
+                                    }
+                                )
+                            }
+                        ),
+                        onClick = {
+                            introDialogConfirmed(
+                                index = IntroOrder.DISCARD_BUTTON.index,
+                                eventHandler = eventHandler,
+                                state = sequenceShowcaseState
+                            )
+                            onDiscard()
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
@@ -710,7 +902,30 @@ private fun ActiveSessionTopBar(
                     }
 
                     TextButton(
-                        onClick = onSave,
+                        modifier = Modifier.sequenceShowcaseTarget(
+                            index = IntroOrder.FINSIH_BUTTON.index,
+                            content = {
+                                MusikusShowcaseDialog(
+                                    targetRect = it,
+                                    text = UiText.StringResource(resId = R.string.active_session_app_intro_finish_button),
+                                    onClick = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.FINSIH_BUTTON.index,
+                                            eventHandler = eventHandler,
+                                            state = sequenceShowcaseState
+                                        )
+                                    }
+                                )
+                            }
+                        ),
+                        onClick = {
+                            introDialogConfirmed(
+                                index = IntroOrder.FINSIH_BUTTON.index,
+                                eventHandler = eventHandler,
+                                state = sequenceShowcaseState
+                            )
+                            onSave()
+                        },
                         enabled = isFinishedButtonEnabled.value
                     ) {
                         Text(text = stringResource(id = R.string.active_session_top_bar_save))
@@ -847,6 +1062,16 @@ private fun SheetDragHandle() {
     )
 }
 
+private fun introDialogConfirmed(
+    index: Int,
+    state: SequenceShowcaseState,
+    eventHandler: ActiveSessionUiEventHandler,
+) {
+    if(eventHandler(ActiveSessionUiEvent.AppIntroDialogConfirmed(index))) {
+        state.next()  // dismiss showcase dialog and proceed to next item next time
+    }
+}
+
 /**
  * ########################################### Previews ############################################
  */
@@ -877,7 +1102,8 @@ private fun PreviewActiveSessionScreen(
 
     val dialogs = ActiveSessionDialogsUiState(
         endDialogUiState = null,
-        discardDialogVisible = false
+        discardDialogVisible = false,
+        appIntroDialogIndex = 100, // not shown in preview
     )
 
     MusikusThemedPreview(theme) {
