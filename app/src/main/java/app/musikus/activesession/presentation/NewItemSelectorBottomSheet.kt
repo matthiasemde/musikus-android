@@ -369,7 +369,7 @@ private fun PreviewNewItemSelector(
                                     mode = LibraryFolderSortMode.DEFAULT,
                                     direction = SortDirection.DEFAULT
                                 ),
-                                selectedFolderIds = setOf(null),
+                                selectedFolderIds = emptySet(),
                             ),
                             libraryItemsUiState = LibraryItemsUiState(
                                 itemsWithLastPracticedDate = dummyLibraryItems.map {
@@ -411,7 +411,7 @@ private fun PreviewNewItemSelectorNoFolders(
                                     mode = LibraryFolderSortMode.DEFAULT,
                                     direction = SortDirection.DEFAULT
                                 ),
-                                selectedFolderIds = setOf(null),
+                                selectedFolderIds = emptySet(),
                             ),
                             libraryItemsUiState = LibraryItemsUiState(
                                 itemsWithLastPracticedDate = dummyLibraryItems.map {
@@ -453,7 +453,7 @@ private fun PreviewNewItemSelectorOneFolder(
                                     mode = LibraryFolderSortMode.DEFAULT,
                                     direction = SortDirection.DEFAULT
                                 ),
-                                selectedFolderIds = setOf(null),
+                                selectedFolderIds = emptySet(),
                             ),
                             libraryItemsUiState = LibraryItemsUiState(
                                 itemsWithLastPracticedDate = dummyLibraryItems.map {

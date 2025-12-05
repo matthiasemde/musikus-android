@@ -84,7 +84,7 @@ abstract class LibraryCoreViewModel(
     private val _itemToEditId = MutableStateFlow<UUID?>(null)
 
     // Action mode
-    protected val selectedFolderIds = MutableStateFlow<Set<UUID?>>(emptySet())
+    protected val selectedFolderIds = MutableStateFlow<Set<UUID>>(emptySet())
     private val _selectedItemIds = MutableStateFlow<Set<UUID>>(emptySet())
 
     // Delete dialog

@@ -131,7 +131,12 @@ class LibraryViewModel @Inject constructor(
         when (event) {
             is LibraryUiEvent.CoreUiEvent -> super.onUiEvent(event.coreEvent)
             is LibraryUiEvent.FolderSortModeSelected -> onFolderSortModeSelected(event.mode)
-            is LibraryUiEvent.FolderPressed -> return onFolderClicked(event.folderId, event.longClick)
+            is LibraryUiEvent.FolderPressed -> {
+                if(event.folderId == null) {
+                    return false  // do not consume event if no folder id
+                }
+                return  onFolderClicked(event.folderId, event.longClick)
+            }
             is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
             else -> return false // Unhandled event
         }
@@ -144,7 +149,7 @@ class LibraryViewModel @Inject constructor(
      * Mutators
      */
     private fun onFolderClicked(
-        folderId: UUID?,
+        folderId: UUID,
         longClick: Boolean = false
     ): Boolean {
         if (longClick) {

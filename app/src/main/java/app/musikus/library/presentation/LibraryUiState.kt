@@ -28,7 +28,7 @@ data class LibraryFoldersSortMenuUiState(
 
 data class LibraryFoldersUiState(
     val foldersWithItems: List<LibraryFolderWithItems>,
-    val selectedFolderIds: Set<UUID?>,
+    val selectedFolderIds: Set<UUID>,
 
     val sortMenuUiState: LibraryFoldersSortMenuUiState
 )
