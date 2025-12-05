@@ -154,8 +154,8 @@ enum class ActiveSessionActions {
  */
 private enum class IntroOrder(val index: Int) {
     FAB_START(0),         // start with the FAB to start a new section
-    PRACTICE_TIMER(1),    // introduce the practice timer
-    CURRENT_SECTION(2),   // introduce the current section item
+    CURRENT_SECTION(1),   // introduce the current section item
+    PRACTICE_TIMER(2),    // introduce the practice timer
     MINIMIZE_BUTTON(3),   // introduce the push to background button
     PAUSE_BUTTON(4),      // introduce the action buttons: pause,...
     DISCARD_BUTTON(5),    // ...discard, and
@@ -282,6 +282,7 @@ fun ActiveSession(
                     bottomSheetScaffoldState.bottomSheetState.expand()
                 }
             }
+
             ActiveSessionActions.RECORDER -> {
                 // switch to metronome tab
                 scope.launch {
@@ -635,10 +636,12 @@ private fun SequenceShowcaseScope.ActiveSessionMainContent(
                     uiState = uiState.value.timerUiState.collectAsState(),
                     sessionState = sessionState,
                     screenSizeClass = screenSizeClass,
-                    onResumeTimer = remember { {
-                        sequenceShowcaseState.dismiss() // dismiss showcase dialog when resuming timer
-                        eventHandler(ActiveSessionUiEvent.TogglePauseState)
-                    } },
+                    onResumeTimer = remember {
+                        {
+                            sequenceShowcaseState.dismiss() // dismiss showcase dialog when resuming timer
+                            eventHandler(ActiveSessionUiEvent.TogglePauseState)
+                        }
+                    },
                     modifier = Modifier.sequenceShowcaseTarget(
                         index = IntroOrder.PRACTICE_TIMER.index,
                         content = {
@@ -744,8 +747,8 @@ private fun SequenceShowcaseScope.ActiveSessionMainContent(
                             }
                         },
                         additionalBottomContentPadding =
-                        // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
-                        MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
+                            // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
+                            MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
                     )
                 }
             }
@@ -832,7 +835,7 @@ private fun SequenceShowcaseScope.ActiveSessionTopBar(
         actions = {
             AnimatedVisibility(
                 visible = sessionState.value == ActiveSessionState.RUNNING ||
-                    sessionState.value == ActiveSessionState.PAUSED,
+                        sessionState.value == ActiveSessionState.PAUSED,
                 enter = slideInVertically(),
             ) {
                 Row {
@@ -841,32 +844,32 @@ private fun SequenceShowcaseScope.ActiveSessionTopBar(
 //                        enter = fadeIn(),
 //                        exit = fadeOut(),
 //                    ) {
-                        PauseButton(
-                            modifier = Modifier.sequenceShowcaseTarget(
-                                index = IntroOrder.PAUSE_BUTTON.index,
-                                content = {
-                                    MusikusShowcaseDialog(
-                                        targetRect = it,
-                                        text = UiText.StringResource(resId = R.string.active_session_app_intro_pause_button),
-                                        onClick = {
-                                            introDialogConfirmed(
-                                                index = IntroOrder.PAUSE_BUTTON.index,
-                                                eventHandler = eventHandler,
-                                                state = sequenceShowcaseState
-                                            )
-                                        }
-                                    )
-                                }
-                            ),
-                            onClick = {
-                                introDialogConfirmed(
-                                    index = IntroOrder.PAUSE_BUTTON.index,
-                                    eventHandler = eventHandler,
-                                    state = sequenceShowcaseState
+                    PauseButton(
+                        modifier = Modifier.sequenceShowcaseTarget(
+                            index = IntroOrder.PAUSE_BUTTON.index,
+                            content = {
+                                MusikusShowcaseDialog(
+                                    targetRect = it,
+                                    text = UiText.StringResource(resId = R.string.active_session_app_intro_pause_button),
+                                    onClick = {
+                                        introDialogConfirmed(
+                                            index = IntroOrder.PAUSE_BUTTON.index,
+                                            eventHandler = eventHandler,
+                                            state = sequenceShowcaseState
+                                        )
+                                    }
                                 )
-                                onTogglePause()
                             }
-                        )
+                        ),
+                        onClick = {
+                            introDialogConfirmed(
+                                index = IntroOrder.PAUSE_BUTTON.index,
+                                eventHandler = eventHandler,
+                                state = sequenceShowcaseState
+                            )
+                            onTogglePause()
+                        }
+                    )
 //                    }
 
                     IconButton(
@@ -935,7 +938,6 @@ private fun SequenceShowcaseScope.ActiveSessionTopBar(
         }
     )
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -1067,9 +1069,11 @@ private fun introDialogConfirmed(
     state: SequenceShowcaseState,
     eventHandler: ActiveSessionUiEventHandler,
 ) {
-    if(eventHandler(ActiveSessionUiEvent.AppIntroDialogConfirmed(index))) {
-        state.next()  // dismiss showcase dialog and proceed to next item next time
+    if (eventHandler(ActiveSessionUiEvent.AppIntroDialogConfirmed(index))) {
+        state.dismiss()  // proceed to next item next time
+        return
     }
+    state.dismiss()  // just dismiss if false (invalid call)
 }
 
 /**
