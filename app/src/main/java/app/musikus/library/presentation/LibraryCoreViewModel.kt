@@ -320,7 +320,7 @@ abstract class LibraryCoreViewModel(
     private fun onDeleteAction() {
         viewModelScope.launch {
             // only delete actual folders (not root=null)
-            _foldersCache = selectedFolderIds.value.filterNotNull().toList()
+            _foldersCache = selectedFolderIds.value.toList()
             _itemsCache = _selectedItemIds.value.toList()
 
             libraryUseCases.deleteFolders(_foldersCache)
