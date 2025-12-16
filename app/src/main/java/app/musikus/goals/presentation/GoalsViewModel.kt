@@ -87,9 +87,6 @@ class GoalsViewModel @Inject constructor(
 
     /** Own state flows */
 
-    // Menu
-    private val _showSortModeMenu = MutableStateFlow(false)
-
     // Goal dialog
     private val _dialogData = MutableStateFlow<GoalDialogData?>(null)
     private val _goalToEditId = MutableStateFlow<UUID?>(null)
@@ -104,12 +101,8 @@ class GoalsViewModel @Inject constructor(
     /**
      *  Composing the Ui state
      */
-    private val sortMenuUiState = combine(
-        goalsSortInfo,
-        _showSortModeMenu
-    ) { (mode, direction), show ->
+    private val sortMenuUiState = goalsSortInfo.map { (mode, direction) ->
         GoalsSortMenuUiState(
-            show = show,
             mode = mode as GoalsSortMode,
             direction = direction,
         )
@@ -117,7 +110,6 @@ class GoalsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsSortMenuUiState(
-            show = false,
             mode = GoalsSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
@@ -259,7 +251,6 @@ class GoalsViewModel @Inject constructor(
 
             is GoalsUiEvent.GoalPressed -> onGoalClicked(event.goal, event.longClick)
 
-            is GoalsUiEvent.GoalSortMenuPressed -> onSortMenuShowChanged(_showSortModeMenu.value.not())
             is GoalsUiEvent.GoalSortModeSelected -> onSortModeSelected(event.mode)
 
             is GoalsUiEvent.ArchiveButtonPressed -> {
@@ -326,12 +317,7 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    private fun onSortMenuShowChanged(show: Boolean) {
-        _showSortModeMenu.update { show }
-    }
-
     private fun onSortModeSelected(selection: GoalsSortMode) {
-        _showSortModeMenu.update { false }
         viewModelScope.launch {
             goalsUseCases.selectGoalSortMode(selection)
         }

@@ -12,16 +12,16 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.library.data.LibraryFolderSortMode
-import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.domain.usecase.LibraryUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class LibraryUiState(
@@ -51,20 +51,10 @@ class LibraryViewModel @Inject constructor(
     )
 
     /**
-     * Own state flows
-     */
-    // Menu
-    private val _showFolderSortMenu = MutableStateFlow(false)
-
-    /**
      * Composing the Ui state
      */
-    private val foldersSortMenuUiState = combine(
-        _showFolderSortMenu,
-        folderSortInfo,
-    ) { showMenu, sortInfo ->
+    private val foldersSortMenuUiState = folderSortInfo.map{ sortInfo ->
         LibraryFoldersSortMenuUiState(
-            show = showMenu,
             mode = sortInfo.mode,
             direction = sortInfo.direction,
         )
@@ -72,7 +62,6 @@ class LibraryViewModel @Inject constructor(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryFoldersSortMenuUiState(
-            show = _showFolderSortMenu.value,
             mode = LibraryFolderSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
@@ -141,10 +130,15 @@ class LibraryViewModel @Inject constructor(
     fun onUiEvent(event: LibraryUiEvent): Boolean {
         when (event) {
             is LibraryUiEvent.CoreUiEvent -> super.onUiEvent(event.coreEvent)
-            is LibraryUiEvent.FolderSortMenuPressed -> onFolderSortMenuChanged(_showFolderSortMenu.value.not())
             is LibraryUiEvent.FolderSortModeSelected -> onFolderSortModeSelected(event.mode)
-            is LibraryUiEvent.FolderPressed -> return onFolderClicked(event.folder, event.longClick)
+            is LibraryUiEvent.FolderPressed -> {
+                if(event.folderId == null) {
+                    return false  // do not consume event if no folder id
+                }
+                return  onFolderClicked(event.folderId, event.longClick)
+            }
             is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
+            else -> return false // Unhandled event
         }
 
         // events are consumed by default
@@ -155,11 +149,11 @@ class LibraryViewModel @Inject constructor(
      * Mutators
      */
     private fun onFolderClicked(
-        folder: LibraryFolder,
+        folderId: UUID,
         longClick: Boolean = false
     ): Boolean {
         if (longClick) {
-            selectedFolderIds.update { it + folder.id }
+            selectedFolderIds.update { it + folderId }
             return true
         }
 
@@ -169,22 +163,18 @@ class LibraryViewModel @Inject constructor(
             // which should trigger the navigation to the folder details screen
             return false
         } else {
-            if (selectedFolderIds.value.contains(folder.id)) {
-                selectedFolderIds.update { it - folder.id }
+            if (selectedFolderIds.value.contains(folderId)) {
+                selectedFolderIds.update { it - folderId }
             } else {
-                selectedFolderIds.update { it + folder.id }
+                selectedFolderIds.update { it + folderId }
             }
         }
 
         return true
     }
 
-    private fun onFolderSortMenuChanged(show: Boolean) {
-        _showFolderSortMenu.update { show }
-    }
 
     private fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
-        _showFolderSortMenu.update { false }
         viewModelScope.launch {
             libraryUseCases.selectFolderSortMode(selection)
         }

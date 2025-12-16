@@ -22,8 +22,6 @@ data class LibraryActionModeUiState(
 )
 
 data class LibraryFoldersSortMenuUiState(
-    val show: Boolean,
-
     val mode: SortMode<LibraryFolder>,
     val direction: SortDirection,
 )
@@ -36,8 +34,6 @@ data class LibraryFoldersUiState(
 )
 
 data class LibraryItemsSortMenuUiState(
-    val show: Boolean,
-
     val mode: SortMode<LibraryItem>,
     val direction: SortDirection,
 )

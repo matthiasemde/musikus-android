@@ -16,8 +16,6 @@ import app.musikus.library.presentation.DialogMode
 import java.util.UUID
 
 data class GoalsSortMenuUiState(
-    val show: Boolean,
-
     val mode: GoalsSortMode,
     val direction: SortDirection,
 )

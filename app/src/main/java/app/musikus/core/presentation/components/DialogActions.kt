@@ -38,6 +38,7 @@ fun DialogActions(
     confirmButtonText: String = stringResource(id = android.R.string.ok),
     dismissButtonText: String = stringResource(id = android.R.string.cancel),
     confirmButtonEnabled: Boolean = true,
+    confirmButtonVisible: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -59,6 +60,7 @@ fun DialogActions(
             }
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
         }
+        if (!confirmButtonVisible) return@Row
         Button(
             modifier = Modifier.semantics {
                 contentDescription = confirmButtonText
@@ -79,7 +81,7 @@ private fun PreviewDialogActions(
     MusikusThemedPreview(theme = theme) {
         DialogActions(
             onDismissHandler = {},
-            onConfirmHandler = {}
+            onConfirmHandler = {},
         )
     }
 }

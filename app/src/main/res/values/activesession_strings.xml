@@ -38,6 +38,11 @@
     <string name="active_session_new_item_selector_title">Select a library item</string>
     <string name="active_session_new_item_selector_create_item">Create item</string>
     <string name="active_session_new_item_selector_create_folder">Create folder</string>
+    <string name="active_session_new_item_selector_sort_menu_title">Change sorting</string>
+    <string name="active_session_new_item_selector_sort_menu_content_description">Change sorting</string>
+    <string name="active_session_new_item_selector_sort_menu_folders">Folders:</string>
+    <string name="active_session_new_item_selector_sort_menu_items">Items:</string>
+    <string name="active_session_new_item_selector_overflow_menu_content_description">More options</string>
 
     <!-- LibraryFolderElement -->
     <string name="active_session_library_folder_element_default">no folder</string>

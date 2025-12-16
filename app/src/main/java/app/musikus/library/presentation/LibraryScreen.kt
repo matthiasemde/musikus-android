@@ -248,14 +248,12 @@ fun LibraryContent(
                     )
                     val sortMenuUiState = foldersUiState.sortMenuUiState
                     SortMenu(
-                        show = sortMenuUiState.show,
                         sortModes = LibraryFolderSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = stringResource(
                             id = R.string.library_content_folders_sort_menu_description
                         ),
-                        onShowMenuChanged = { eventHandler(LibraryUiEvent.FolderSortMenuPressed) },
                         onSelectionHandler = {
                             eventHandler(LibraryUiEvent.FolderSortModeSelected(it as LibraryFolderSortMode))
                         }
@@ -280,17 +278,17 @@ fun LibraryContent(
                     ) { folderWithItems ->
                         val folder = folderWithItems.folder
                         Row(modifier = Modifier.animateItem()) {
-                            LibraryFolderComponent(
+                            LibraryFolderComponentLarge(
                                 folder = folder,
                                 numItems = folderWithItems.items.size,
                                 selected = folder.id in foldersUiState.selectedFolderIds,
                                 onShortClick = {
-                                    if (!eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))) {
+                                    if (!eventHandler(LibraryUiEvent.FolderPressed(folder.id, longClick = false))) {
                                         navigateToFolderDetails(Screen.LibraryFolderDetails(folder.id.toString()))
                                     }
                                 },
                                 onLongClick = {
-                                    eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = true))
+                                    eventHandler(LibraryUiEvent.FolderPressed(folder.id, longClick = true))
                                 }
                             )
                         }

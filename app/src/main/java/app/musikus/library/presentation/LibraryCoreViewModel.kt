@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -73,9 +74,6 @@ abstract class LibraryCoreViewModel(
     /** Own state flows */
     // Active folder
     protected val activeFolderId = MutableStateFlow<UUID?>(null)
-
-    // Menu
-    private val _showItemSortMenu = MutableStateFlow(false)
 
     // Folder dialog
     private val _folderEditData = MutableStateFlow<LibraryFolderEditData?>(null)
@@ -129,12 +127,8 @@ abstract class LibraryCoreViewModel(
         )
     )
 
-    protected val itemsSortMenuUiState = combine(
-        _showItemSortMenu,
-        itemSortInfo,
-    ) { showMenu, sortInfo ->
+    protected val itemsSortMenuUiState = itemSortInfo.map { sortInfo ->
         LibraryItemsSortMenuUiState(
-            show = showMenu,
             mode = sortInfo.mode,
             direction = sortInfo.direction,
         )
@@ -142,7 +136,6 @@ abstract class LibraryCoreViewModel(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryItemsSortMenuUiState(
-            show = false,
             mode = LibraryItemSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
@@ -252,7 +245,6 @@ abstract class LibraryCoreViewModel(
     protected fun onUiEvent(event: LibraryCoreUiEvent): Boolean {
         when (event) {
             is LibraryCoreUiEvent.ItemPressed -> onItemClicked(event.item, event.longClick)
-            is LibraryCoreUiEvent.ItemSortMenuPressed -> onItemSortMenuChanged(_showItemSortMenu.value.not())
             is LibraryCoreUiEvent.ItemSortModeSelected -> onItemSortModeSelected(event.mode)
             is LibraryCoreUiEvent.DeleteButtonPressed -> _showDeleteDialog.update { true }
             is LibraryCoreUiEvent.DeleteDialogDismissed -> {
@@ -325,12 +317,9 @@ abstract class LibraryCoreViewModel(
         }
     }
 
-    private fun onItemSortMenuChanged(show: Boolean) {
-        _showItemSortMenu.update { show }
-    }
-
     private fun onDeleteAction() {
         viewModelScope.launch {
+            // only delete actual folders (not root=null)
             _foldersCache = selectedFolderIds.value.toList()
             _itemsCache = _selectedItemIds.value.toList()
 
@@ -463,7 +452,6 @@ abstract class LibraryCoreViewModel(
     }
 
     private fun onItemSortModeSelected(selection: LibraryItemSortMode) {
-        _showItemSortMenu.update { false }
         viewModelScope.launch {
             libraryUseCases.selectItemSortMode(selection)
         }
