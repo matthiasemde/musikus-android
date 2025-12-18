@@ -15,6 +15,7 @@ import app.musikus.activesession.domain.usecase.ComputeRunningItemDurationUseCas
 import app.musikus.activesession.domain.usecase.ComputeTotalPracticeDurationUseCase
 import app.musikus.activesession.domain.usecase.DeleteSectionUseCase
 import app.musikus.activesession.domain.usecase.GetActiveSessionStateUseCase
+import app.musikus.activesession.domain.usecase.GetAppIntroDialogIndexUseCase
 import app.musikus.activesession.domain.usecase.GetCompletedSectionsUseCase
 import app.musikus.activesession.domain.usecase.GetFinalizedSessionUseCase
 import app.musikus.activesession.domain.usecase.GetRunningItemUseCase
@@ -26,7 +27,9 @@ import app.musikus.activesession.domain.usecase.PauseActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.ResetSessionUseCase
 import app.musikus.activesession.domain.usecase.ResumeActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.SelectItemUseCase
+import app.musikus.activesession.domain.usecase.SetAppIntroDialogIndexUseCase
 import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.UserPreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,7 +44,8 @@ object ActiveSessionUseCasesModule {
     @Singleton
     fun provideActiveSessionUseCases(
         activeSessionRepository: ActiveSessionRepository,
-        idProvider: IdProvider
+        idProvider: IdProvider,
+        userPreferencesRepository: UserPreferencesRepository,
     ): ActiveSessionUseCases {
         val computeOngoingPauseDurationUseCase = ComputeOngoingPauseDurationUseCase()
 
@@ -81,7 +85,10 @@ object ActiveSessionUseCasesModule {
             reset = ResetSessionUseCase(activeSessionRepository),
             getRunningItem = GetRunningItemUseCase(activeSessionRepository),
             isSessionRunning = IsSessionRunningUseCase(activeSessionRepository),
-            getSessionStatus = GetSessionStatusUseCase(activeSessionRepository)
+            getSessionStatus = GetSessionStatusUseCase(activeSessionRepository),
+
+            setAppIntroDialogIndex = SetAppIntroDialogIndexUseCase(userPreferencesRepository),
+            getAppIntroDialogIndex = GetAppIntroDialogIndexUseCase(userPreferencesRepository)
         )
     }
 }
