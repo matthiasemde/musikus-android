@@ -113,6 +113,7 @@ fun RatingBar(
 
 @Composable
 fun SessionCard(
+    modifier: Modifier = Modifier,
     sessionWithSectionsWithLibraryItems: SessionWithSectionsWithLibraryItems,
 ) {
     val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems
@@ -127,6 +128,7 @@ fun SessionCard(
     val goldenRatio = 1.618f
 
     ElevatedCard(
+        modifier = modifier,
         elevation = CardDefaults.cardElevation(0.dp),
     ) {
         /** Card Header */
