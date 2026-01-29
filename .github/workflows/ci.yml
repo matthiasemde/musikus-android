@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRO }}
 
       # See https://community.gradle.org/github-actions/docs/setup-gradle/ for more information
-      - uses: gradle/actions/setup-gradle@v4 # creates build cache when on main branch
+      - uses: gradle/actions/setup-gradle@v5 # creates build cache when on main branch
         with:
           build-scan-publish: true
           build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
@@ -45,25 +45,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRO }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
 
       - name: Check Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@v5
 
       - name: Check lint
         run: ./gradlew --build-cache --configuration-cache --configuration-cache-problems=warn app:lint
 
       - name: Upload lint results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lint-results
           path: app/build/reports/lint-results-debug.html
@@ -74,13 +74,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRO }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: unit-test-results
           path: app/build/reports/tests/testDebugUnitTest
@@ -106,13 +106,13 @@ jobs:
       fail-fast: false # make sure all tests finish, even if some fail
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRO }}
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
         with:
           cache-encryption-key: ${{ secrets.GRADLE_CACHE_ENCRYPTION_KEY }}
           cache-read-only: true
@@ -127,7 +127,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Cache AVD
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.config/.android/avd
           key: avd-${{ hashFiles('app/build.gradle.kts') }}   # gradle-managed devices are defined there
@@ -137,7 +137,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
           path: app/build/reports/androidTests/managedDevice/debug/api${{ matrix.api-level }}
