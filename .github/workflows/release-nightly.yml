@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -70,7 +70,7 @@ jobs:
             s/commitHash=.*/commitHash=$COMMIT_HASH/
           " build.properties
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         if: env.skip_nightly == 'false'
         with:
           java-version: ${{ env.JAVA_VERSION }}
