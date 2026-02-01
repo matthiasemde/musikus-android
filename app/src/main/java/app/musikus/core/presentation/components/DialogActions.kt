@@ -42,7 +42,7 @@ fun DialogActions(
 ) {
     Row(
         modifier = Modifier
-            .padding(MaterialTheme.spacing.large)
+            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.medium)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
@@ -50,9 +50,7 @@ fun DialogActions(
             TextButton(
                 modifier = Modifier.semantics {
                     contentDescription = dismissButtonText
-                },
-                onClick = onDismissHandler,
-                colors = ButtonDefaults.textButtonColors(
+                }, onClick = onDismissHandler, colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
@@ -64,9 +62,7 @@ fun DialogActions(
         Button(
             modifier = Modifier.semantics {
                 contentDescription = confirmButtonText
-            },
-            onClick = onConfirmHandler,
-            enabled = confirmButtonEnabled
+            }, onClick = onConfirmHandler, enabled = confirmButtonEnabled
         ) {
             Text(text = confirmButtonText, softWrap = false)
         }

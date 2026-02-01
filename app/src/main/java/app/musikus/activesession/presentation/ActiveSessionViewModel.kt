@@ -63,6 +63,16 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+
+enum class ActiveSessionIntroElement {
+    PRACTICE_TIMER,
+    CURRENT_ITEM,
+    PAST_SECTIONS,
+    ADD_ITEM_BUTTON,
+    FINISH_BUTTON,
+    METRONOME_BUTTON,
+}
+
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
     application: Application,
@@ -136,6 +146,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogRating = MutableStateFlow(3)
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
+    private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(ActiveSessionIntroElement.METRONOME_BUTTON)
     private val _newItemSelectorVisible = MutableStateFlow(false)
     private val _displayedFolder = MutableStateFlow<UUID?>(null)
 
@@ -378,18 +389,21 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val dialogsUiStates = combine(
         _endDialogUiState,
-        _discardDialogVisible
-    ) { endDialog, discardDialogVisible ->
+        _discardDialogVisible,
+        _introDialogHighlightedElement
+    ) { endDialog, discardDialogVisible, introDialogElement ->
         ActiveSessionDialogsUiState(
             endDialogUiState = endDialog,
-            discardDialogVisible = discardDialogVisible
+            discardDialogVisible = discardDialogVisible,
+            introDialogElement = introDialogElement
         )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = ActiveSessionDialogsUiState(
             endDialogUiState = _endDialogUiState.value,
-            discardDialogVisible = _discardDialogVisible.value
+            discardDialogVisible = _discardDialogVisible.value,
+            introDialogElement = _introDialogHighlightedElement.value
         )
     )
 
@@ -451,6 +465,12 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.NewItemSelectorEvent -> {
                 // redirect events to NewItemSelector event handler
                 return onNewItemSelectorEvent(event.libraryEvent)
+            }
+            is ActiveSessionUiEvent.IntroDialogSkipped -> {
+                _introDialogHighlightedElement.update { null }
+            }
+            is ActiveSessionUiEvent.IntroDialogConfirmed -> {
+                _introDialogHighlightedElement.update { ActiveSessionIntroElement.PRACTICE_TIMER }
             }
         }
 

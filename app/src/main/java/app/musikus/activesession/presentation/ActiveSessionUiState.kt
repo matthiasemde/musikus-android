@@ -40,6 +40,7 @@ data class ActiveSessionUiState(
 data class ActiveSessionDialogsUiState(
     val endDialogUiState: ActiveSessionEndDialogUiState?,
     val discardDialogVisible: Boolean,
+    val introDialogElement: ActiveSessionIntroElement?,
 )
 
 @Stable
@@ -112,6 +113,8 @@ sealed class ActiveSessionUiEvent {
     data object ToggleFinishDialog : ActiveSessionUiEvent()
     data object ToggleDiscardDialog : ActiveSessionUiEvent()
     data class NewItemSelectorEvent(val libraryEvent: LibraryUiEvent) : ActiveSessionUiEvent()
+    data object IntroDialogConfirmed : ActiveSessionUiEvent()
+    data object IntroDialogSkipped : ActiveSessionUiEvent()
 }
 
 sealed class ActiveSessionEndDialogUiEvent {

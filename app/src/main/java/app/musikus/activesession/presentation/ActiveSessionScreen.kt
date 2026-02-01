@@ -83,9 +83,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.platform.LocalContext
@@ -103,9 +105,12 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
+import app.musikus.core.presentation.components.AppIntroDialog
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.conditional
+import app.musikus.core.presentation.components.registerAppIntroElement
+import app.musikus.core.presentation.components.rememberAppIntroElementBounds
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewWholeScreen
 import app.musikus.core.presentation.theme.MusikusThemedPreview
@@ -153,9 +158,7 @@ data class ScreenSizeClass(
 )
 
 @OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class,
-    ExperimentalMaterial3WindowSizeClassApi::class
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3WindowSizeClassApi::class
 )
 @Composable
 fun ActiveSession(
@@ -181,14 +184,11 @@ fun ActiveSession(
             type = ActiveSessionTab.METRONOME,
             title = stringResource(id = R.string.active_session_toolbar_metronome),
             icon = UiIcon.IconResource(R.drawable.ic_metronome),
-            content = { MetronomeUi() }
-        ),
-        ToolsTab(
+            content = { MetronomeUi() }), ToolsTab(
             type = ActiveSessionTab.RECORDER,
             title = stringResource(id = R.string.active_session_toolbar_recorder),
             icon = UiIcon.DynamicIcon(Icons.Default.Mic),
-            content = { RecorderUi(showSnackbar = { mainEventHandler(it) }) }
-        )
+            content = { RecorderUi(showSnackbar = { mainEventHandler(it) }) })
     ).toImmutableList()
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
@@ -220,13 +220,9 @@ fun ActiveSession(
      * Exception handling
      */
     val context = LocalContext.current
-    ExceptionHandler<ActiveSessionException>(
-        viewModel.exceptionChannel,
-        exceptionHandler = { exception ->
-            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
-        },
-        onUnhandledException = { throw (it) }
-    )
+    ExceptionHandler<ActiveSessionException>(viewModel.exceptionChannel, exceptionHandler = { exception ->
+        Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+    }, onUnhandledException = { throw (it) })
 
     ActiveSessionScreen(
         uiState = uiState,
@@ -237,8 +233,7 @@ fun ActiveSession(
         bottomSheetPagerState = bottomSheetPagerState,
         showSnackbar = { mainEventHandler(it) },
         sizeClass = ScreenSizeClass(
-            windowsSizeClass.widthSizeClass,
-            windowsSizeClass.heightSizeClass
+            windowsSizeClass.widthSizeClass, windowsSizeClass.heightSizeClass
         )
     )
 
@@ -249,20 +244,19 @@ fun ActiveSession(
                 // switch to metronome tab
                 scope.launch {
                     bottomSheetPagerState.animateScrollToPage(
-                        tabs.indexOfFirst { it.type == ActiveSessionTab.METRONOME }
-                    )
+                        tabs.indexOfFirst { it.type == ActiveSessionTab.METRONOME })
                 }
                 // expand bottom sheet
                 scope.launch {
                     bottomSheetScaffoldState.bottomSheetState.expand()
                 }
             }
+
             ActiveSessionActions.RECORDER -> {
                 // switch to metronome tab
                 scope.launch {
                     bottomSheetPagerState.animateScrollToPage(
-                        tabs.indexOfFirst { it.type == ActiveSessionTab.RECORDER }
-                    )
+                        tabs.indexOfFirst { it.type == ActiveSessionTab.RECORDER })
                 }
                 // expand bottom sheet
                 scope.launch {
@@ -305,45 +299,44 @@ private fun ActiveSessionScreen(
     sizeClass: ScreenSizeClass,
     showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
 ) {
+    // hoist the registry to the true screen root
+    val introRegistry = rememberAppIntroElementBounds()
+
     // Custom Scaffold for our elements which adapts to available window sizes
-    ActiveSessionAdaptiveScaffold(
-        screenSizeClass = sizeClass,
-        bottomSheetScaffoldState = bottomSheetScaffoldState,
-        topBar = {
-            ActiveSessionTopBar(
-                sessionState = uiState.value.sessionState.collectAsState(),
-                isFinishedButtonEnabled = uiState.value.isFinishButtonEnabled.collectAsState(),
-                onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
-                onNavigateUp = remember { { navigateUp() } },
-                onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
-                onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
-            )
-        },
-        bottomBar = {
-            ActiveSessionBottomTabs(
-                tabs = tabs,
-                sheetState = bottomSheetScaffoldState,
-                pagerState = bottomSheetPagerState,
-                screenSizeClass = sizeClass,
-            )
-        },
-        mainContent = { padding ->
-            ActiveSessionMainContent(
-                contentPadding = padding,
-                uiState = uiState.value.mainContentUiState.collectAsState(),
-                sessionState = uiState.value.sessionState.collectAsState(),
-                showSnackbar = showSnackbar,
-                eventHandler = eventHandler,
-                screenSizeClass = sizeClass
-            )
-        },
-        toolsContent = {
-            ActiveSessionToolsLayout(
-                tabs = tabs,
-                pagerState = bottomSheetPagerState
-            )
-        }
-    )
+    ActiveSessionAdaptiveScaffold(screenSizeClass = sizeClass, bottomSheetScaffoldState = bottomSheetScaffoldState, topBar = {
+        ActiveSessionTopBar(
+            sessionState = uiState.value.sessionState.collectAsState(),
+            isFinishedButtonEnabled = uiState.value.isFinishButtonEnabled.collectAsState(),
+            onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
+            onNavigateUp = remember { { navigateUp() } },
+            onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
+            onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
+        )
+    }, bottomBar = {
+        ActiveSessionBottomTabs(
+            tabs = tabs,
+            sheetState = bottomSheetScaffoldState,
+            pagerState = bottomSheetPagerState,
+            screenSizeClass = sizeClass,
+            introElements = introRegistry,
+        )
+    }, mainContent = { padding ->
+        ActiveSessionMainContent(
+            contentPadding = padding,
+            uiState = uiState.value.mainContentUiState.collectAsState(),
+            sessionState = uiState.value.sessionState.collectAsState(),
+            showSnackbar = showSnackbar,
+            eventHandler = eventHandler,
+            screenSizeClass = sizeClass,
+            introRegistry = introRegistry,
+        )
+    }, toolsContent = {
+        ActiveSessionToolsLayout(
+            tabs = tabs,
+            pagerState = bottomSheetPagerState,
+            introElements = introRegistry,
+        )
+    })
 
     /**
      * --------------------- Dialogs ---------------------
@@ -385,8 +378,7 @@ private fun ActiveSessionScreen(
             onConfirm = {
                 eventHandler(dialogEvent(ActiveSessionEndDialogUiEvent.Confirmed))
                 navigateUp()
-            }
-        )
+            })
     }
 
     /** Discard Session Dialog */
@@ -399,7 +391,20 @@ private fun ActiveSessionScreen(
             onConfirm = {
                 eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
                 navigateUp()
-            }
+            })
+    }
+    /**
+     * --------------------- Onboarding Overlay ---------------------
+     */
+
+    val maybeRect = introRegistry[dialogUiState.value.introDialogElement]
+    if (maybeRect != null) {
+        AppIntroDialog(
+            cutout = maybeRect,
+            message = "This is a demo dialog Text",
+            headline = "Practice Timer",
+            onConfirm = {eventHandler(ActiveSessionUiEvent.IntroDialogConfirmed)},
+            onSkipIntro = {eventHandler(ActiveSessionUiEvent.IntroDialogSkipped)},
         )
     }
 }
@@ -448,12 +453,10 @@ private fun ActiveSessionAdaptiveScaffold(
                 Column( // right column
                     Modifier
                         .weight(1f)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Bottom
+                        .fillMaxSize(), verticalArrangement = Arrangement.Bottom
                 ) {
                     Scaffold( // Scaffold needed for bottomBar
-                        bottomBar = bottomBar,
-                        content = { paddingValues ->
+                        bottomBar = bottomBar, content = { paddingValues ->
                             Surface( // don't overlap with bottomBar
                                 Modifier.padding(bottom = paddingValues.calculateBottomPadding())
                             ) {
@@ -465,8 +468,7 @@ private fun ActiveSessionAdaptiveScaffold(
                                     mainContent = { /* mainContent is in other column */ },
                                 )
                             }
-                        }
-                    )
+                        })
                 }
             }
         }
@@ -474,10 +476,7 @@ private fun ActiveSessionAdaptiveScaffold(
         /** Portrait. Use normal scaffold with bottom sheet */
 
         Scaffold(
-            modifier = modifier,
-            topBar = topBar,
-            bottomBar = bottomBar,
-            content = { paddingValues ->
+            modifier = modifier, topBar = topBar, bottomBar = bottomBar, content = { paddingValues ->
                 Surface(Modifier.padding(paddingValues)) { // don't overlap with bottomBar
                     ToolsBottomSheetScaffold(
                         bottomSheetScaffoldState = bottomSheetScaffoldState,
@@ -489,8 +488,7 @@ private fun ActiveSessionAdaptiveScaffold(
                         },
                     )
                 }
-            }
-        )
+            })
     }
 }
 
@@ -520,8 +518,7 @@ private fun ToolsBottomSheetScaffold(
                     sheetPadding.calculateBottomPadding()
                 } else {
                     0.dp
-                },
-                label = "animatedBottomPadding"
+                }, label = "animatedBottomPadding"
             )
             val paddingValues = remember {
                 derivedStateOf {
@@ -535,8 +532,7 @@ private fun ToolsBottomSheetScaffold(
                 }
             }
             mainContent(paddingValues)
-        }
-    )
+        })
 }
 
 @Composable
@@ -548,6 +544,7 @@ private fun ActiveSessionMainContent(
     sessionState: State<ActiveSessionState>,
     showSnackbar: (MainUiEvent.ShowSnackbar) -> Unit,
     eventHandler: ActiveSessionUiEventHandler,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -589,11 +586,11 @@ private fun ActiveSessionMainContent(
             Column( // Animated container
                 modifier = Modifier
                     .fillMaxWidth()
-                    .animateContentSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Big Timer
                 PracticeTimer(
+                    modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.PRACTICE_TIMER, introRegistry),
                     uiState = uiState.value.timerUiState.collectAsState(),
                     sessionState = sessionState,
                     screenSizeClass = screenSizeClass,
@@ -628,14 +625,13 @@ private fun ActiveSessionMainContent(
                         listState = sectionsListState,
                         showSnackbar = showSnackbar,
                         onSectionDeleted = remember {
-                            {
-                                    section ->
+                            { section ->
                                 eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
                             }
                         },
                         additionalBottomContentPadding =
-                        // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
-                        MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
+                            // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
+                            MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
                     )
                 }
             }
@@ -646,8 +642,7 @@ private fun ActiveSessionMainContent(
             isVisible = addSectionFABVisible || !limitedHeight, // only hide FAB in landscape layout
             sessionState = sessionState,
             modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
-        )
+            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } })
     }
 }
 
@@ -658,6 +653,7 @@ private fun ActiveSessionToolsLayout(
     modifier: Modifier = Modifier,
     tabs: ImmutableList<ToolsTab>,
     pagerState: PagerState,
+    introElements: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     Box(modifier.fillMaxWidth()) {
         Column {
@@ -678,49 +674,42 @@ private fun ActiveSessionTopBar(
     onTogglePause: () -> Unit,
     onSave: () -> Unit,
 ) {
-    TopAppBar(
-        title = { },
-        navigationIcon = {
-            IconButton(onClick = onNavigateUp, content = {
-                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-            })
-        },
-        actions = {
-            AnimatedVisibility(
-                visible = sessionState.value == ActiveSessionState.RUNNING ||
-                    sessionState.value == ActiveSessionState.PAUSED,
-                enter = slideInVertically(),
-            ) {
-                Row {
-                    AnimatedVisibility(
-                        visible = sessionState.value == ActiveSessionState.RUNNING,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        PauseButton(onClick = onTogglePause)
-                    }
+    TopAppBar(title = { }, navigationIcon = {
+        IconButton(onClick = onNavigateUp, content = {
+            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+        })
+    }, actions = {
+        AnimatedVisibility(
+            visible = sessionState.value == ActiveSessionState.RUNNING || sessionState.value == ActiveSessionState.PAUSED,
+            enter = slideInVertically(),
+        ) {
+            Row {
+                AnimatedVisibility(
+                    visible = sessionState.value == ActiveSessionState.RUNNING,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    PauseButton(onClick = onTogglePause)
+                }
 
-                    IconButton(
-                        onClick = onDiscard,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = stringResource(id = R.string.active_session_top_bar_delete)
-                        )
-                    }
+                IconButton(
+                    onClick = onDiscard,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = stringResource(id = R.string.active_session_top_bar_delete)
+                    )
+                }
 
-                    TextButton(
-                        onClick = onSave,
-                        enabled = isFinishedButtonEnabled.value
-                    ) {
-                        Text(text = stringResource(id = R.string.active_session_top_bar_save))
-                    }
+                TextButton(
+                    onClick = onSave, enabled = isFinishedButtonEnabled.value
+                ) {
+                    Text(text = stringResource(id = R.string.active_session_top_bar_save))
                 }
             }
         }
-    )
+    })
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -730,6 +719,7 @@ private fun ActiveSessionBottomTabs(
     sheetState: BottomSheetScaffoldState,
     pagerState: PagerState,
     screenSizeClass: ScreenSizeClass,
+    introElements: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxWidth()) { // full-width container to center tabs column
@@ -737,8 +727,7 @@ private fun ActiveSessionBottomTabs(
             modifier = Modifier
                 .align(Alignment.Center)
                 .widthIn(
-                    min = 0.dp,
-                    max = BottomSheetDefaults.SheetMaxWidth
+                    min = 0.dp, max = BottomSheetDefaults.SheetMaxWidth
                 ) // limit width for large screens
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh) // bg for WindowInsets
                 .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
@@ -746,8 +735,7 @@ private fun ActiveSessionBottomTabs(
                     // (Workaround): but not on landscape mode / compact height because it will add
                     // unnecessary padding on API < 34 (try different navigation bar modes).
                     windowInsetsPadding(WindowInsets.navigationBars)
-                },
-            horizontalAlignment = Alignment.CenterHorizontally
+                }, horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HorizontalDivider()
 
@@ -755,6 +743,7 @@ private fun ActiveSessionBottomTabs(
                 tabs = tabs,
                 activeTabIndex = pagerState.currentPage,
                 showIndicator = sheetState.bottomSheetState.currentValue != SheetValue.Hidden,
+                introElements = introElements,
                 onClick = { tabIndex ->
                     scope.launch {
                         val currentPage = pagerState.currentPage
@@ -769,8 +758,7 @@ private fun ActiveSessionBottomTabs(
                                 when (sheetState.bottomSheetState.currentValue) {
                                     SheetValue.PartiallyExpanded -> sheetState.bottomSheetState.expand()
                                     SheetValue.Expanded -> sheetState.bottomSheetState.hide()
-                                    SheetValue.Hidden -> {
-                                        /* case should never occur */
+                                    SheetValue.Hidden -> {/* case should never occur */
                                     }
                                 }
                             } else {
@@ -779,8 +767,7 @@ private fun ActiveSessionBottomTabs(
                             }
                         }
                     }
-                }
-            )
+                })
         }
     }
 }
@@ -791,11 +778,10 @@ private fun ToolsTabRow(
     showIndicator: Boolean,
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit,
+    introElements: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     TabRow(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        divider = {},
-        indicator = { tabPositions ->
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, divider = {}, indicator = { tabPositions ->
             if (activeTabIndex < tabPositions.size) {
                 AnimatedVisibility(
                     visible = showIndicator,
@@ -808,25 +794,27 @@ private fun ToolsTabRow(
                             .offset(y = (-69).dp),
                         width = 100.dp,
                         shape = RoundedCornerShape(
-                            topStartPercent = 0,
-                            topEndPercent = 0,
-                            bottomStartPercent = 100,
-                            bottomEndPercent = 100
+                            topStartPercent = 0, topEndPercent = 0, bottomStartPercent = 100, bottomEndPercent = 100
                         )
                     )
                 }
             }
-        },
-        selectedTabIndex = activeTabIndex
+        }, selectedTabIndex = activeTabIndex
     ) {
         tabs.forEachIndexed { index, tab ->
             Row {
                 Tab(
+                    modifier = Modifier.then(
+                        if (tab.type == ActiveSessionTab.METRONOME) {
+                            Modifier.registerAppIntroElement(ActiveSessionIntroElement.METRONOME_BUTTON, introElements)
+                        } else {
+                            Modifier
+                        }
+                    ),
                     selected = activeTabIndex == index,
                     text = { Text(tab.title) },
                     icon = { Icon(imageVector = tab.icon.asIcon(), contentDescription = null) },
-                    onClick = { onClick(index) }
-                )
+                    onClick = { onClick(index) })
             }
         }
     }
@@ -835,16 +823,11 @@ private fun ToolsTabRow(
 @Composable
 private fun SheetDragHandle() {
     Surface(
-        color = MaterialTheme.colorScheme.outline,
-        modifier = Modifier
+        color = MaterialTheme.colorScheme.outline, modifier = Modifier
             .padding(top = MaterialTheme.spacing.small)
             .size(
-                width = 25.dp,
-                height = 3.dp
-            ),
-        shape = RoundedCornerShape(50),
-        content = { }
-    )
+                width = 25.dp, height = 3.dp
+            ), shape = RoundedCornerShape(50), content = { })
 }
 
 /**
@@ -861,8 +844,7 @@ private fun PreviewActiveSessionScreen(
         timerUiState = MutableStateFlow(
             ActiveSessionTimerUiState(
                 timerText = getDurationString(
-                    (42 * 60 + 24).seconds,
-                    DurationFormat.MS_DIGITAL
+                    (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
                 ).toString(),
                 subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading),
             )
@@ -876,8 +858,7 @@ private fun PreviewActiveSessionScreen(
     )
 
     val dialogs = ActiveSessionDialogsUiState(
-        endDialogUiState = null,
-        discardDialogVisible = false
+        endDialogUiState = null, discardDialogVisible = false, introDialogElement = null
     )
 
     MusikusThemedPreview(theme) {
@@ -899,21 +880,17 @@ private fun PreviewActiveSessionScreen(
                     type = ActiveSessionTab.METRONOME,
                     title = stringResource(id = R.string.active_session_toolbar_metronome),
                     icon = UiIcon.IconResource(R.drawable.ic_metronome),
-                    content = { }
-                ),
-                ToolsTab(
+                    content = { }), ToolsTab(
                     type = ActiveSessionTab.RECORDER,
                     title = stringResource(id = R.string.active_session_toolbar_recorder),
                     icon = UiIcon.DynamicIcon(Icons.Default.Mic),
-                    content = { }
-                )
+                    content = { })
             ).toImmutableList(),
             eventHandler = { true },
             navigateUp = {},
             bottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
             bottomSheetPagerState = rememberPagerState(pageCount = { 2 }),
-            showSnackbar = {}
-        )
+            showSnackbar = {})
     }
 }
 
@@ -925,23 +902,19 @@ private fun PreviewActiveSessionScreen(
 object ScreenSizeDefaults {
 
     val Phone = ScreenSizeClass(
-        width = WindowWidthSizeClass.Compact,
-        height = WindowHeightSizeClass.Expanded
+        width = WindowWidthSizeClass.Compact, height = WindowHeightSizeClass.Expanded
     )
 
     val PhoneLandscape = ScreenSizeClass(
-        width = WindowWidthSizeClass.Expanded,
-        height = WindowHeightSizeClass.Compact
+        width = WindowWidthSizeClass.Expanded, height = WindowHeightSizeClass.Compact
     )
 
     val Foldable = ScreenSizeClass(
-        width = WindowWidthSizeClass.Medium,
-        height = WindowHeightSizeClass.Medium
+        width = WindowWidthSizeClass.Medium, height = WindowHeightSizeClass.Medium
     )
 
     val LargeTablet = ScreenSizeClass(
-        width = WindowWidthSizeClass.Expanded,
-        height = WindowHeightSizeClass.Expanded
+        width = WindowWidthSizeClass.Expanded, height = WindowHeightSizeClass.Expanded
     )
 }
 
