@@ -14,6 +14,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.musikus.core.data.PreferenceKeys.APPINTRO_PREFIX
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.UserPreferences
@@ -52,6 +53,8 @@ object PreferenceKeys {
 
     // Contains the id of the last announcement message that was shown to the user
     val LAST_ANNOUNCEMENT_SEEN = intPreferencesKey("last_announcement_seen")
+
+    const val APPINTRO_PREFIX = "appintro_dialog_"
 }
 
 class UserPreferencesRepositoryImpl(
@@ -94,7 +97,15 @@ class UserPreferencesRepositoryImpl(
                     ?: MetronomeSettings.Companion.DEFAULT.clicksPerBeat
             ),
 
-            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1
+            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1,
+
+            appIntroSeenDialogVersions = preferences.asMap()
+                .filter { (key, _) -> key.name.startsWith(PreferenceKeys.APPINTRO_PREFIX) }
+                .map { (key, value) ->
+                    val featureName = key.name.removePrefix(PreferenceKeys.APPINTRO_PREFIX)
+                    featureName to (value as? Int ?: -1)
+                }
+                .toMap()
         )
     }
 
@@ -136,6 +147,10 @@ class UserPreferencesRepositoryImpl(
 
     override val idOfLastAnnouncementSeen: Flow<Int> = userPreferences.map { preferences ->
         preferences.idOfLastAnnouncementSeen
+    }
+
+    override val appIntroSeenDialogVersions: Flow<Map<String, Int>> = userPreferences.map { preferences ->
+        preferences.appIntroSeenDialogVersions
     }
 
     /** Mutators */
@@ -193,6 +208,15 @@ class UserPreferencesRepositoryImpl(
     override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] = id
+        }
+    }
+
+    /**
+     * Stores the version index of the app intro dialog that has been seen by the user.
+     */
+    override suspend fun updateAppIntroSeenDialogVersion(featureName: String, index: Int) {
+        dataStore.edit { preferences ->
+            preferences[intPreferencesKey(APPINTRO_PREFIX + featureName)] = index
         }
     }
 }

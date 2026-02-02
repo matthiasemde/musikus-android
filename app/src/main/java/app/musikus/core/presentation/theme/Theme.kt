@@ -138,7 +138,7 @@ data class Dimensions(
     val toolsBodyHeight: Dp = 205.dp,
     val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp, // 3.dp DragHandle + spacing
     val fabHeight: Dp = 56.dp, // TODO: remove and try to get it via intrinsic defaults
-    val introDialogHeight: Dp = 250.dp,
+    val introDialogHeight: Dp = 200.dp,
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }
