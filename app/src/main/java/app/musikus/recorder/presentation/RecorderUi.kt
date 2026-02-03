@@ -159,6 +159,7 @@ fun RecorderUi(
     }
 
     RecorderLayout(
+        modifier = modifier,
         uiState = uiState,
         eventHandler = eventHandler,
         mediaController = mediaController,

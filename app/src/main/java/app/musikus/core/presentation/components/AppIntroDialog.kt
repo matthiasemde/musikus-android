@@ -53,11 +53,12 @@ import app.musikus.core.presentation.theme.spacing
 fun rememberAppIntroElementBounds(): SnapshotStateMap<ActiveSessionIntroElement, Rect> = remember { mutableStateMapOf() }
 
 /** mark a composable as a target to be cut out */
-fun Modifier.registerAppIntroElement(id: ActiveSessionIntroElement, registry: SnapshotStateMap<ActiveSessionIntroElement, Rect>): Modifier = this.then(
-    Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
-        // store bounds in window coordinates so overlay can use them directly
-        registry[id] = coordinates.boundsInWindow()
-    })
+fun Modifier.registerAppIntroElement(id: ActiveSessionIntroElement, registry: SnapshotStateMap<ActiveSessionIntroElement, Rect>): Modifier =
+    this.then(
+        Modifier.onGloballyPositioned { coordinates: LayoutCoordinates ->
+            // store bounds in window coordinates so overlay can use them directly
+            registry[id] = coordinates.boundsInWindow()
+        })
 
 
 /**

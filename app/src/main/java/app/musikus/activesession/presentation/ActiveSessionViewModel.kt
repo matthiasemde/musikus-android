@@ -20,6 +20,7 @@ import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.usecase.CoreUseCases
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiText
@@ -65,12 +66,21 @@ import kotlin.time.Duration.Companion.seconds
 
 
 enum class ActiveSessionIntroElement {
+    FAB_START_PRACTICING,
+    CURRENT_SECTION,
     PRACTICE_TIMER,
-    CURRENT_ITEM,
+    MINIMIZE_BUTTON,
+    PAUSE_BUTTON,
+    DISCARD_BUTTON,
+    FAB_NEXT_SECTION,
     PAST_SECTIONS,
-    ADD_ITEM_BUTTON,
     FINISH_BUTTON,
-    METRONOME_BUTTON,
+    RESUME_BUTTON,
+    TOOLS_BOTTOM_BAR,
+    TOOLS_METRONOME_BUTTON,
+    TOOLS_RECORDER_BUTTON,
+    TOOLS_METRONOME,  // TODO: more sub-elements?
+    TOOLS_RECORDER,  // TODO: more sub-elements?
 }
 
 @HiltViewModel
@@ -78,6 +88,7 @@ class ActiveSessionViewModel @Inject constructor(
     application: Application,
     private val libraryUseCases: LibraryUseCases,
     private val activeSessionUseCases: ActiveSessionUseCases,
+    private val coreUseCases: CoreUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
     @ApplicationScope private val applicationScope: CoroutineScope,
@@ -146,7 +157,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogRating = MutableStateFlow(3)
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
-    private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(ActiveSessionIntroElement.METRONOME_BUTTON)
+    private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(ActiveSessionIntroElement.FAB_START_PRACTICING)
     private val _newItemSelectorVisible = MutableStateFlow(false)
     private val _displayedFolder = MutableStateFlow<UUID?>(null)
 
@@ -470,7 +481,26 @@ class ActiveSessionViewModel @Inject constructor(
                 _introDialogHighlightedElement.update { null }
             }
             is ActiveSessionUiEvent.IntroDialogConfirmed -> {
-                _introDialogHighlightedElement.update { ActiveSessionIntroElement.PRACTICE_TIMER }
+                // TODO: for debugging: cycle through all components
+                val nextState = when(_introDialogHighlightedElement.value) {
+                    ActiveSessionIntroElement.FAB_START_PRACTICING -> ActiveSessionIntroElement.CURRENT_SECTION
+                    ActiveSessionIntroElement.CURRENT_SECTION -> ActiveSessionIntroElement.PRACTICE_TIMER
+                    ActiveSessionIntroElement.PRACTICE_TIMER -> ActiveSessionIntroElement.MINIMIZE_BUTTON
+                    ActiveSessionIntroElement.MINIMIZE_BUTTON -> ActiveSessionIntroElement.PAUSE_BUTTON
+                    ActiveSessionIntroElement.PAUSE_BUTTON -> ActiveSessionIntroElement.DISCARD_BUTTON
+                    ActiveSessionIntroElement.DISCARD_BUTTON -> ActiveSessionIntroElement.FAB_NEXT_SECTION
+                    ActiveSessionIntroElement.FAB_NEXT_SECTION -> ActiveSessionIntroElement.PAST_SECTIONS
+                    ActiveSessionIntroElement.PAST_SECTIONS ->  ActiveSessionIntroElement.FINISH_BUTTON
+                    ActiveSessionIntroElement.FINISH_BUTTON ->  ActiveSessionIntroElement.RESUME_BUTTON
+                    ActiveSessionIntroElement.RESUME_BUTTON -> ActiveSessionIntroElement.TOOLS_BOTTOM_BAR
+                    ActiveSessionIntroElement.TOOLS_BOTTOM_BAR -> ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON
+                    ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON -> ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
+                    ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON -> ActiveSessionIntroElement.TOOLS_METRONOME
+                    ActiveSessionIntroElement.TOOLS_METRONOME -> ActiveSessionIntroElement.TOOLS_RECORDER
+                    ActiveSessionIntroElement.TOOLS_RECORDER -> ActiveSessionIntroElement.FAB_START_PRACTICING
+                    null -> TODO()
+                }
+                _introDialogHighlightedElement.update { nextState }
             }
         }
 

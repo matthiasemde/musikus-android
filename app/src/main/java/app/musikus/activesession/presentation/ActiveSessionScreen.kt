@@ -149,7 +149,7 @@ data class ToolsTab(
     val title: String,
     val icon: UiIcon,
     val type: ActiveSessionTab,
-    val content: @Composable () -> Unit,
+    val content: @Composable (Modifier) -> Unit,
 )
 
 data class ScreenSizeClass(
@@ -184,11 +184,13 @@ fun ActiveSession(
             type = ActiveSessionTab.METRONOME,
             title = stringResource(id = R.string.active_session_toolbar_metronome),
             icon = UiIcon.IconResource(R.drawable.ic_metronome),
-            content = { MetronomeUi() }), ToolsTab(
+            content = { MetronomeUi(modifier = it) }),
+
+        ToolsTab(
             type = ActiveSessionTab.RECORDER,
             title = stringResource(id = R.string.active_session_toolbar_recorder),
             icon = UiIcon.DynamicIcon(Icons.Default.Mic),
-            content = { RecorderUi(showSnackbar = { mainEventHandler(it) }) })
+            content = { RecorderUi(modifier = it, showSnackbar = { mainEventHandler(it) }) })
     ).toImmutableList()
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
@@ -311,6 +313,7 @@ private fun ActiveSessionScreen(
             onNavigateUp = remember { { navigateUp() } },
             onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
             onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
+            introRegistry = introRegistry,
         )
     }, bottomBar = {
         ActiveSessionBottomTabs(
@@ -334,7 +337,7 @@ private fun ActiveSessionScreen(
         ActiveSessionToolsLayout(
             tabs = tabs,
             pagerState = bottomSheetPagerState,
-            introElements = introRegistry,
+            introRegistry = introRegistry,
         )
     })
 
@@ -403,8 +406,8 @@ private fun ActiveSessionScreen(
             cutout = maybeRect,
             message = "This is a demo dialog Text",
             headline = "Practice Timer",
-            onConfirm = {eventHandler(ActiveSessionUiEvent.IntroDialogConfirmed)},
-            onSkipIntro = {eventHandler(ActiveSessionUiEvent.IntroDialogSkipped)},
+            onConfirm = { eventHandler(ActiveSessionUiEvent.IntroDialogConfirmed) },
+            onSkipIntro = { eventHandler(ActiveSessionUiEvent.IntroDialogSkipped) },
         )
     }
 }
@@ -595,6 +598,7 @@ private fun ActiveSessionMainContent(
                     sessionState = sessionState,
                     screenSizeClass = screenSizeClass,
                     onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
+                    introRegistry = introRegistry
                 )
 
                 if (limitedHeight) {
@@ -605,7 +609,9 @@ private fun ActiveSessionMainContent(
 
                 // Running Item
                 CurrentPracticingItem(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    modifier = Modifier
+                        .registerAppIntroElement(ActiveSessionIntroElement.CURRENT_SECTION, introRegistry)
+                        .padding(horizontal = MaterialTheme.spacing.large),
                     screenSizeClass = screenSizeClass,
                     uiState = uiState.value.currentItemUiState.collectAsState(),
                 )
@@ -620,6 +626,7 @@ private fun ActiveSessionMainContent(
                 val pastItemsState = uiState.value.pastSectionsUiState.collectAsState()
                 if (pastItemsState.value != null) {
                     SectionsList(
+                        modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.PAST_SECTIONS, introRegistry),
                         uiState = pastItemsState,
                         nestedScrollConnection = nestedScrollConnection, // for hiding the FAB
                         listState = sectionsListState,
@@ -639,10 +646,12 @@ private fun ActiveSessionMainContent(
         }
 
         AddSectionFAB(
+            modifier = Modifier.align(Alignment.BottomCenter),
             isVisible = addSectionFABVisible || !limitedHeight, // only hide FAB in landscape layout
             sessionState = sessionState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } })
+            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } },
+            introRegistry = introRegistry
+        )
     }
 }
 
@@ -653,12 +662,17 @@ private fun ActiveSessionToolsLayout(
     modifier: Modifier = Modifier,
     tabs: ImmutableList<ToolsTab>,
     pagerState: PagerState,
-    introElements: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     Box(modifier.fillMaxWidth()) {
         Column {
             HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
-                tabs[tabIndex].content()
+                val modifier = when(tabs[tabIndex].type) {
+                    ActiveSessionTab.METRONOME -> Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_METRONOME, introRegistry)
+                    ActiveSessionTab.RECORDER -> Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_RECORDER, introRegistry)
+                    ActiveSessionTab.DEFAULT -> Modifier
+                }
+                tabs[tabIndex].content(modifier)
             }
         }
     }
@@ -673,11 +687,15 @@ private fun ActiveSessionTopBar(
     onNavigateUp: () -> Unit,
     onTogglePause: () -> Unit,
     onSave: () -> Unit,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>
 ) {
     TopAppBar(title = { }, navigationIcon = {
-        IconButton(onClick = onNavigateUp, content = {
-            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-        })
+        IconButton(
+            modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.MINIMIZE_BUTTON, introRegistry),
+            onClick = onNavigateUp,
+            content = {
+                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            })
     }, actions = {
         AnimatedVisibility(
             visible = sessionState.value == ActiveSessionState.RUNNING || sessionState.value == ActiveSessionState.PAUSED,
@@ -689,10 +707,14 @@ private fun ActiveSessionTopBar(
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    PauseButton(onClick = onTogglePause)
+                    PauseButton(
+                        modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.PAUSE_BUTTON, introRegistry),
+                        onClick = onTogglePause
+                    )
                 }
 
                 IconButton(
+                    modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.DISCARD_BUTTON, introRegistry),
                     onClick = onDiscard,
                 ) {
                     Icon(
@@ -702,7 +724,9 @@ private fun ActiveSessionTopBar(
                 }
 
                 TextButton(
-                    onClick = onSave, enabled = isFinishedButtonEnabled.value
+                    modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.FINISH_BUTTON, introRegistry),
+                    onClick = onSave,
+                    enabled = isFinishedButtonEnabled.value
                 ) {
                     Text(text = stringResource(id = R.string.active_session_top_bar_save))
                 }
@@ -743,7 +767,7 @@ private fun ActiveSessionBottomTabs(
                 tabs = tabs,
                 activeTabIndex = pagerState.currentPage,
                 showIndicator = sheetState.bottomSheetState.currentValue != SheetValue.Hidden,
-                introElements = introElements,
+                introRegistry = introElements,
                 onClick = { tabIndex ->
                     scope.launch {
                         val currentPage = pagerState.currentPage
@@ -778,10 +802,13 @@ private fun ToolsTabRow(
     showIndicator: Boolean,
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit,
-    introElements: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>,
 ) {
     TabRow(
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, divider = {}, indicator = { tabPositions ->
+        modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_BOTTOM_BAR, introRegistry),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        divider = {},
+        indicator = { tabPositions ->
             if (activeTabIndex < tabPositions.size) {
                 AnimatedVisibility(
                     visible = showIndicator,
@@ -799,16 +826,25 @@ private fun ToolsTabRow(
                     )
                 }
             }
-        }, selectedTabIndex = activeTabIndex
+        },
+        selectedTabIndex = activeTabIndex
     ) {
         tabs.forEachIndexed { index, tab ->
             Row {
                 Tab(
                     modifier = Modifier.then(
-                        if (tab.type == ActiveSessionTab.METRONOME) {
-                            Modifier.registerAppIntroElement(ActiveSessionIntroElement.METRONOME_BUTTON, introElements)
-                        } else {
-                            Modifier
+                        when (tab.type) {
+                            ActiveSessionTab.METRONOME -> {
+                                Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON, introRegistry)
+                            }
+
+                            ActiveSessionTab.RECORDER -> {
+                                Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON, introRegistry)
+                            }
+
+                            else -> {
+                                Modifier
+                            }
                         }
                     ),
                     selected = activeTabIndex == index,

@@ -68,6 +68,7 @@ import kotlin.random.Random
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SectionsList(
+    modifier: Modifier = Modifier,
     uiState: State<ActiveSessionCompletedSectionsUiState?>,
     onSectionDeleted: (CompletedSectionUiState) -> Unit,
     nestedScrollConnection: NestedScrollConnection,
@@ -78,7 +79,7 @@ internal fun SectionsList(
     val listUiState = uiState.value ?: return
 
     // This column must not have padding to make swipe-to-dismiss work edge2edge
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()

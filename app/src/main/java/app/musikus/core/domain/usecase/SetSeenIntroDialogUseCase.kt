@@ -7,6 +7,6 @@ class SetSeenIntroDialogUseCase(
 ) {
 
     suspend operator fun invoke(featureName: String, version: Int) {
-        userPreferencesRepository.updateAppIntroSeenDialogVersion( featureName, version)
+        userPreferencesRepository.updateAppIntroSeenDialogVersion(featureName, version)
     }
 }

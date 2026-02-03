@@ -44,8 +44,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,6 +59,7 @@ import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
+import app.musikus.core.presentation.components.registerAppIntroElement
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
@@ -75,6 +78,7 @@ internal fun PracticeTimer(
     modifier: Modifier = Modifier,
     onResumeTimer: () -> Unit,
     screenSizeClass: ScreenSizeClass,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>
 ) {
     Column(
         modifier.animateContentSize(),
@@ -89,6 +93,7 @@ internal fun PracticeTimer(
         when (sessionState.value) {
             ActiveSessionState.PAUSED -> {
                 ElevatedButton(
+                    modifier = Modifier.registerAppIntroElement(ActiveSessionIntroElement.RESUME_BUTTON, introRegistry),
                     onClick = onResumeTimer,
                     colors = ButtonDefaults.elevatedButtonColors().copy(
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -198,6 +203,7 @@ internal fun AddSectionFAB(
     modifier: Modifier = Modifier,
     isVisible: Boolean = true,
     onClick: () -> Unit,
+    introRegistry: SnapshotStateMap<ActiveSessionIntroElement, Rect>
 ) {
     AnimatedVisibility(
         visible = isVisible,
@@ -213,7 +219,13 @@ internal fun AddSectionFAB(
                     R.string.active_session_add_section_fab_during_session
                 }
         )
+        val introElement = if (sessionState.value == ActiveSessionState.NOT_STARTED) {
+            ActiveSessionIntroElement.FAB_START_PRACTICING
+        } else {
+            ActiveSessionIntroElement.FAB_NEXT_SECTION
+        }
         ExtendedFloatingActionButton(
+            modifier = Modifier.registerAppIntroElement(introElement, introRegistry),
             onClick = onClick,
             icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = message) },
             text = { Text(text = message) },
@@ -283,9 +295,11 @@ internal fun EndSessionDialog(
 
 @Composable
 internal fun PauseButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     IconButton(
+        modifier = modifier,
         onClick = onClick
     ) {
         Icon(
@@ -343,7 +357,8 @@ private fun PreviewPracticeTimer(
             },
             sessionState = remember { mutableStateOf(ActiveSessionState.PAUSED) },
             onResumeTimer = {},
-            screenSizeClass = ScreenSizeDefaults.Phone
+            screenSizeClass = ScreenSizeDefaults.Phone,
+            introRegistry = SnapshotStateMap()
         )
     }
 }

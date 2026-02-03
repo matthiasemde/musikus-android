@@ -111,7 +111,7 @@ fun MetronomeLayout(
         HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(MaterialTheme.dimensions.toolsBodyHeight),
         ) {
