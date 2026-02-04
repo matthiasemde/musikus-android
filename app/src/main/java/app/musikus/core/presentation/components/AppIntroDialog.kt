@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -29,7 +31,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -69,6 +71,7 @@ fun Modifier.registerAppIntroElement(id: ActiveSessionIntroElement, registry: Sn
  * - `cutoutCornerRadius` radius in Dp
  * - `dialog` content will be positioned near the target (below) or centered if no target
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AppIntroDialog(
     cutout: Rect,
@@ -85,18 +88,21 @@ fun AppIntroDialog(
             // Offscreen compositing required for BlendMode.Clear to punch holes
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .background(Color.Transparent)
-            // consume all pointer events so taps/presses don't pass through the scrim
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val ev = awaitPointerEvent()
-                        ev.changes.forEach { it.consume() } // consume to stop propagation
-                    }
-                }
-            }
     ) {
         // Draw scrim and cutout(s)
-        Canvas(modifier = Modifier.matchParentSize()) {
+        Canvas(
+            modifier = Modifier
+                // consume all pointer events so taps/presses don't pass through the scrim
+                .pointerInteropFilter() { event ->
+                    val position = Offset(event.x, event.y)
+                    val isInsideCutout = cutout.contains(position)
+                    if (isInsideCutout) {
+                        false // Don't consume - let event pass through
+                    } else {
+                        true // Consume - block taps outside cutout
+                    }
+                }
+                .matchParentSize()) {
             // full scrim
             drawRect(Color.Black.copy(alpha = 0.7f))
 
@@ -122,6 +128,7 @@ fun AppIntroDialog(
             }
         }
 
+        // calculate if dialog would overlap element. If yes, align dialog on Top instead
         val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
         val introDialogTotalHeightDp = MaterialTheme.dimensions.introDialogHeight + MaterialTheme.spacing.extraLarge * 2
         val thresholdPx = with(density) { (introDialogTotalHeightDp).toPx() }
