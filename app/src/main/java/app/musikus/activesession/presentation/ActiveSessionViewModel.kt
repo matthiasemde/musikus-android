@@ -457,6 +457,9 @@ class ActiveSessionViewModel @Inject constructor(
      * Returns true if the event was consumed, false otherwise.
      */
     fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
+        // always dismiss any dialog
+        val introDialogName = _introDialogHighlightedElement.value?.name
+        _introDialogHighlightedElement.update { null }
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
             is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }
@@ -478,9 +481,14 @@ class ActiveSessionViewModel @Inject constructor(
                 return onNewItemSelectorEvent(event.libraryEvent)
             }
             is ActiveSessionUiEvent.IntroDialogSkipped -> {
-                _introDialogHighlightedElement.update { null }
+
             }
             is ActiveSessionUiEvent.IntroDialogConfirmed -> {
+                if (introDialogName != null) {
+                    viewModelScope.launch {
+                        coreUseCases.setIntroDialogSeen(introDialogName, 1)
+                    }
+                }
                 // TODO: for debugging: cycle through all components
                 val nextState = when(_introDialogHighlightedElement.value) {
                     ActiveSessionIntroElement.FAB_START_PRACTICING -> ActiveSessionIntroElement.CURRENT_SECTION
