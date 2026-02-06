@@ -52,6 +52,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -63,25 +64,6 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-
-
-enum class ActiveSessionIntroElement {
-    FAB_START_PRACTICING,
-    CURRENT_SECTION,
-    PRACTICE_TIMER,
-    MINIMIZE_BUTTON,
-    PAUSE_BUTTON,
-    DISCARD_BUTTON,
-    FAB_NEXT_SECTION,
-    PAST_SECTIONS,
-    FINISH_BUTTON,
-    RESUME_BUTTON,
-    TOOLS_BOTTOM_BAR,
-    TOOLS_METRONOME_BUTTON,
-    TOOLS_RECORDER_BUTTON,
-    TOOLS_METRONOME,  // TODO: more sub-elements?
-    TOOLS_RECORDER,  // TODO: more sub-elements?
-}
 
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
@@ -97,22 +79,18 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
 
+    private var shouldSkipDialogs = false
+
     private val state = activeSessionUseCases.getState().stateIn(
-        scope = viewModelScope,
-        started = Eagerly,
-        initialValue = null
+        scope = viewModelScope, started = Eagerly, initialValue = null
     )
 
     private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = emptyList()
     )
 
     private val runningLibraryItem = activeSessionUseCases.getRunningItem().stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = null
     )
 
     private val sessionState = activeSessionUseCases.getSessionStatus().map { state ->
@@ -122,30 +100,22 @@ class ActiveSessionViewModel @Inject constructor(
             SessionStatus.PAUSED -> ActiveSessionState.PAUSED
         }
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = ActiveSessionState.UNKNOWN
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = ActiveSessionState.UNKNOWN
     )
 
     private val libraryFolders = libraryUseCases.getSortedFolders().stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = emptyList()
     )
 
     private val itemSortInfo = libraryUseCases.getItemSortInfo().stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = SortInfo(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = SortInfo(
             mode = LibraryItemSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
     )
 
     private val folderSortInfo = libraryUseCases.getFolderSortInfo().stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = SortInfo(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = SortInfo(
             mode = LibraryFolderSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
@@ -157,7 +127,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogRating = MutableStateFlow(3)
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
-    private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(ActiveSessionIntroElement.FAB_START_PRACTICING)
+    private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(null)
     private val _newItemSelectorVisible = MutableStateFlow(false)
     private val _displayedFolder = MutableStateFlow<UUID?>(null)
 
@@ -175,9 +145,7 @@ class ActiveSessionViewModel @Inject constructor(
             activeSessionUseCases.computeTotalPracticeDuration(it, now)
         } ?: Duration.ZERO
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = Duration.ZERO
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = Duration.ZERO
     )
 
     /** Items from selected folder */
@@ -185,9 +153,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val items = _displayedFolder.flatMapLatest { folderId ->
         libraryUseCases.getSortedItems(Nullable(folderId))
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = emptyList()
     )
 
     /** Last practiced dates for items in the selected folder */
@@ -195,9 +161,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val lastPracticedDates = items.flatMapLatest { items ->
         libraryUseCases.getLastPracticedDate(items)
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyMap()
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = emptyMap()
     )
 
     private val ongoingPauseDuration = timeProvider.clock.map { now ->
@@ -206,9 +170,7 @@ class ActiveSessionViewModel @Inject constructor(
             activeSessionUseCases.computeOngoingPauseDuration(it, now)
         } ?: Duration.ZERO
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = Duration.ZERO
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = Duration.ZERO
     )
 
     private val runningItemDuration = timeProvider.clock.map { now ->
@@ -217,17 +179,13 @@ class ActiveSessionViewModel @Inject constructor(
             activeSessionUseCases.computeRunningItemDuration(it, now)
         } ?: Duration.ZERO
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = Duration.ZERO
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = Duration.ZERO
     )
 
     val isFinishButtonEnabled = totalPracticeDuration.map {
         it >= 1.seconds
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = false
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = false
     )
 
     /** ------------------- Sub UI states  ------------------------------------------- */
@@ -240,51 +198,39 @@ class ActiveSessionViewModel @Inject constructor(
         val pause = sessionState == ActiveSessionState.PAUSED
 
         val pauseDurStr = getDurationString(
-            ongoingPauseDuration,
-            DurationFormat.MS_DIGITAL
+            ongoingPauseDuration, DurationFormat.MS_DIGITAL
         )
         ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(totalPracticeDuration),
-            subHeadingText =
-            if (pause) {
+            subHeadingText = if (pause) {
                 UiText.StringResource(R.string.active_session_timer_subheading_paused, pauseDurStr)
             } else {
                 UiText.StringResource(R.string.active_session_timer_subheading)
             },
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = ActiveSessionTimerUiState(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(Duration.ZERO),
             subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading)
         )
     )
 
     private fun getFormattedTimerText(duration: Duration) = getDurationString(
-        duration,
-        DurationFormat.MS_DIGITAL
+        duration, DurationFormat.MS_DIGITAL
     ).toString()
 
     private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
-        sessionState,
-        runningLibraryItem,
-        runningItemDuration
+        sessionState, runningLibraryItem, runningItemDuration
     ) { sessionState, item, runningItemDuration ->
         if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
         ActiveSessionCurrentItemUiState(
-            name = item.name,
-            durationText = getDurationString(
-                runningItemDuration,
-                DurationFormat.MS_DIGITAL
-            ).toString(),
-            color = libraryItemColors[item.colorIndex]
+            name = item.name, durationText = getDurationString(
+                runningItemDuration, DurationFormat.MS_DIGITAL
+            ).toString(), color = libraryItemColors[item.colorIndex]
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = null
     )
 
     private val pastSectionsUiState = completedSections.map { sections ->
@@ -298,16 +244,12 @@ class ActiveSessionViewModel @Inject constructor(
                     name = it.libraryItem.name,
                     color = libraryItemColors[it.libraryItem.colorIndex],
                     durationText = getDurationString(
-                        it.duration,
-                        DurationFormat.MS_DIGITAL
+                        it.duration, DurationFormat.MS_DIGITAL
                     ).toString()
                 )
-            }
-        )
+            })
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = null
     )
 
     private val libraryItemsUiState = combine(
@@ -326,9 +268,7 @@ class ActiveSessionViewModel @Inject constructor(
             ),
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = LibraryItemsUiState(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = LibraryItemsUiState(
             itemsWithLastPracticedDate = emptyList(),
             selectedItemIds = emptySet(),
             sortMenuUiState = LibraryItemsSortMenuUiState(
@@ -351,9 +291,7 @@ class ActiveSessionViewModel @Inject constructor(
             ),
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = LibraryFoldersUiState(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = LibraryFoldersUiState(
             foldersWithItems = emptyList(),
             selectedFolderIds = emptySet(),
             sortMenuUiState = LibraryFoldersSortMenuUiState(
@@ -372,46 +310,31 @@ class ActiveSessionViewModel @Inject constructor(
         if (!visible) return@combine null
 
         NewItemSelectorUiState(
-            runningItem = runningItem,
-            libraryItemsUiState = libraryItemsUiState,
-            libraryFoldersUiState = libraryFoldersUiState
+            runningItem = runningItem, libraryItemsUiState = libraryItemsUiState, libraryFoldersUiState = libraryFoldersUiState
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = null
     )
 
     private val _endDialogUiState = combine(
-        _endDialogVisible,
-        _endDialogComment,
-        _endDialogRating
+        _endDialogVisible, _endDialogComment, _endDialogRating
     ) { visible, comment, rating ->
         if (!visible) return@combine null
         ActiveSessionEndDialogUiState(
-            comment = comment,
-            rating = rating
+            comment = comment, rating = rating
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = null
     )
 
     private val dialogsUiStates = combine(
-        _endDialogUiState,
-        _discardDialogVisible,
-        _introDialogHighlightedElement
+        _endDialogUiState, _discardDialogVisible, _introDialogHighlightedElement
     ) { endDialog, discardDialogVisible, introDialogElement ->
         ActiveSessionDialogsUiState(
-            endDialogUiState = endDialog,
-            discardDialogVisible = discardDialogVisible,
-            introDialogElement = introDialogElement
+            endDialogUiState = endDialog, discardDialogVisible = discardDialogVisible, introDialogElement = introDialogElement
         )
     }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = ActiveSessionDialogsUiState(
+        scope = viewModelScope, started = WhileSubscribed(5000), initialValue = ActiveSessionDialogsUiState(
             endDialogUiState = _endDialogUiState.value,
             discardDialogVisible = _discardDialogVisible.value,
             introDialogElement = _introDialogHighlightedElement.value
@@ -448,6 +371,10 @@ class ActiveSessionViewModel @Inject constructor(
 //                viewModelScope.launch {
 //                    _eventChannel.send(ActiveSessionEvent.HideTools)
 //                }
+
+                if (canShowDialog(ActiveSessionIntroElement.FAB_START_PRACTICING)) {
+                    _introDialogHighlightedElement.update { ActiveSessionIntroElement.FAB_START_PRACTICING }
+                }
             }
         }
     }
@@ -457,15 +384,31 @@ class ActiveSessionViewModel @Inject constructor(
      * Returns true if the event was consumed, false otherwise.
      */
     fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
-        // always dismiss any dialog
-        val introDialogName = _introDialogHighlightedElement.value?.name
-        _introDialogHighlightedElement.update { null }
+        // always dismiss any dialog, except for just toggling the bottom sheet
+        // TODO: this exception is not good for intro dialogs for the tools buttons
+        val introDialog = _introDialogHighlightedElement.value
+        if (event != ActiveSessionUiEvent.ToggleNewItemSelector)
+            _introDialogHighlightedElement.update { null }
+
+        // set the dialog to seen for any UI events when user clicks on an element, except user chose to skip intro
+        if (introDialog != null && event != ActiveSessionUiEvent.IntroDialogSkipped) {
+            viewModelScope.launch { setDialogSeen(introDialog) }
+        }
+
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
-            is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }
+            is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch {
+                if (sessionState.value == ActiveSessionState.RUNNING && canShowDialog(ActiveSessionIntroElement.RESUME_BUTTON)) {
+                    _introDialogHighlightedElement.update { ActiveSessionIntroElement.RESUME_BUTTON }
+                }
+                togglePauseState()
+            }
+
             is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
             is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
-            is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
+            is ActiveSessionUiEvent.BackPressed -> { /* TODO */
+            }
+
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> activeSessionUseCases.reset()
             ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
@@ -476,39 +419,46 @@ class ActiveSessionViewModel @Inject constructor(
                 }
                 _newItemSelectorVisible.update { !it }
             }
+
             is ActiveSessionUiEvent.NewItemSelectorEvent -> {
                 // redirect events to NewItemSelector event handler
                 return onNewItemSelectorEvent(event.libraryEvent)
             }
-            is ActiveSessionUiEvent.IntroDialogSkipped -> {
 
+            is ActiveSessionUiEvent.IntroDialogSkipped -> {
+                shouldSkipDialogs = true
             }
+
             is ActiveSessionUiEvent.IntroDialogConfirmed -> {
-                if (introDialogName != null) {
+                if (introDialog != null) {
                     viewModelScope.launch {
-                        coreUseCases.setIntroDialogSeen(introDialogName, 1)
+                        setDialogSeen(introDialog)
+                        if (sessionState.value != ActiveSessionState.NOT_STARTED) {
+                            showNextIntroDialog()
+                        }
                     }
                 }
-                // TODO: for debugging: cycle through all components
-                val nextState = when(_introDialogHighlightedElement.value) {
-                    ActiveSessionIntroElement.FAB_START_PRACTICING -> ActiveSessionIntroElement.CURRENT_SECTION
-                    ActiveSessionIntroElement.CURRENT_SECTION -> ActiveSessionIntroElement.PRACTICE_TIMER
-                    ActiveSessionIntroElement.PRACTICE_TIMER -> ActiveSessionIntroElement.MINIMIZE_BUTTON
-                    ActiveSessionIntroElement.MINIMIZE_BUTTON -> ActiveSessionIntroElement.PAUSE_BUTTON
-                    ActiveSessionIntroElement.PAUSE_BUTTON -> ActiveSessionIntroElement.DISCARD_BUTTON
-                    ActiveSessionIntroElement.DISCARD_BUTTON -> ActiveSessionIntroElement.FAB_NEXT_SECTION
-                    ActiveSessionIntroElement.FAB_NEXT_SECTION -> ActiveSessionIntroElement.PAST_SECTIONS
-                    ActiveSessionIntroElement.PAST_SECTIONS ->  ActiveSessionIntroElement.FINISH_BUTTON
-                    ActiveSessionIntroElement.FINISH_BUTTON ->  ActiveSessionIntroElement.RESUME_BUTTON
-                    ActiveSessionIntroElement.RESUME_BUTTON -> ActiveSessionIntroElement.TOOLS_BOTTOM_BAR
-                    ActiveSessionIntroElement.TOOLS_BOTTOM_BAR -> ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON
-                    ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON -> ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
-                    ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON -> ActiveSessionIntroElement.TOOLS_METRONOME
-                    ActiveSessionIntroElement.TOOLS_METRONOME -> ActiveSessionIntroElement.TOOLS_RECORDER
-                    ActiveSessionIntroElement.TOOLS_RECORDER -> ActiveSessionIntroElement.FAB_START_PRACTICING
-                    null -> TODO()
-                }
-                _introDialogHighlightedElement.update { nextState }
+
+//                // TODO: for debugging: cycle through all components
+//                val nextState = when (_introDialogHighlightedElement.value) {
+//                    ActiveSessionIntroElement.FAB_START_PRACTICING -> ActiveSessionIntroElement.CURRENT_SECTION
+//                    ActiveSessionIntroElement.CURRENT_SECTION -> ActiveSessionIntroElement.PRACTICE_TIMER
+//                    ActiveSessionIntroElement.PRACTICE_TIMER -> ActiveSessionIntroElement.MINIMIZE_BUTTON
+//                    ActiveSessionIntroElement.MINIMIZE_BUTTON -> ActiveSessionIntroElement.PAUSE_BUTTON
+//                    ActiveSessionIntroElement.PAUSE_BUTTON -> ActiveSessionIntroElement.DISCARD_BUTTON
+//                    ActiveSessionIntroElement.DISCARD_BUTTON -> ActiveSessionIntroElement.FAB_NEXT_SECTION
+//                    ActiveSessionIntroElement.FAB_NEXT_SECTION -> ActiveSessionIntroElement.PAST_SECTIONS
+//                    ActiveSessionIntroElement.PAST_SECTIONS -> ActiveSessionIntroElement.FINISH_BUTTON
+//                    ActiveSessionIntroElement.FINISH_BUTTON -> ActiveSessionIntroElement.RESUME_BUTTON
+//                    ActiveSessionIntroElement.RESUME_BUTTON -> ActiveSessionIntroElement.TOOLS_BOTTOM_BAR
+//                    ActiveSessionIntroElement.TOOLS_BOTTOM_BAR -> ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON
+//                    ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON -> ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
+//                    ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON -> ActiveSessionIntroElement.TOOLS_METRONOME
+//                    ActiveSessionIntroElement.TOOLS_METRONOME -> ActiveSessionIntroElement.TOOLS_RECORDER
+//                    ActiveSessionIntroElement.TOOLS_RECORDER -> ActiveSessionIntroElement.FAB_START_PRACTICING
+//                    null -> TODO()
+//                }
+//                _introDialogHighlightedElement.update { nextState }
             }
         }
 
@@ -529,21 +479,26 @@ class ActiveSessionViewModel @Inject constructor(
                         if (event.coreEvent.longClick) return@launch // ignore long clicks
                         selectItem(event.coreEvent.item)
                     }
+
                     is LibraryCoreUiEvent.ItemSortModeSelected -> viewModelScope.launch {
                         libraryUseCases.selectItemSortMode(event.coreEvent.mode)
                     }
+
                     else -> return false // event not handled
                 }
             }
+
             is LibraryUiEvent.FolderPressed -> {
                 // select folder in new item selector
                 _displayedFolder.update { event.folderId }
             }
+
             is LibraryUiEvent.FolderSortModeSelected -> {
                 viewModelScope.launch {
                     libraryUseCases.selectFolderSortMode(event.mode)
                 }
             }
+
             else -> return false // event not handled
         }
         return true
@@ -579,9 +534,10 @@ class ActiveSessionViewModel @Inject constructor(
         }
 
         activeSessionUseCases.selectItem(
-            item = item,
-            at = timeProvider.now()
+            item = item, at = timeProvider.now()
         )
+
+        showNextIntroDialog()
     }
 
     private suspend fun deleteSection(sectionId: UUID) {
@@ -606,19 +562,44 @@ class ActiveSessionViewModel @Inject constructor(
                 // add up all pause durations
                 breakDuration = savableState.completedSections.fold(0.seconds) { acc, section ->
                     acc + section.pauseDuration
-                },
-                comment = _endDialogComment.value,
-                rating = _endDialogRating.value
-            ),
-            sectionCreationAttributes = savableState.completedSections.map { section ->
+                }, comment = _endDialogComment.value, rating = _endDialogRating.value
+            ), sectionCreationAttributes = savableState.completedSections.map { section ->
                 SectionCreationAttributes(
-                    libraryItemId = section.libraryItem.id,
-                    duration = section.duration,
-                    startTimestamp = section.startTimestamp
+                    libraryItemId = section.libraryItem.id, duration = section.duration, startTimestamp = section.startTimestamp
                 )
-            }
-        )
+            })
         activeSessionUseCases.reset() // reset the active session state
+    }
+
+    private suspend fun canShowDialog(element: ActiveSessionIntroElement): Boolean =
+        !shouldSkipDialogs && coreUseCases.getSeenIntroDialogVersion(element.name).firstOrNull() != element.version
+
+    private suspend fun setDialogSeen(element: ActiveSessionIntroElement) {
+        coreUseCases.setIntroDialogSeen(element.name, version = element.version)
+    }
+
+    private suspend fun showNextIntroDialog() {
+        // all dialogs which we can show at any time during the session, in the correct order
+        val introDialogOrder = setOf(
+            ActiveSessionIntroElement.PRACTICE_TIMER,
+            ActiveSessionIntroElement.CURRENT_SECTION,
+            ActiveSessionIntroElement.FAB_NEXT_SECTION,
+            ActiveSessionIntroElement.PAST_SECTIONS,
+            ActiveSessionIntroElement.MINIMIZE_BUTTON,
+            ActiveSessionIntroElement.PAUSE_BUTTON,
+            ActiveSessionIntroElement.DISCARD_BUTTON,
+            ActiveSessionIntroElement.FINISH_BUTTON,
+            ActiveSessionIntroElement.TOOLS_BOTTOM_BAR,
+            ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON,
+            ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
+        )
+
+        for (elem in introDialogOrder) {
+            if (canShowDialog(elem)) {
+                _introDialogHighlightedElement.update { elem }
+                break
+            }
+        }
     }
 }
 

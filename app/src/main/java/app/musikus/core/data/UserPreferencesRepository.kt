@@ -62,27 +62,27 @@ class UserPreferencesRepositoryImpl(
 ) : UserPreferencesRepository {
     private val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(
-            theme = ThemeSelections.Companion.valueOrDefault(preferences[PreferenceKeys.THEME]),
-            colorScheme = ColorSchemeSelections.Companion.valueOrDefault(preferences[PreferenceKeys.COLOR_SCHEME]),
+            theme = ThemeSelections.valueOrDefault(preferences[PreferenceKeys.THEME]),
+            colorScheme = ColorSchemeSelections.valueOrDefault(preferences[PreferenceKeys.COLOR_SCHEME]),
 
             appIntroDone = preferences[PreferenceKeys.APPINTRO_DONE] ?: false,
 
-            libraryFolderSortMode = LibraryFolderSortMode.Companion.valueOrDefault(
+            libraryFolderSortMode = LibraryFolderSortMode.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE]
             ),
-            libraryFolderSortDirection = SortDirection.Companion.valueOrDefault(
+            libraryFolderSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION]
             ),
 
-            libraryItemSortMode = LibraryItemSortMode.Companion.valueOrDefault(
+            libraryItemSortMode = LibraryItemSortMode.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE]
             ),
-            libraryItemSortDirection = SortDirection.Companion.valueOrDefault(
+            libraryItemSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION]
             ),
 
-            goalsSortMode = GoalsSortMode.Companion.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
-            goalsSortDirection = SortDirection.Companion.valueOrDefault(
+            goalsSortMode = GoalsSortMode.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
+            goalsSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.GOALS_SORT_DIRECTION]
             ),
 
@@ -90,19 +90,19 @@ class UserPreferencesRepositoryImpl(
 
             metronomeSettings = MetronomeSettings(
                 bpm = preferences[PreferenceKeys.METRONOME_BPM]
-                    ?: MetronomeSettings.Companion.DEFAULT.bpm,
+                    ?: MetronomeSettings.DEFAULT.bpm,
                 beatsPerBar = preferences[PreferenceKeys.METRONOME_BEATS_PER_BAR]
-                    ?: MetronomeSettings.Companion.DEFAULT.beatsPerBar,
+                    ?: MetronomeSettings.DEFAULT.beatsPerBar,
                 clicksPerBeat = preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT]
-                    ?: MetronomeSettings.Companion.DEFAULT.clicksPerBeat
+                    ?: MetronomeSettings.DEFAULT.clicksPerBeat
             ),
 
             idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1,
 
             appIntroSeenDialogVersions = preferences.asMap()
-                .filter { (key, _) -> key.name.startsWith(PreferenceKeys.APPINTRO_PREFIX) }
+                .filter { (key, _) -> key.name.startsWith(APPINTRO_PREFIX) }
                 .map { (key, value) ->
-                    val featureName = key.name.removePrefix(PreferenceKeys.APPINTRO_PREFIX)
+                    val featureName = key.name.removePrefix(APPINTRO_PREFIX)
                     featureName to (value as? Int ?: -1)
                 }
                 .toMap()
