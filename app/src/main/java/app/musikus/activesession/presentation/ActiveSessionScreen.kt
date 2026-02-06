@@ -400,12 +400,13 @@ private fun ActiveSessionScreen(
      * --------------------- Onboarding Overlay ---------------------
      */
 
-    val maybeRect = introRegistry[dialogUiState.value.introDialogElement]
-    if (maybeRect != null) {
+    val introElement = dialogUiState.value.introDialogElement
+    val maybeRect = introRegistry[introElement]
+    if (introElement != null && maybeRect != null) {
         AppIntroDialog(
             cutout = maybeRect,
-            message = "This is a demo dialog Text",
-            headline = "Practice Timer",
+            message = introElement.message,
+            headline = introElement.headline,
             onConfirm = { eventHandler(ActiveSessionUiEvent.IntroDialogConfirmed) },
             onSkipIntro = { eventHandler(ActiveSessionUiEvent.IntroDialogSkipped) },
         )
