@@ -37,10 +37,13 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.musikus.R
 import app.musikus.activesession.presentation.ActiveSessionIntroElement
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiText
 
 
 /**
@@ -75,12 +78,13 @@ fun Modifier.registerAppIntroElement(id: ActiveSessionIntroElement, registry: Sn
 @Composable
 fun AppIntroDialog(
     cutout: Rect,
-    headline: String,
-    message: String,
+    headline: UiText,
+    message: UiText,
     onSkipIntro: () -> Unit,
     onConfirm: () -> Unit,
 ) {
     val density = LocalDensity.current
+    val margin = MaterialTheme.dimensions.introElementCutoutMarginPx
 
     Box(
         modifier = Modifier
@@ -108,11 +112,10 @@ fun AppIntroDialog(
 
             drawIntoCanvas { canvas ->
                 val paint = Paint().apply { blendMode = BlendMode.Clear }
-
                 // convert window rect (already in px) to DrawScope coordinates
-                val left = cutout.left
-                val top = cutout.top
-                val size = Size(cutout.width, cutout.height)
+                val left = cutout.left - margin/2
+                val top = cutout.top - margin/2
+                val size = Size(cutout.width + margin, cutout.height + margin)
 
                 // draw rounded rect cleared
                 val cornerRadius = 12.dp
@@ -144,8 +147,8 @@ fun AppIntroDialog(
 
 @Composable
 private fun BoxScope.IntroDialogContent(
-    headline: String,
-    message: String,
+    headline: UiText,
+    message: UiText,
     alignTop: Boolean,
     onConfirm: () -> Unit,
     onSkipIntro: () -> Unit,
@@ -174,18 +177,18 @@ private fun BoxScope.IntroDialogContent(
                     .weight(1f)
             ) {
                 Text(
-                    text = headline, style = MaterialTheme.typography.titleMedium
+                    text = headline.asString(), style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(Modifier.height(MaterialTheme.spacing.medium))
                 Text(
-                    text = message, style = MaterialTheme.typography.bodyMedium
+                    text = message.asString(), style = MaterialTheme.typography.bodyMedium
                 )
             }
             DialogActions(
                 onConfirmHandler = onConfirm,
-                confirmButtonText = "Got it",
+                confirmButtonText = stringResource(R.string.components_intro_dialog_action_ok),
                 onDismissHandler = onSkipIntro,
-                dismissButtonText = "Skip intro for now"
+                dismissButtonText = stringResource(R.string.components_intro_dialog_action_skip_intro),
             )
         }
     }
