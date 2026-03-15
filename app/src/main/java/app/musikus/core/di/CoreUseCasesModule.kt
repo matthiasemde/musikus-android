@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.di
@@ -12,7 +12,9 @@ import app.musikus.core.domain.UserPreferencesRepository
 import app.musikus.core.domain.usecase.ConfirmAnnouncementMessageUseCase
 import app.musikus.core.domain.usecase.CoreUseCases
 import app.musikus.core.domain.usecase.GetIdOfLastSeenAnnouncementSeenUseCase
+import app.musikus.core.domain.usecase.GetSeenIntroDialogVersionUseCase
 import app.musikus.core.domain.usecase.ResetAnnouncementMessageUseCase
+import app.musikus.core.domain.usecase.SetSeenIntroDialogUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +38,12 @@ object CoreUseCasesModule {
                 userPreferencesRepository
             ),
             resetAnnouncementMessage = ResetAnnouncementMessageUseCase(
+                userPreferencesRepository
+            ),
+            setIntroDialogSeen = SetSeenIntroDialogUseCase(
+                userPreferencesRepository
+            ),
+            getSeenIntroDialogVersion = GetSeenIntroDialogVersionUseCase(
                 userPreferencesRepository
             )
         )

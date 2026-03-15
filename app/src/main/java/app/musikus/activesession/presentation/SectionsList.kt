@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2025 Michael Prommersberger
+ * Copyright (c) 2025-2026 Michael Prommersberger
  */
 package app.musikus.activesession.presentation
 
@@ -68,6 +68,7 @@ import kotlin.random.Random
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun SectionsList(
+    modifier: Modifier = Modifier,
     uiState: State<ActiveSessionCompletedSectionsUiState?>,
     onSectionDeleted: (CompletedSectionUiState) -> Unit,
     nestedScrollConnection: NestedScrollConnection,
@@ -78,7 +79,7 @@ internal fun SectionsList(
     val listUiState = uiState.value ?: return
 
     // This column must not have padding to make swipe-to-dismiss work edge2edge
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()

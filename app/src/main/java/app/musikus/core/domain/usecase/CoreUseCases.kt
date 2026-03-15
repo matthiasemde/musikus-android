@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.domain.usecase
@@ -11,5 +11,7 @@ package app.musikus.core.domain.usecase
 data class CoreUseCases(
     val getIdOfLastSeenAnnouncementSeen: GetIdOfLastSeenAnnouncementSeenUseCase,
     val confirmAnnouncementMessage: ConfirmAnnouncementMessageUseCase,
-    val resetAnnouncementMessage: ResetAnnouncementMessageUseCase
+    val resetAnnouncementMessage: ResetAnnouncementMessageUseCase,
+    val setIntroDialogSeen: SetSeenIntroDialogUseCase,
+    val getSeenIntroDialogVersion: GetSeenIntroDialogVersionUseCase
 )

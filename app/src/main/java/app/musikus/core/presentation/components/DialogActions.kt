@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.presentation.components
@@ -42,7 +42,7 @@ fun DialogActions(
 ) {
     Row(
         modifier = Modifier
-            .padding(MaterialTheme.spacing.large)
+            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.medium)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End
     ) {
@@ -50,9 +50,7 @@ fun DialogActions(
             TextButton(
                 modifier = Modifier.semantics {
                     contentDescription = dismissButtonText
-                },
-                onClick = onDismissHandler,
-                colors = ButtonDefaults.textButtonColors(
+                }, onClick = onDismissHandler, colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
@@ -64,9 +62,7 @@ fun DialogActions(
         Button(
             modifier = Modifier.semantics {
                 contentDescription = confirmButtonText
-            },
-            onClick = onConfirmHandler,
-            enabled = confirmButtonEnabled
+            }, onClick = onConfirmHandler, enabled = confirmButtonEnabled
         ) {
             Text(text = confirmButtonText, softWrap = false)
         }

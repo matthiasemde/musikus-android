@@ -3,7 +3,7 @@
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-    Copyright (c) 2022-2024 Matthias Emde
+    Copyright (c) 2022-2026 Matthias Emde, Michael Prommersberger
 -->
 <resources>
 
@@ -72,5 +72,9 @@
     <!-- DurationInput -->
     <string name="components_duration_input_hours_content_description">Target hours input</string>
     <string name="components_duration_input_minutes_content_description">Target minutes input</string>
+
+    <!--    Intro dialog actions -->
+    <string name="components_intro_dialog_action_ok">Got it!</string>
+    <string name="components_intro_dialog_action_skip_intro">Skip Intro for now</string>
 
 </resources>

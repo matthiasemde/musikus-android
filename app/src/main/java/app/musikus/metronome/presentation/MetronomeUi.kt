@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.metronome.presentation
@@ -111,7 +111,7 @@ fun MetronomeLayout(
         HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(MaterialTheme.dimensions.toolsBodyHeight),
         ) {

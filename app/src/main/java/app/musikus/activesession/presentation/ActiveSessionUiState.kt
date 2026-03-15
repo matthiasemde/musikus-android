@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.activesession.presentation
@@ -40,6 +40,7 @@ data class ActiveSessionUiState(
 data class ActiveSessionDialogsUiState(
     val endDialogUiState: ActiveSessionEndDialogUiState?,
     val discardDialogVisible: Boolean,
+    val introDialogElement: ActiveSessionIntroElement?,
 )
 
 @Stable
@@ -112,6 +113,8 @@ sealed class ActiveSessionUiEvent {
     data object ToggleFinishDialog : ActiveSessionUiEvent()
     data object ToggleDiscardDialog : ActiveSessionUiEvent()
     data class NewItemSelectorEvent(val libraryEvent: LibraryUiEvent) : ActiveSessionUiEvent()
+    data object IntroDialogConfirmed : ActiveSessionUiEvent()
+    data object IntroDialogSkipped : ActiveSessionUiEvent()
 }
 
 sealed class ActiveSessionEndDialogUiEvent {

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.data
@@ -14,6 +14,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.musikus.core.data.PreferenceKeys.APPINTRO_PREFIX
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.UserPreferences
@@ -52,6 +53,8 @@ object PreferenceKeys {
 
     // Contains the id of the last announcement message that was shown to the user
     val LAST_ANNOUNCEMENT_SEEN = intPreferencesKey("last_announcement_seen")
+
+    const val APPINTRO_PREFIX = "appintro_dialog_"
 }
 
 class UserPreferencesRepositoryImpl(
@@ -59,27 +62,27 @@ class UserPreferencesRepositoryImpl(
 ) : UserPreferencesRepository {
     private val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(
-            theme = ThemeSelections.Companion.valueOrDefault(preferences[PreferenceKeys.THEME]),
-            colorScheme = ColorSchemeSelections.Companion.valueOrDefault(preferences[PreferenceKeys.COLOR_SCHEME]),
+            theme = ThemeSelections.valueOrDefault(preferences[PreferenceKeys.THEME]),
+            colorScheme = ColorSchemeSelections.valueOrDefault(preferences[PreferenceKeys.COLOR_SCHEME]),
 
             appIntroDone = preferences[PreferenceKeys.APPINTRO_DONE] ?: false,
 
-            libraryFolderSortMode = LibraryFolderSortMode.Companion.valueOrDefault(
+            libraryFolderSortMode = LibraryFolderSortMode.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE]
             ),
-            libraryFolderSortDirection = SortDirection.Companion.valueOrDefault(
+            libraryFolderSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION]
             ),
 
-            libraryItemSortMode = LibraryItemSortMode.Companion.valueOrDefault(
+            libraryItemSortMode = LibraryItemSortMode.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE]
             ),
-            libraryItemSortDirection = SortDirection.Companion.valueOrDefault(
+            libraryItemSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION]
             ),
 
-            goalsSortMode = GoalsSortMode.Companion.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
-            goalsSortDirection = SortDirection.Companion.valueOrDefault(
+            goalsSortMode = GoalsSortMode.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
+            goalsSortDirection = SortDirection.valueOrDefault(
                 preferences[PreferenceKeys.GOALS_SORT_DIRECTION]
             ),
 
@@ -87,14 +90,22 @@ class UserPreferencesRepositoryImpl(
 
             metronomeSettings = MetronomeSettings(
                 bpm = preferences[PreferenceKeys.METRONOME_BPM]
-                    ?: MetronomeSettings.Companion.DEFAULT.bpm,
+                    ?: MetronomeSettings.DEFAULT.bpm,
                 beatsPerBar = preferences[PreferenceKeys.METRONOME_BEATS_PER_BAR]
-                    ?: MetronomeSettings.Companion.DEFAULT.beatsPerBar,
+                    ?: MetronomeSettings.DEFAULT.beatsPerBar,
                 clicksPerBeat = preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT]
-                    ?: MetronomeSettings.Companion.DEFAULT.clicksPerBeat
+                    ?: MetronomeSettings.DEFAULT.clicksPerBeat
             ),
 
-            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1
+            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1,
+
+            appIntroSeenDialogVersions = preferences.asMap()
+                .filter { (key, _) -> key.name.startsWith(APPINTRO_PREFIX) }
+                .map { (key, value) ->
+                    val featureName = key.name.removePrefix(APPINTRO_PREFIX)
+                    featureName to (value as? Int ?: -1)
+                }
+                .toMap()
         )
     }
 
@@ -136,6 +147,10 @@ class UserPreferencesRepositoryImpl(
 
     override val idOfLastAnnouncementSeen: Flow<Int> = userPreferences.map { preferences ->
         preferences.idOfLastAnnouncementSeen
+    }
+
+    override val appIntroSeenDialogVersions: Flow<Map<String, Int>> = userPreferences.map { preferences ->
+        preferences.appIntroSeenDialogVersions
     }
 
     /** Mutators */
@@ -193,6 +208,15 @@ class UserPreferencesRepositoryImpl(
     override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] = id
+        }
+    }
+
+    /**
+     * Stores the version index of the app intro dialog that has been seen by the user.
+     */
+    override suspend fun updateAppIntroSeenDialogVersion(featureName: String, index: Int) {
+        dataStore.edit { preferences ->
+            preferences[intPreferencesKey(APPINTRO_PREFIX + featureName)] = index
         }
     }
 }

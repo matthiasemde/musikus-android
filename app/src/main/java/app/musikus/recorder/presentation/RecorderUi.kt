@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.recorder.presentation
@@ -159,6 +159,7 @@ fun RecorderUi(
     }
 
     RecorderLayout(
+        modifier = modifier,
         uiState = uiState,
         eventHandler = eventHandler,
         mediaController = mediaController,

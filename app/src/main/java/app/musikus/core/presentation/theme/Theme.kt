@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.presentation.theme
@@ -137,7 +137,9 @@ data class Dimensions(
     val toolsHeaderHeight: Dp = 95.dp,
     val toolsBodyHeight: Dp = 205.dp,
     val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp, // 3.dp DragHandle + spacing
-    val fabHeight: Dp = 56.dp // TODO: remove and try to get it via intrisic defaults
+    val fabHeight: Dp = 56.dp, // TODO: remove and try to get it via intrinsic defaults
+    val introDialogHeight: Dp = 230.dp,
+    val introElementCutoutMarginPx: Float = 30.0f
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

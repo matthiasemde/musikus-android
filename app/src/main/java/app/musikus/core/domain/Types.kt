@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2026 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.domain
@@ -44,7 +44,10 @@ data class UserPreferences(
     val metronomeSettings: MetronomeSettings,
 
     // Announcement message
-    val idOfLastAnnouncementSeen: Int
+    val idOfLastAnnouncementSeen: Int,
+
+    // Intro dialogs
+    val appIntroSeenDialogVersions: Map<String, Int>,
 )
 
 interface UserPreferencesRepository {
@@ -59,6 +62,8 @@ interface UserPreferencesRepository {
     val metronomeSettings: Flow<MetronomeSettings>
 
     val idOfLastAnnouncementSeen: Flow<Int>
+
+    val appIntroSeenDialogVersions: Flow<Map<String, Int>>
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
@@ -75,4 +80,6 @@ interface UserPreferencesRepository {
     suspend fun updateMetronomeSettings(settings: MetronomeSettings)
 
     suspend fun updateIdOfLastAnnouncementSeen(id: Int)
+
+    suspend fun updateAppIntroSeenDialogVersion(featureName: String, index: Int)
 }
