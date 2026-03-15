@@ -65,6 +65,9 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+const val DefaultSessionRating = 3
+
+
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
     application: Application,
@@ -78,6 +81,7 @@ class ActiveSessionViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
+
 
     private var shouldSkipDialogs = false
 
@@ -124,7 +128,7 @@ class ActiveSessionViewModel @Inject constructor(
     /** ------------------- Own StateFlow UI state ------------------------------------------- */
 
     private val _endDialogComment = MutableStateFlow("")
-    private val _endDialogRating = MutableStateFlow(3)
+    private val _endDialogRating = MutableStateFlow(DefaultSessionRating)
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
     private val _introDialogHighlightedElement = MutableStateFlow<ActiveSessionIntroElement?>(null)
@@ -372,6 +376,7 @@ class ActiveSessionViewModel @Inject constructor(
 //                    _eventChannel.send(ActiveSessionEvent.HideTools)
 //                }
 
+                // show first intro dialog
                 if (canShowDialog(ActiveSessionIntroElement.FAB_START_PRACTICING)) {
                     _introDialogHighlightedElement.update { ActiveSessionIntroElement.FAB_START_PRACTICING }
                 }
@@ -396,6 +401,7 @@ class ActiveSessionViewModel @Inject constructor(
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
             is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch {
+                // show explanation for resume button
                 if (sessionState.value == ActiveSessionState.RUNNING && canShowDialog(ActiveSessionIntroElement.RESUME_BUTTON)) {
                     _introDialogHighlightedElement.update { ActiveSessionIntroElement.RESUME_BUTTON }
                 }
