@@ -668,7 +668,7 @@ private fun ActiveSessionToolsLayout(
     Box(modifier.fillMaxWidth()) {
         Column {
             HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
-                val modifier = when(tabs[tabIndex].type) {
+                val modifier = when (tabs[tabIndex].type) {
                     ActiveSessionTab.METRONOME -> Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_METRONOME, introRegistry)
                     ActiveSessionTab.RECORDER -> Modifier.registerAppIntroElement(ActiveSessionIntroElement.TOOLS_RECORDER, introRegistry)
                     ActiveSessionTab.DEFAULT -> Modifier

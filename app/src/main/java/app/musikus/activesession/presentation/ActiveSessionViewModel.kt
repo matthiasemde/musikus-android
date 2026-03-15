@@ -384,13 +384,11 @@ class ActiveSessionViewModel @Inject constructor(
      * Returns true if the event was consumed, false otherwise.
      */
     fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
-        // always dismiss any dialog, except for just toggling the bottom sheet
-        // TODO: this exception is not good for intro dialogs for the tools buttons
+        // always dismiss any dialog
         val introDialog = _introDialogHighlightedElement.value
-        if (event != ActiveSessionUiEvent.ToggleNewItemSelector)
-            _introDialogHighlightedElement.update { null }
+        _introDialogHighlightedElement.update { null }
 
-        // set the dialog to seen for any UI events when user clicks on an element, except user chose to skip intro
+        // set the dialog to "seen" for any UI events when user clicks on the respective element, except user chose "skip intro"
         if (introDialog != null && event != ActiveSessionUiEvent.IntroDialogSkipped) {
             viewModelScope.launch { setDialogSeen(introDialog) }
         }
@@ -438,27 +436,6 @@ class ActiveSessionViewModel @Inject constructor(
                         }
                     }
                 }
-
-//                // TODO: for debugging: cycle through all components
-//                val nextState = when (_introDialogHighlightedElement.value) {
-//                    ActiveSessionIntroElement.FAB_START_PRACTICING -> ActiveSessionIntroElement.CURRENT_SECTION
-//                    ActiveSessionIntroElement.CURRENT_SECTION -> ActiveSessionIntroElement.PRACTICE_TIMER
-//                    ActiveSessionIntroElement.PRACTICE_TIMER -> ActiveSessionIntroElement.MINIMIZE_BUTTON
-//                    ActiveSessionIntroElement.MINIMIZE_BUTTON -> ActiveSessionIntroElement.PAUSE_BUTTON
-//                    ActiveSessionIntroElement.PAUSE_BUTTON -> ActiveSessionIntroElement.DISCARD_BUTTON
-//                    ActiveSessionIntroElement.DISCARD_BUTTON -> ActiveSessionIntroElement.FAB_NEXT_SECTION
-//                    ActiveSessionIntroElement.FAB_NEXT_SECTION -> ActiveSessionIntroElement.PAST_SECTIONS
-//                    ActiveSessionIntroElement.PAST_SECTIONS -> ActiveSessionIntroElement.FINISH_BUTTON
-//                    ActiveSessionIntroElement.FINISH_BUTTON -> ActiveSessionIntroElement.RESUME_BUTTON
-//                    ActiveSessionIntroElement.RESUME_BUTTON -> ActiveSessionIntroElement.TOOLS_BOTTOM_BAR
-//                    ActiveSessionIntroElement.TOOLS_BOTTOM_BAR -> ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON
-//                    ActiveSessionIntroElement.TOOLS_METRONOME_BUTTON -> ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
-//                    ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON -> ActiveSessionIntroElement.TOOLS_METRONOME
-//                    ActiveSessionIntroElement.TOOLS_METRONOME -> ActiveSessionIntroElement.TOOLS_RECORDER
-//                    ActiveSessionIntroElement.TOOLS_RECORDER -> ActiveSessionIntroElement.FAB_START_PRACTICING
-//                    null -> TODO()
-//                }
-//                _introDialogHighlightedElement.update { nextState }
             }
         }
 
@@ -594,6 +571,7 @@ class ActiveSessionViewModel @Inject constructor(
             ActiveSessionIntroElement.TOOLS_RECORDER_BUTTON
         )
 
+        // show the first element in the list which has not been shown yet
         for (elem in introDialogOrder) {
             if (canShowDialog(elem)) {
                 _introDialogHighlightedElement.update { elem }
