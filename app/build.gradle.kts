@@ -26,10 +26,9 @@ plugins {
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.license.report)
+//    alias(libs.plugins.license.report)
     alias(libs.plugins.detekt)
 }
 
@@ -75,7 +74,8 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release").takeIf {
-                it.isSigningReady
+//                it.isSigningReady
+                false
             } ?: signingConfigs.getByName("debug")
         }
     }
@@ -122,11 +122,11 @@ android {
             }
             groups {
                 create("all") {
-                    targetDevices.add(devices["api29"])
-                    targetDevices.add(devices["api30"])
-                    targetDevices.add(devices["api31"])
-                    targetDevices.add(devices["api33"])
-                    targetDevices.add(devices["api35"])
+                    targetDevices.add(localDevices["api29"])
+                    targetDevices.add(localDevices["api30"])
+                    targetDevices.add(localDevices["api31"])
+                    targetDevices.add(localDevices["api33"])
+                    targetDevices.add(localDevices["api35"])
                 }
             }
         }
@@ -137,13 +137,15 @@ android {
         }
     }
 
-    sourceSets {
+    sourceSets.named("androidTest") {
         // Adds exported schema location as test app assets.
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        kotlin.directories += "$projectDir/src/androidTest/kotlin"
     }
 
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
+    kotlin {
+        compilerOptions {
+            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
+        }
     }
 
     buildFeatures {
@@ -399,7 +401,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.google.truth)
-    androidTestImplementation(libs.android.arch.persistence.room.testing)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.navigation)
 }
 

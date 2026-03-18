@@ -8,7 +8,6 @@
 
 package app.musikus.library.presentation
 
-import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
@@ -23,7 +22,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
 import app.assertNodesInVerticalOrder
@@ -62,17 +61,17 @@ class LibraryFolderDetailsScreenTest {
     val screenshotRule = ScreenshotRule(composeRule)
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlocking {
         hiltRule.inject()
-        composeRule.activity.setContent {
+
+        // Seed data before composition so UI can render deterministically.
+        libraryUseCases.addFolder(
+            LibraryFolderCreationAttributes("TestFolder1")
+        )
+
+        composeRule.setContent {
             val mainViewModel: MainViewModel = hiltViewModel()
             val mainEventHandler = mainViewModel::onUiEvent
-
-            runBlocking {
-                libraryUseCases.addFolder(
-                    LibraryFolderCreationAttributes("TestFolder1")
-                )
-            }
 
             LibraryFolderDetailsScreen(
                 mainEventHandler = mainEventHandler,
@@ -80,6 +79,8 @@ class LibraryFolderDetailsScreenTest {
                 navigateUp = {}
             )
         }
+
+        composeRule.waitForIdle()
     }
 
     @Test
