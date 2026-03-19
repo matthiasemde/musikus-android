@@ -193,7 +193,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("TestItem2").performTouchInput { longClick() }
         composeRule.onNode(
             matcher = hasContentDescription("Edit")
-                and hasAnySibling(hasText("1 items selected"))
+                and hasAnySibling(hasContentDescription("Delete"))
         ).performClick()
         composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).apply {
             performTextClearance()
