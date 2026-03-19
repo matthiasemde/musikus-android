@@ -8,6 +8,7 @@
 
 package app.musikus.library.presentation
 
+import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasAnySibling
@@ -69,7 +70,7 @@ class LibraryFolderDetailsScreenTest {
             LibraryFolderCreationAttributes("TestFolder1")
         )
 
-        composeRule.setContent {
+        composeRule.activity.setContent {
             val mainViewModel: MainViewModel = hiltViewModel()
             val mainEventHandler = mainViewModel::onUiEvent
 
