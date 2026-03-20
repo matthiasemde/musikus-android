@@ -28,7 +28,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Get current version name
         run: |
