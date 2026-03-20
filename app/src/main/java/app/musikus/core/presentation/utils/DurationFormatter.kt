@@ -94,7 +94,6 @@ fun getDurationString(
                 val spaceOrNot = when (format) {
                     DurationFormat.HUMAN_PRETTY -> " "
                     DurationFormat.HUMAN_PRETTY_SHORT -> ""
-                    else -> ""
                 }
 
                 if (totalHours > 0) {

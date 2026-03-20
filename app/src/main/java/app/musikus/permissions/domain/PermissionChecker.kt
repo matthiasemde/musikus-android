@@ -45,7 +45,7 @@ abstract class PermissionCheckerActivity : ComponentActivity() {
 
 class PermissionChecker(
     private val context: Context,
-    @ApplicationScope private val applicationScope: CoroutineScope
+    @param:ApplicationScope private val applicationScope: CoroutineScope
 ) {
 
     private lateinit var activity: PermissionCheckerActivity

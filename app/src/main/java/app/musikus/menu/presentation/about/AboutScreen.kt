@@ -9,7 +9,6 @@
 package app.musikus.menu.presentation.about
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +23,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.core.presentation.MusikusTopBar
@@ -53,7 +54,7 @@ fun AboutScreen(
         }
     ) { paddingValues ->
         val context = LocalContext.current
-
+        val privacyPolicyUrl = stringResource(R.string.menu_about_privacy_policy_url)
         val aboutScreenItems = listOf(
             listOf(
                 TwoLinerData(
@@ -70,7 +71,7 @@ fun AboutScreen(
                     firstLine = UiText.StringResource(R.string.menu_about_privacy_policy_first_line),
                     onClick = {
                         val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                        openUrlIntent.data = Uri.parse(context.getString(R.string.menu_about_privacy_policy_url))
+                        openUrlIntent.data = privacyPolicyUrl.toUri()
                         context.startActivity(openUrlIntent, null)
                     },
                     trailingIcon = UiIcon.DynamicIcon(Icons.AutoMirrored.Filled.OpenInNew)

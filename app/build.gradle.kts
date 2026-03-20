@@ -32,6 +32,12 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
+kotlin {
+    compilerOptions {
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+    }
+}
+
 android {
     val javaVersion = JavaVersion.VERSION_17
 
@@ -142,11 +148,6 @@ android {
         kotlin.directories += "$projectDir/src/androidTest/kotlin"
     }
 
-    kotlin {
-        compilerOptions {
-            languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0
-        }
-    }
 
     buildFeatures {
         compose = true

@@ -9,6 +9,7 @@ package app.musikus.activesession.presentation
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.annotation.Keep
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -57,12 +58,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -95,7 +95,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -167,7 +167,7 @@ fun ActiveSession(
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
     val scope = rememberCoroutineScope()
-    val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
+    val windowsSizeClass = calculateWindowSizeClass(activity = LocalActivity.current as Activity)
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
@@ -792,29 +792,27 @@ private fun ToolsTabRow(
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit,
 ) {
-    TabRow(
+    SecondaryTabRow(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         divider = {},
-        indicator = { tabPositions ->
-            if (activeTabIndex < tabPositions.size) {
-                AnimatedVisibility(
-                    visible = showIndicator,
-                    enter = slideInVertically { -it } + fadeIn(),
-                    exit = slideOutVertically { -it } + fadeOut(),
-                ) {
-                    TabRowDefaults.PrimaryIndicator(
-                        modifier = Modifier
-                            .tabIndicatorOffset(tabPositions[activeTabIndex])
-                            .offset(y = (-69).dp),
-                        width = 100.dp,
-                        shape = RoundedCornerShape(
-                            topStartPercent = 0,
-                            topEndPercent = 0,
-                            bottomStartPercent = 100,
-                            bottomEndPercent = 100
-                        )
+        indicator = {
+            AnimatedVisibility(
+                visible = showIndicator,
+                enter = slideInVertically { -it } + fadeIn(),
+                exit = slideOutVertically { -it } + fadeOut(),
+            ) {
+                TabRowDefaults.PrimaryIndicator(
+                    modifier = Modifier
+                        .tabIndicatorOffset(activeTabIndex)
+                        .offset(y = (-69).dp),
+                    width = 100.dp,
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = 0,
+                        bottomStartPercent = 100,
+                        bottomEndPercent = 100
                     )
-                }
+                )
             }
         },
         selectedTabIndex = activeTabIndex

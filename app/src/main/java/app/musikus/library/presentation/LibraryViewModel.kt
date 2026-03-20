@@ -138,7 +138,6 @@ class LibraryViewModel @Inject constructor(
                 return  onFolderClicked(event.folderId, event.longClick)
             }
             is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
-            else -> return false // Unhandled event
         }
 
         // events are consumed by default

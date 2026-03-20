@@ -27,18 +27,18 @@ sealed class UiText {
     data class DynamicString(val value: String) : UiText()
     data class DynamicAnnotatedString(val value: AnnotatedString) : UiText()
     class StringResource(
-        @StringRes val resId: Int,
+        @param:StringRes val resId: Int,
         vararg val args: Any
     ) : UiText()
 
     class PluralResource(
-        @PluralsRes val resId: Int,
+        @param:PluralsRes val resId: Int,
         val quantity: Int,
         vararg val formatArgs: Any
     ) : UiText()
 
     class HtmlResource(
-        @StringRes val resId: Int,
+        @param:StringRes val resId: Int,
         vararg val args: Any
     ) : UiText()
 

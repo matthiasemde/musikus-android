@@ -63,6 +63,7 @@ fun ExportScreen(
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             val context = LocalContext.current
+            val comingSoonMessage = stringResource(R.string.core_coming_soon)
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -70,7 +71,7 @@ fun ExportScreen(
                 onClick = {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.core_coming_soon),
+                        comingSoonMessage,
                         Toast.LENGTH_SHORT
                     ).show()
                 }

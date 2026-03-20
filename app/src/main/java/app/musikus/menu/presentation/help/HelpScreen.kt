@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
@@ -123,13 +123,14 @@ fun HelpScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                val comingSoonMessage = stringResource(R.string.core_coming_soon)
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.spacing.extraLarge),
                     onClick = {
                         /* TODO restart intro */
-                        Toast.makeText(context, context.getString(R.string.core_coming_soon), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, comingSoonMessage, Toast.LENGTH_SHORT).show()
                     }
                 ) {
                     Text(stringResource(R.string.menu_help_tutorial_replay_intro))
