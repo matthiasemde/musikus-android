@@ -1,4 +1,14 @@
 Initial revision
+## [v0.12.0] - 2026-03-20
+### :sparkles: New Features
+- [`0bc23f3`](https://github.com/matthiasemde/musikus-android/commit/0bc23f34210476992f7e4584e893834ccbf56034) - sort items in ActiveSession *(PR [#173](https://github.com/matthiasemde/musikus-android/pull/173) by [@mipro98](https://github.com/mipro98))*
+  - :arrow_lower_right: *addresses issue [#162](https://github.com/matthiasemde/musikus-android/issues/162) opened by [@matthiasemde](https://github.com/matthiasemde)*
+  - :arrow_lower_right: *addresses issue [#165](https://github.com/matthiasemde/musikus-android/issues/165) opened by [@matthiasemde](https://github.com/matthiasemde)*
+
+### :bug: Bug Fixes
+- [`86263aa`](https://github.com/matthiasemde/musikus-android/commit/86263aa6bbff07441fcb41dc4fb51703a1bf2eaf) - **deps**: update all dependencies *(PR [#151](https://github.com/matthiasemde/musikus-android/pull/151) by [@renovate[bot]](https://github.com/apps/renovate))*
+
+
 ## [v0.11.1] - 2025-01-17
 ### :bug: Bug Fixes
 - [`9e5f755`](https://github.com/matthiasemde/musikus-android/commit/9e5f75560defb52d2f9918558f270e4bc2c3e16b) - replace content padding in lists by spacers *(PR [#160](https://github.com/matthiasemde/musikus-android/pull/160) by [@matthiasemde](https://github.com/matthiasemde))*
@@ -61,3 +71,4 @@ Initial revision
 [v0.10.0]: https://github.com/matthiasemde/musikus-android/compare/v0.9.3...v0.10.0
 [v0.11.0]: https://github.com/matthiasemde/musikus-android/compare/v0.10.0...v0.11.0
 [v0.11.1]: https://github.com/matthiasemde/musikus-android/compare/v0.11.0...v0.11.1
+[v0.12.0]: https://github.com/matthiasemde/musikus-android/compare/v0.11.1...v0.12.0
