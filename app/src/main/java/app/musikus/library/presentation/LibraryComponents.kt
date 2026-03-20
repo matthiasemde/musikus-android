@@ -39,7 +39,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -146,7 +146,7 @@ fun LibraryFoldersSwipeRow(
         folders.indexOfFirst { it.folder.id == highlightedFolderId } + if (includeRootFolder) 1 else 0
     }
 
-    ScrollableTabRow(
+    PrimaryScrollableTabRow(
         modifier = modifier.fillMaxWidth(),
         selectedTabIndex = selectedTabIndex,
         containerColor = colorScheme.surfaceContainerLow, // match color of ModalBottomSheet
@@ -415,16 +415,16 @@ fun LibraryDialogs(
     libraryCoreEventHandler: LibraryCoreUiEventHandler,
     mainEventHandler: MainUiEventHandler,
 ) {
-    uiState.folderDialogUiState?.let {
+    uiState.folderDialogUiState?.let { uiState ->
         LibraryFolderDialog(
-            uiState = it,
+            uiState = uiState,
             eventHandler = { libraryCoreEventHandler(LibraryCoreUiEvent.FolderDialogUiEvent(it)) }
         )
     }
 
-    uiState.itemDialogUiState?.let {
+    uiState.itemDialogUiState?.let { uiState ->
         LibraryItemDialog(
-            uiState = it,
+            uiState = uiState,
             eventHandler = { libraryCoreEventHandler(LibraryCoreUiEvent.ItemDialogUiEvent(it)) }
         )
     }

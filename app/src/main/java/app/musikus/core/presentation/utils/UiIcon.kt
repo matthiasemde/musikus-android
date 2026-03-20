@@ -17,7 +17,7 @@ sealed class UiIcon {
     data class DynamicIcon(val value: ImageVector) : UiIcon()
 
     data class IconResource(
-        @DrawableRes val resId: Int
+        @param:DrawableRes val resId: Int
     ) : UiIcon()
 
     @Composable

@@ -45,7 +45,7 @@ private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 11 // 2048 Byte
 class RecordingsRepositoryImpl(
     private val application: Application,
     private val contentResolver: ContentResolver,
-    @IoScope private val ioScope: CoroutineScope
+    @param:IoScope private val ioScope: CoroutineScope
 ) : RecordingsRepository {
 
     private val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -71,7 +71,7 @@ class RecordingsRepositoryImpl(
 
             repeat(mediaExtractor.trackCount) { trackIndex ->
                 mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
-                if (mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                if (mediaFormat.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
                     mediaExtractor.selectTrack(trackIndex)
                     return@repeat
                 }

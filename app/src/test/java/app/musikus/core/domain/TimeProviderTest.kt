@@ -11,6 +11,8 @@ package app.musikus.core.domain
 import com.google.common.truth.Truth.assertThat
 import io.mockk.spyk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -116,10 +118,9 @@ class TimeProviderTest {
     @Test
     fun `Get start of week`() {
         val dateTime = ZonedDateTime.parse("1961-05-05T09:50:00Z[UTC]")
-
-        timeProviderSpy.getStartOfWeek(dateTime = dateTime)
-
-        verify(exactly = 1) { timeProviderSpy.getStartOfDayOfWeek(1, dateTime) }
+        val result = timeProviderSpy.getStartOfWeek(dateTime = dateTime)
+        val expected = timeProviderSpy.getStartOfDayOfWeek(1, dateTime)
+        Assertions.assertEquals(expected, result)
     }
 
     @Test

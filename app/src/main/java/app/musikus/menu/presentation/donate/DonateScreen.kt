@@ -9,7 +9,6 @@
 package app.musikus.menu.presentation.donate
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,6 +27,7 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
+import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.theme.spacing
@@ -68,12 +68,12 @@ fun DonateScreen(
             }
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-
+            val donateUrl = stringResource(R.string.menu_donate_url)
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                    openUrlIntent.data = Uri.parse(context.getString(R.string.menu_donate_url))
+                    openUrlIntent.data = donateUrl.toUri()
                     context.startActivity(openUrlIntent, null)
                 }
             ) {

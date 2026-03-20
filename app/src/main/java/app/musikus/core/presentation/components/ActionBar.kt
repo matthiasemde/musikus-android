@@ -42,7 +42,7 @@ fun ActionBar(
                 overflow = TextOverflow.Ellipsis
             )
         },
-        colors = TopAppBarDefaults.largeTopAppBarColors(
+        colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,

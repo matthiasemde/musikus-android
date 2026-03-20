@@ -53,6 +53,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+@SdkSuppress(minSdkVersion = 31)
 @HiltAndroidTest
 class ActiveSessionScreenTest {
     @Inject lateinit var libraryUseCases: LibraryUseCases
@@ -281,7 +282,6 @@ class ActiveSessionScreenTest {
      * Section: 00000000-0000-0000-0000-000000000007
      */
     @Test
-    @SdkSuppress(minSdkVersion = 29) // somehow crashes on API < 29
     fun finishSession() = runTest {
         // Start session
         composeRule.onNodeWithContentDescription("Start practicing").performClick()

@@ -48,7 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.core.presentation.MainUiEvent
@@ -160,11 +160,12 @@ fun SessionsScreen(
             // Action bar
             val actionModeUiState = uiState.actionModeUiState
             if (actionModeUiState.isActionMode) {
+                val comingSoonMessage = stringResource(R.string.core_coming_soon)
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = { eventHandler(SessionsUiEvent.ClearActionMode) },
                     onEditHandler = {
-                        Toast.makeText(context, context.getString(R.string.core_coming_soon), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, comingSoonMessage, Toast.LENGTH_SHORT).show()
                         eventHandler(SessionsUiEvent.EditButtonPressed(onSessionEdit)) // TODO
                     },
                     onDeleteHandler = { eventHandler(SessionsUiEvent.DeleteButtonPressed) }

@@ -11,6 +11,7 @@ package app.musikus.core.presentation.theme
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -78,7 +79,7 @@ fun MusikusTheme(
     // skip this block when in LocalInspectionMode (Compose Preview) so that we can use
     // MusikusTheme{} wrapper also in Compose Previews
     if (!LocalInspectionMode.current) {
-        val context = LocalContext.current as ComponentActivity
+        val context = LocalActivity.current as ComponentActivity
         LaunchedEffect(key1 = theme) {
             val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
             val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
