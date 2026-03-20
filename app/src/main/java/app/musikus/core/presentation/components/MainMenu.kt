@@ -9,7 +9,6 @@
 package app.musikus.core.presentation.components
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -97,6 +97,7 @@ fun MainMenu(
         Spacer(modifier = Modifier.weight(1f))
 
         // Link to Discord
+        val discordUrl = stringResource(R.string.menu_connect_discord_url)
         NavigationDrawerItem(
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
             icon = {
@@ -110,12 +111,13 @@ fun MainMenu(
             selected = false,
             onClick = {
                 val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                openUrlIntent.data = Uri.parse(context.getString(R.string.menu_connect_discord_url))
+                openUrlIntent.data = discordUrl.toUri()
                 context.startActivity(openUrlIntent, null)
             }
         )
 
         // Link to GitHub
+        val githubUrl = stringResource(R.string.menu_contribute_github_url)
         NavigationDrawerItem(
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
             icon = {
@@ -129,7 +131,7 @@ fun MainMenu(
             selected = false,
             onClick = {
                 val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                openUrlIntent.data = Uri.parse(context.getString(R.string.menu_contribute_github_url))
+                openUrlIntent.data = githubUrl.toUri()
                 context.startActivity(openUrlIntent, null)
             }
         )

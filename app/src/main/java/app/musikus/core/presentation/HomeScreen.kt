@@ -11,7 +11,7 @@ package app.musikus.core.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.Dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.core.domain.TimeProvider
 import app.musikus.goals.presentation.GoalsScreen

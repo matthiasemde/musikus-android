@@ -23,7 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.test.filters.SdkSuppress
 import app.ScreenshotRule
 import app.assertNodesInVerticalOrder
@@ -62,17 +62,17 @@ class LibraryFolderDetailsScreenTest {
     val screenshotRule = ScreenshotRule(composeRule)
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlocking {
         hiltRule.inject()
+
+        // Seed data before composition so UI can render deterministically.
+        libraryUseCases.addFolder(
+            LibraryFolderCreationAttributes("TestFolder1")
+        )
+
         composeRule.activity.setContent {
             val mainViewModel: MainViewModel = hiltViewModel()
             val mainEventHandler = mainViewModel::onUiEvent
-
-            runBlocking {
-                libraryUseCases.addFolder(
-                    LibraryFolderCreationAttributes("TestFolder1")
-                )
-            }
 
             LibraryFolderDetailsScreen(
                 mainEventHandler = mainEventHandler,
@@ -80,6 +80,8 @@ class LibraryFolderDetailsScreenTest {
                 navigateUp = {}
             )
         }
+
+        composeRule.waitForIdle()
     }
 
     @Test
@@ -191,7 +193,7 @@ class LibraryFolderDetailsScreenTest {
         composeRule.onNodeWithText("TestItem2").performTouchInput { longClick() }
         composeRule.onNode(
             matcher = hasContentDescription("Edit")
-                and hasAnySibling(hasText("1 items selected"))
+                and hasAnySibling(hasContentDescription("Delete"))
         ).performClick()
         composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).apply {
             performTextClearance()

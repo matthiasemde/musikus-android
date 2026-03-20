@@ -15,10 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,7 +73,7 @@ fun SelectionSpinner(
 
             OutlinedTextField(
                 readOnly = true,
-                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
+                modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true),
             value = selectedOption?.name?.asString() ?: "", // if no option is selected, show nothing
             onValueChange = {},
             label = label,

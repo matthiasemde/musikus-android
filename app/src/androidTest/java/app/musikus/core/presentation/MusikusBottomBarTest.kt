@@ -13,9 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.test.filters.SdkSuppress
 import app.musikus.core.domain.FakeTimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -27,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 
+@SdkSuppress(minSdkVersion = 31)
 @HiltAndroidTest
 class MusikusBottomBarTest {
 

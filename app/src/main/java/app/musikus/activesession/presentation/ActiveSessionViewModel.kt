@@ -70,7 +70,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
-    @ApplicationScope private val applicationScope: CoroutineScope,
+    @param:ApplicationScope private val applicationScope: CoroutineScope,
     private val timeProvider: TimeProvider
 ) : AndroidViewModel(application) {
 

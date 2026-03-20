@@ -26,11 +26,16 @@ plugins {
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.license.report)
+//    alias(libs.plugins.license.report)
     alias(libs.plugins.detekt)
+}
+
+kotlin {
+    compilerOptions {
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_3
+    }
 }
 
 android {
@@ -74,9 +79,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release").takeIf {
-                it.isSigningReady
-            } ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+            // signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -122,11 +126,11 @@ android {
             }
             groups {
                 create("all") {
-                    targetDevices.add(devices["api29"])
-                    targetDevices.add(devices["api30"])
-                    targetDevices.add(devices["api31"])
-                    targetDevices.add(devices["api33"])
-                    targetDevices.add(devices["api35"])
+                    targetDevices.add(localDevices["api29"])
+                    targetDevices.add(localDevices["api30"])
+                    targetDevices.add(localDevices["api31"])
+                    targetDevices.add(localDevices["api33"])
+                    targetDevices.add(localDevices["api35"])
                 }
             }
         }
@@ -137,14 +141,11 @@ android {
         }
     }
 
-    sourceSets {
+    sourceSets.named("androidTest") {
         // Adds exported schema location as test app assets.
-        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+        kotlin.directories += "$projectDir/src/androidTest/kotlin"
     }
 
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
-    }
 
     buildFeatures {
         compose = true
@@ -175,7 +176,7 @@ room {
 }
 
 object DetektSettings {
-    const val VERSION = "1.23.7"
+    const val VERSION = "1.23.8"
     const val CONFIG_FILE = "config/detekt.yml" // Relative to the project root
     const val BUILD_UPON_DEFAULT_CONFIG = true
     const val REPORT_PATH = "lint" // Relative to the reports path
@@ -399,7 +400,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.google.truth)
-    androidTestImplementation(libs.android.arch.persistence.room.testing)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.test.navigation)
 }
 

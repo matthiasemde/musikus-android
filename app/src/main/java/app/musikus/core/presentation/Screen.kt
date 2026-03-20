@@ -204,7 +204,7 @@ val HomeTabNavType = object : NavType<HomeTab>(isNullableAllowed = false) {
 data class DisplayData(
     val title: UiText,
     val icon: UiIcon,
-    @DrawableRes val animatedIcon: Int? = null
+    @param:DrawableRes val animatedIcon: Int? = null
 )
 
 /**
