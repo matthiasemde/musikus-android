@@ -80,8 +80,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release").takeIf {
-//                it.isSigningReady
-                false
+                it.enableV4Signing == true
             } ?: signingConfigs.getByName("debug")
         }
     }
