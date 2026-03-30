@@ -40,6 +40,8 @@ targetSdk = "36"
 google-truth = "1.4.5"
 ui-test = "1.10.5"
 
+showcase-sequence = "1.3.1"
+
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-compose-animation = { module = "androidx.compose.animation:animation" }
@@ -101,6 +103,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockk" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockk" }
 google-truth = { module = "com.google.truth:truth", version.ref = "google-truth" }
+jocoand-compose-showcase = { module = "io.github.jocoand:showcase-sequence", version.ref = "showcase-sequence" }
 
 
 [plugins]

@@ -14,6 +14,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.musikus.core.domain.AppIntroDialogScreens
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.UserPreferences
@@ -94,7 +95,12 @@ class UserPreferencesRepositoryImpl(
                     ?: MetronomeSettings.Companion.DEFAULT.clicksPerBeat
             ),
 
-            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1
+            idOfLastAnnouncementSeen = preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] ?: -1,
+
+            // Store the index of the dialogs for each screen associated with the enum name of the AppIntroDialogScreens member.
+            appIntroDialogIndices = AppIntroDialogScreens.entries.associateWith {
+                screen -> (preferences[intPreferencesKey(screen.name)] ?: 0)
+            }
         )
     }
 
@@ -137,6 +143,16 @@ class UserPreferencesRepositoryImpl(
     override val idOfLastAnnouncementSeen: Flow<Int> = userPreferences.map { preferences ->
         preferences.idOfLastAnnouncementSeen
     }
+
+    /**
+     * App intro dialog indices.
+     *
+     * If the key is not set, it will default to 0, meaning the dialog has not been shown yet.
+     */
+    override val appIntroDialogIndices: Flow<Map<AppIntroDialogScreens, Int>> =
+        userPreferences.map { preferences ->
+            preferences.appIntroDialogIndices
+        }
 
     /** Mutators */
     override suspend fun updateTheme(theme: ThemeSelections) {
@@ -193,6 +209,16 @@ class UserPreferencesRepositoryImpl(
     override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.LAST_ANNOUNCEMENT_SEEN] = id
+        }
+    }
+
+    /**
+     * Updates the index of the app intro dialog for the given screen.
+     * Each screen gets its own intPreferencesKey in DataStore to store the index.
+     */
+    override suspend fun updateAppIntroDialogIndex(screen: AppIntroDialogScreens, index: Int) {
+        dataStore.edit { preferences ->
+            preferences[intPreferencesKey(screen.name)] = index
         }
     }
 }

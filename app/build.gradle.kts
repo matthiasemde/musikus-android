@@ -368,6 +368,9 @@ dependencies {
     // For exposing and controlling media sessions
     implementation(libs.androidx.media3.session)
 
+    // App introduction, showcaseview
+    implementation(libs.jocoand.compose.showcase)
+
     // Testing
     androidTestImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.kotlinx.coroutines.test)

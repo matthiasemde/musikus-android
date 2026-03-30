@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024-2025 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.core.data
 
+import app.musikus.core.domain.AppIntroDialogScreens
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.domain.UserPreferences
@@ -26,6 +27,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
+/**
+ * Volatile implementation of [UserPreferencesRepository] for testing purposes.
+ * This repository does not persist data and is reset on each instantiation.
+ */
+
 class FakeUserPreferencesRepository : UserPreferencesRepository {
 
     private val _preferences = MutableStateFlow(
@@ -41,7 +47,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
             goalsSortDirection = SortDirection.Companion.DEFAULT,
             showPausedGoals = true,
             metronomeSettings = MetronomeSettings.Companion.DEFAULT,
-            idOfLastAnnouncementSeen = 0
+            idOfLastAnnouncementSeen = 0,
+            appIntroDialogIndices = AppIntroDialogScreens.entries.associateWith { 0 }
         )
     )
     override val theme: Flow<ThemeSelections>
@@ -78,6 +85,9 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
 
     override val idOfLastAnnouncementSeen: Flow<Int>
         get() = _preferences.map { it.idOfLastAnnouncementSeen }
+
+    override val appIntroDialogIndices: Flow<Map<AppIntroDialogScreens, Int>>
+        get() = _preferences.map { it.appIntroDialogIndices }
 
     override suspend fun updateTheme(theme: ThemeSelections) {
         _preferences.update {
@@ -139,6 +149,14 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateIdOfLastAnnouncementSeen(id: Int) {
         _preferences.update {
             it.copy(idOfLastAnnouncementSeen = id)
+        }
+    }
+
+    override suspend fun updateAppIntroDialogIndex(screen: AppIntroDialogScreens, index: Int) {
+        _preferences.update { preferences ->
+            val updatedIndices = preferences.appIntroDialogIndices.toMutableMap()
+            updatedIndices[screen] = index
+            preferences.copy(appIntroDialogIndices = updatedIndices)
         }
     }
 }
