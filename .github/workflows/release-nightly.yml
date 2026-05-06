@@ -95,7 +95,7 @@ jobs:
 
       - name: Release apk on Github
         if: env.skip_nightly == 'false'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           prerelease: true
